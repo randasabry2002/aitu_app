@@ -1,0 +1,84 @@
+{
+  "project_info": {
+    "project_number": "853561466710",
+    "project_id": "german-collage-training-78233",
+    "storage_bucket": "german-collage-training-78233.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:853561466710:android:a35852d6a42ae8e5e480f7",
+        "android_client_info": {
+          "package_name": "com.example.aitu_app"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "853561466710-gv7bru6ticb04o55k5slr11v27gt07nd.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.aitu_app",
+            "certificate_hash": "33b9e130d9fe741077a94b075a82d9648b6876cc"
+          }
+        },
+        {
+          "client_id": "853561466710-nbn2rdbnuduph5qauesist8v80elfe2k.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBP2Eo46rs2ZP-upEd0-yShS-gKkarrYms"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "853561466710-nbn2rdbnuduph5qauesist8v80elfe2k.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:853561466710:android:a58ca4884590d523e480f7",
+        "android_client_info": {
+          "package_name": "com.example.german_college_flutter_app"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "853561466710-r8v3glnmcv9d169h0rqvlltru7mfptm4.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.german_college_flutter_app",
+            "certificate_hash": "33b9e130d9fe741077a94b075a82d9648b6876cc"
+          }
+        },
+        {
+          "client_id": "853561466710-nbn2rdbnuduph5qauesist8v80elfe2k.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBP2Eo46rs2ZP-upEd0-yShS-gKkarrYms"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "853561466710-nbn2rdbnuduph5qauesist8v80elfe2k.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
