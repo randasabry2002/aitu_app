@@ -253,7 +253,15 @@ class _SignUpScreenState extends State<SignUpScreen> {
                       SizedBox(height: 28),
                       //sign up btn
                       CreateButton(
-                        title: 'sign_up'.tr,
+                        title: Text(
+                          'sign up'.tr,
+                          style: TextStyle(
+                            fontSize: 24,
+                            color: mainColor,
+                            fontWeight: FontWeight.bold,
+                            fontFamily: 'mainFont',
+                          ),
+                        ), // Key for "Sign Up",
                         onPressed: () async {
                           if (name.isEmpty) {
                             ScaffoldMessenger.of(context).showSnackBar(

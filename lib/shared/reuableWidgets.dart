@@ -63,7 +63,7 @@ class _CreateInputState extends State<CreateInput> {
 //buttons
 class CreateButton extends StatelessWidget {
   final VoidCallback onPressed;
-  final String title;
+  final Widget title;
 
   const CreateButton({Key? key, required this.onPressed, required this.title})
     : super(key: key);
@@ -76,15 +76,7 @@ class CreateButton extends StatelessWidget {
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
       ),
       onPressed: onPressed,
-      child: Text(
-        title.tr,
-        style: TextStyle(
-          fontSize: 24,
-          color: mainColor,
-          fontWeight: FontWeight.bold,
-          fontFamily: 'mainFont',
-        ),
-      ), // Key for "Sign Up"
+      child: title,
     );
   }
 }

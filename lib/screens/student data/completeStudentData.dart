@@ -465,7 +465,15 @@ class _CompleteStudentDataState extends State<CompleteStudentData> {
 
                       //next button
                       CreateButton(
-                        title: 'Next'.tr,
+                        title: Text(
+                          'Next'.tr,
+                          style: TextStyle(
+                            fontSize: 24,
+                            color: mainColor,
+                            fontWeight: FontWeight.bold,
+                            fontFamily: 'mainFont',
+                          ),
+                        ), // Key for "Sign Up",
                         onPressed: () async {
                           checkDataComplete();
                           // Check if all required fields are filled

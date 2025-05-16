@@ -100,8 +100,7 @@ class _EnterStudentCodeState extends State<EnterStudentCode> {
                         onChanged: (value) {
                           studentCode = value;
                         },
-                        labelText:
-                            'code'.tr, // Translation key for "Email"
+                        labelText: 'code'.tr, // Translation key for "Email"
                         keyboardType: TextInputType.text,
                       ),
                       SizedBox(height: 80),
@@ -131,7 +130,15 @@ class _EnterStudentCodeState extends State<EnterStudentCode> {
                             );
                           }
                         },
-                        title: 'Start',
+                        title: Text(
+                          'Start'.tr,
+                          style: TextStyle(
+                            fontSize: 24,
+                            color: mainColor,
+                            fontWeight: FontWeight.bold,
+                            fontFamily: 'mainFont',
+                          ),
+                        ), // Key for "Sign Up",
                       ),
                       SizedBox(height: 16),
                     ],
