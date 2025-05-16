@@ -53,7 +53,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
               : TextDirection.ltr,
       child: Scaffold(
         appBar: AppBar(
-          backgroundColor: Color(0xFF0187c4),
+          backgroundColor: secondaryColor,
           automaticallyImplyLeading: false,
           actions: <Widget>[
             // Language Selector Icon
@@ -257,7 +257,6 @@ class _SignUpScreenState extends State<SignUpScreen> {
                           'sign up'.tr,
                           style: TextStyle(
                             fontSize: 24,
-                            color: mainColor,
                             fontWeight: FontWeight.bold,
                             fontFamily: 'mainFont',
                           ),

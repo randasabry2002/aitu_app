@@ -93,7 +93,8 @@ class _CompleteStudentDataState extends State<CompleteStudentData> {
               : TextDirection.ltr,
       child: Scaffold(
         appBar: AppBar(
-          backgroundColor: Color(0xFF0187c4),
+          elevation: 20.0,
+          backgroundColor: secondaryColor,
           // automaticallyImplyLeading: false,
           actions: <Widget>[
             // Language Selector Icon
@@ -140,6 +141,7 @@ class _CompleteStudentDataState extends State<CompleteStudentData> {
                         padding: EdgeInsets.symmetric(vertical: 4.0),
                         // margin: EdgeInsets.symmetric(horizontal: 20.0),
                         decoration: BoxDecoration(
+                          color: const Color.fromARGB(199, 255, 255, 255),
                           borderRadius: BorderRadius.circular(20),
                           border: Border.all(color: mainColor, width: 2),
                         ),
@@ -161,17 +163,16 @@ class _CompleteStudentDataState extends State<CompleteStudentData> {
                                 color: mainColor,
                               ),
                             ),
-                            Center(
-                              child: Text(
-                                name.tr,
-                                style: TextStyle(
-                                  color: const Color.fromARGB(255, 0, 0, 0),
-                                  fontSize: 22,
-                                  fontFamily: 'mainFont',
-                                  fontWeight: FontWeight.bold,
-                                ),
-                                textAlign: TextAlign.center,
+                            SizedBox(width: 20),
+                            Text(
+                              name.tr,
+                              style: TextStyle(
+                                color: const Color.fromARGB(255, 0, 0, 0),
+                                fontSize: 22,
+                                fontFamily: 'mainFont',
+                                fontWeight: FontWeight.bold,
                               ),
+                              textAlign: TextAlign.center,
                             ),
                           ],
                         ),
@@ -180,18 +181,18 @@ class _CompleteStudentDataState extends State<CompleteStudentData> {
                       Row(
                         children: [
                           Expanded(child: Divider()),
-                          SizedBox(height: 4),
+                          SizedBox(width: 4),
 
                           Text(
                             'Complete your data'.tr,
                             style: TextStyle(
-                              color: mainColor,
+                              color: const Color.fromARGB(255, 63, 63, 63),
                               fontSize: 14,
                               fontFamily: 'mainFont',
                               fontWeight: FontWeight.bold,
                             ),
                           ),
-                          SizedBox(height: 4),
+                          SizedBox(width: 4),
 
                           Expanded(child: Divider()),
                         ],
@@ -469,7 +470,6 @@ class _CompleteStudentDataState extends State<CompleteStudentData> {
                           'Next'.tr,
                           style: TextStyle(
                             fontSize: 24,
-                            color: mainColor,
                             fontWeight: FontWeight.bold,
                             fontFamily: 'mainFont',
                           ),

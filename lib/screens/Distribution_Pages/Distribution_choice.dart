@@ -3,7 +3,6 @@ import 'package:aitu_app/shared/reuableWidgets.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-
 import 'College_distribution_page.dart';
 import 'Not_College_distribution_page.dart';
 
@@ -24,7 +23,7 @@ class _Distribution_choiceState extends State<Distribution_choice> {
               : TextDirection.ltr,
       child: Scaffold(
         appBar: AppBar(
-          backgroundColor: Color(0xFF0187c4),
+          backgroundColor: secondaryColor,
           actions: <Widget>[
             // Language Selector Icon
             PopupMenuButton<String>(
@@ -85,7 +84,6 @@ class _Distribution_choiceState extends State<Distribution_choice> {
                               'College'.tr,
                               style: TextStyle(
                                 fontSize: 24,
-                                color: mainColor,
                                 fontWeight: FontWeight.bold,
                                 fontFamily: 'mainFont',
                               ),
@@ -112,7 +110,6 @@ class _Distribution_choiceState extends State<Distribution_choice> {
                               'Other'.tr,
                               style: TextStyle(
                                 fontSize: 24,
-                                color: mainColor,
                                 fontWeight: FontWeight.bold,
                                 fontFamily: 'mainFont',
                               ),

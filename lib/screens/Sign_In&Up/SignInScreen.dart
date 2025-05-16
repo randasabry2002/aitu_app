@@ -107,7 +107,7 @@ class _SignInScreenState extends State<SignInScreen> {
                           fontFamily: 'mainFont',
                         ),
                       ),
-                      SizedBox(height: 24),
+                      SizedBox(height: 60),
                         CreateInput(
                         labelText: 'email'.tr,
                         onChanged: (value) {
@@ -170,21 +170,13 @@ class _SignInScreenState extends State<SignInScreen> {
                           ),
                         ],
                       ),
-                      SizedBox(height: 10),
+                      SizedBox(height: 30),
                       //sign in btn
-                        SizedBox(
-                          width: MediaQuery.of(context).size.width * 0.9,
-                          child: ElevatedButton(
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color.fromARGB(255, 255, 255, 255),
-                            foregroundColor: mainColor,
-                            minimumSize: Size(double.infinity, 50),
-                            shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(30),
-                            ),
-                            elevation: 4,
-                          ),
-                          onPressed: () async {
+                       SizedBox(
+                        height: 60.0,
+                        width: MediaQuery.of(context).size.width * 0.9,
+                         child: CreateButton(
+                          onPressed:  () async {
                             try {
                             await _auth.signInWithEmailAndPassword(
                               email: email,
@@ -198,18 +190,18 @@ class _SignInScreenState extends State<SignInScreen> {
                               _auth.currentUser!.email.toString(),
                               );
                               print("${_prefs.getString("email")}  in signin");
-
+                          
                               String? studentId = await getStudentIdByEmail(
                               email,
                               );
-
+                          
                               if (studentId != null) {
                               print('Student ID: $studentId');
                               await _prefs.setString("studentId", studentId);
                               } else {
                               print('Student not found');
                               }
-
+                          
                               Get.offAll(Instructions());
                             }
                             } catch (e) {
@@ -222,25 +214,28 @@ class _SignInScreenState extends State<SignInScreen> {
                             );
                             }
                           },
-                          child: Text(
-                            'sign_in_button'.tr,
+                          title: Text(
+                            'sign_in'.tr,
                             style: TextStyle(
-                            color: mainColor,
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                            fontFamily: 'mainFont',
+                              fontSize: 26,
+                              fontWeight: FontWeight.bold,
+                              fontFamily: 'mainFont',
                             ),
-                          ),
-                          ),
-                        ),
-                        SizedBox(height: 16),
+                          ), // Key for "Sign Up",
+                         ),
+                       ),
+                        SizedBox(height: 20),
                         SizedBox(
                           width: MediaQuery.of(context).size.width * 0.9,
                           child: ElevatedButton(
                             style: ElevatedButton.styleFrom(
                               // padding: EdgeInsets.symmetric(horizontal: 16),
-                              backgroundColor: mainColor,
-                              foregroundColor: Colors.white,
+                              backgroundColor: const Color.fromARGB(255, 255, 255, 255),
+                              foregroundColor: secondaryColor,
+                                side: BorderSide(
+                                color: secondaryColor,
+                                width: 1.0,
+                                ),
                               minimumSize: Size(double.infinity, 50),
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(30),
@@ -283,13 +278,12 @@ class _SignInScreenState extends State<SignInScreen> {
                             child: Row(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
-                                  Icon(Icons.g_mobiledata, color: const Color.fromARGB(255, 255, 255, 255), size: 50),
+                                  Icon(Icons.g_mobiledata, size: 50),
                                 SizedBox(width: 16),
                                 // Translated text
                                 Text(
                                   'Sign In With Google',
                                   style: TextStyle(
-                                    color: const Color.fromARGB(255, 255, 255, 255),
                                     fontSize: 18,
                                     fontWeight: FontWeight.bold,
                                     fontFamily: 'mainFont',
@@ -299,7 +293,7 @@ class _SignInScreenState extends State<SignInScreen> {
                             ),
                           ),
                         ),
-                        SizedBox(height: 16),
+                        SizedBox(height: 40),
 
                       //sign up btn
                       TextButton(

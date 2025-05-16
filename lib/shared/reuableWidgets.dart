@@ -71,8 +71,9 @@ class CreateButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return ElevatedButton(
       style: ElevatedButton.styleFrom(
-        backgroundColor: Color.fromARGB(255, 255, 255, 255),
-        padding: EdgeInsets.symmetric(horizontal: 120, vertical: 12),
+        backgroundColor: secondaryColor,
+        foregroundColor: Colors.white,
+        padding: EdgeInsets.symmetric(horizontal: 80, vertical: 10),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
       ),
       onPressed: onPressed,
