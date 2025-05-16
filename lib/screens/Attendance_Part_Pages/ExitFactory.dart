@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:geolocator/geolocator.dart';
-import 'package:geocoding/geocoding.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
@@ -31,6 +30,7 @@ class _ExitFactoryState extends State<ExitFactory> {
   bool spinkitVisable_exit = false;
   late String attendanceId;
   late final SharedPreferences _prefs;
+
   ///****************************
   double benefitRating = 0;
   double supervisorRating = 0;
@@ -174,14 +174,23 @@ class _ExitFactoryState extends State<ExitFactory> {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Text("تقييم مدى الاستفادة",style: TextStyle(fontSize: 20,color: Colors.white70,fontWeight: FontWeight.bold),),
-                        SizedBox(width: 20,),
+                        Text(
+                          "تقييم مدى الاستفادة",
+                          style: TextStyle(
+                              fontSize: 20,
+                              color: Colors.white70,
+                              fontWeight: FontWeight.bold),
+                        ),
+                        SizedBox(
+                          width: 20,
+                        ),
                         RatingBar.builder(
                           initialRating: benefitRating,
                           minRating: 1,
                           itemCount: 5,
                           itemSize: 30.0,
-                          itemBuilder: (context, _) => Icon(Icons.star, color: Colors.amber),
+                          itemBuilder: (context, _) =>
+                              Icon(Icons.star, color: Colors.amber),
                           onRatingUpdate: (rating) {
                             setState(() {
                               benefitRating = rating;
@@ -194,14 +203,23 @@ class _ExitFactoryState extends State<ExitFactory> {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Text("تقييم تعامل المشرف",style: TextStyle(fontSize: 20,color: Colors.white70,fontWeight: FontWeight.bold),),
-                        SizedBox(width: 20,),
+                        Text(
+                          "تقييم تعامل المشرف",
+                          style: TextStyle(
+                              fontSize: 20,
+                              color: Colors.white70,
+                              fontWeight: FontWeight.bold),
+                        ),
+                        SizedBox(
+                          width: 20,
+                        ),
                         RatingBar.builder(
                           initialRating: supervisorRating,
                           minRating: 1,
                           itemCount: 5,
                           itemSize: 30.0,
-                          itemBuilder: (context, _) => Icon(Icons.star, color: Colors.amber),
+                          itemBuilder: (context, _) =>
+                              Icon(Icons.star, color: Colors.amber),
                           onRatingUpdate: (rating) {
                             setState(() {
                               supervisorRating = rating;
@@ -214,14 +232,23 @@ class _ExitFactoryState extends State<ExitFactory> {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Text("تقييم بيئة العمل",style: TextStyle(fontSize: 20,color: Colors.white70,fontWeight: FontWeight.bold),),
-                        SizedBox(width: 50,),
+                        Text(
+                          "تقييم بيئة العمل",
+                          style: TextStyle(
+                              fontSize: 20,
+                              color: Colors.white70,
+                              fontWeight: FontWeight.bold),
+                        ),
+                        SizedBox(
+                          width: 50,
+                        ),
                         RatingBar.builder(
                           initialRating: environmentRating,
                           minRating: 1,
                           itemCount: 5,
                           itemSize: 30.0,
-                          itemBuilder: (context, _) => Icon(Icons.star, color: Colors.amber),
+                          itemBuilder: (context, _) =>
+                              Icon(Icons.star, color: Colors.amber),
                           onRatingUpdate: (rating) {
                             setState(() {
                               environmentRating = rating;
@@ -231,7 +258,7 @@ class _ExitFactoryState extends State<ExitFactory> {
                       ],
                     ),
                     SizedBox(height: 40),
-                
+
                     //get location btn
                     ElevatedButton(
                       onPressed: () {
@@ -248,7 +275,6 @@ class _ExitFactoryState extends State<ExitFactory> {
                             color: Color(0xFF0187c4),
                             fontWeight: FontWeight.bold),
                       ),
-
                     ),
                     //spinkit
                     Visibility(
@@ -273,7 +299,8 @@ class _ExitFactoryState extends State<ExitFactory> {
                         )),
                     //location map
                     Visibility(
-                        visible: show_done_location, child: SizedBox(height: 30)),
+                        visible: show_done_location,
+                        child: SizedBox(height: 30)),
                     Visibility(
                       visible: show_done_location,
                       child: Container(
@@ -299,7 +326,7 @@ class _ExitFactoryState extends State<ExitFactory> {
                               spinkitVisable_exit = true;
                             });
                             await updateStudent();
-                
+
                             Future.delayed(Duration(seconds: 2), () async {
                               await _prefs.setString("attendanceId", 'null');
                               Get.offAll(() => HomeScreen());

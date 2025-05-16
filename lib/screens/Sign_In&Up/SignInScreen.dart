@@ -1,13 +1,11 @@
 import 'package:aitu_app/shared/constant.dart';
 import 'package:aitu_app/shared/reuableWidgets.dart';
 import 'package:flutter/material.dart';
-
 import 'package:get/get.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:google_sign_in/google_sign_in.dart';
-
 import '../Attendance_Part_Pages/HomeScreen.dart';
 import '../Distribution_Pages/Instructions.dart';
 import 'SignUpScreen.dart';
@@ -15,6 +13,8 @@ import 'SignUpScreen.dart';
 class SignInScreen extends StatefulWidget {
   @override
   State<SignInScreen> createState() => _SignInScreenState();
+  String studentCode;
+  SignInScreen({super.key, required this.studentCode});
 }
 
 class _SignInScreenState extends State<SignInScreen> {
@@ -25,17 +25,16 @@ class _SignInScreenState extends State<SignInScreen> {
 
   Future<String?> getStudentIdByEmail(String email) async {
     try {
-      QuerySnapshot querySnapshot =
-          await FirebaseFirestore.instance
-              .collection(
-                'StudentsTable',
-              ) // اسم المجموعة التي تحتوي على بيانات الطلاب
-              .where(
-                'Email',
-                isEqualTo: email,
-              ) // البحث باستخدام البريد الإلكتروني
-              .limit(1) // جلب أول نتيجة فقط
-              .get();
+      QuerySnapshot querySnapshot = await FirebaseFirestore.instance
+          .collection(
+            'StudentsTable',
+          ) // اسم المجموعة التي تحتوي على بيانات الطلاب
+          .where(
+            'Email',
+            isEqualTo: email,
+          ) // البحث باستخدام البريد الإلكتروني
+          .limit(1) // جلب أول نتيجة فقط
+          .get();
 
       if (querySnapshot.docs.isNotEmpty) {
         return querySnapshot.docs.first.id; // إرجاع الـ ID الخاص بالمستند
@@ -52,10 +51,9 @@ class _SignInScreenState extends State<SignInScreen> {
   @override
   Widget build(BuildContext context) {
     return Directionality(
-      textDirection:
-          Get.locale?.languageCode == 'ar'
-              ? TextDirection.rtl
-              : TextDirection.ltr,
+      textDirection: Get.locale?.languageCode == 'ar'
+          ? TextDirection.rtl
+          : TextDirection.ltr,
       child: Scaffold(
         appBar: AppBar(
           backgroundColor: Color(0xFF0187c4),
@@ -108,48 +106,49 @@ class _SignInScreenState extends State<SignInScreen> {
                         ),
                       ),
                       SizedBox(height: 60),
-                        CreateInput(
+                      CreateInput(
                         labelText: 'email'.tr,
                         onChanged: (value) {
                           setState(() {
-                          email = value;
+                            email = value;
                           });
                         },
                         isPassword: false,
                         controller: null,
-                        ),
-                        SizedBox(height: 16),
-                        CreateInput(
+                      ),
+                      SizedBox(height: 16),
+                      CreateInput(
                         labelText: 'password'.tr,
                         onChanged: (value) {
                           setState(() {
-                          password = value;
+                            password = value;
                           });
                           if (password.isEmpty) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                            content: Text(
-                              "enter_password".tr,
-                            ),
-                            ),
-                          );
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text(
+                                  "enter_password".tr,
+                                ),
+                              ),
+                            );
                           }
                         },
                         isPassword: isPasswordVisible,
                         controller: null,
                         suffix: IconButton(
-                        icon: Icon(
-                          isPasswordVisible
-                              ? Icons.visibility
-                              : Icons.visibility_off,
-                          color: const Color.fromARGB(255, 63, 63, 63),
+                          icon: Icon(
+                            isPasswordVisible
+                                ? Icons.visibility
+                                : Icons.visibility_off,
+                            color: const Color.fromARGB(255, 63, 63, 63),
+                          ),
+                          onPressed: () {
+                            setState(() {
+                              isPasswordVisible = !isPasswordVisible;
+                            });
+                          },
                         ),
-                        onPressed: () {
-                          setState(() {
-                            isPasswordVisible = !isPasswordVisible;
-                          });
-                        },
-                        ),),
+                      ),
                       SizedBox(height: 4),
                       //forget password btn
                       Row(
@@ -172,46 +171,48 @@ class _SignInScreenState extends State<SignInScreen> {
                       ),
                       SizedBox(height: 30),
                       //sign in btn
-                       SizedBox(
+                      SizedBox(
                         height: 60.0,
                         width: MediaQuery.of(context).size.width * 0.9,
-                         child: CreateButton(
-                          onPressed:  () async {
+                        child: CreateButton(
+                          onPressed: () async {
                             try {
-                            await _auth.signInWithEmailAndPassword(
-                              email: email,
-                              password: password,
-                            );
-                            if (_auth.currentUser != null) {
-                              final SharedPreferences _prefs =
-                                await SharedPreferences.getInstance();
-                              await _prefs.setString(
-                              "email",
-                              _auth.currentUser!.email.toString(),
+                              await _auth.signInWithEmailAndPassword(
+                                email: email,
+                                password: password,
                               );
-                              print("${_prefs.getString("email")}  in signin");
-                          
-                              String? studentId = await getStudentIdByEmail(
-                              email,
-                              );
-                          
-                              if (studentId != null) {
-                              print('Student ID: $studentId');
-                              await _prefs.setString("studentId", studentId);
-                              } else {
-                              print('Student not found');
+                              if (_auth.currentUser != null) {
+                                final SharedPreferences _prefs =
+                                    await SharedPreferences.getInstance();
+                                await _prefs.setString(
+                                  "email",
+                                  _auth.currentUser!.email.toString(),
+                                );
+                                print(
+                                    "${_prefs.getString("email")}  in signin");
+
+                                String? studentId = await getStudentIdByEmail(
+                                  email,
+                                );
+
+                                if (studentId != null) {
+                                  print('Student ID: $studentId');
+                                  await _prefs.setString(
+                                      "studentId", studentId);
+                                } else {
+                                  print('Student not found');
+                                }
+
+                                Get.offAll(Instructions());
                               }
-                          
-                              Get.offAll(Instructions());
-                            }
                             } catch (e) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                              content: Text(
-                                "invalid_credentials".tr,
-                              ),
-                              ),
-                            );
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text(
+                                    "invalid_credentials".tr,
+                                  ),
+                                ),
+                              );
                             }
                           },
                           title: Text(
@@ -222,83 +223,90 @@ class _SignInScreenState extends State<SignInScreen> {
                               fontFamily: 'mainFont',
                             ),
                           ), // Key for "Sign Up",
-                         ),
-                       ),
-                        SizedBox(height: 20),
-                        SizedBox(
-                          width: MediaQuery.of(context).size.width * 0.9,
-                          child: ElevatedButton(
-                            style: ElevatedButton.styleFrom(
-                              // padding: EdgeInsets.symmetric(horizontal: 16),
-                              backgroundColor: const Color.fromARGB(255, 255, 255, 255),
-                              foregroundColor: secondaryColor,
-                                side: BorderSide(
-                                color: secondaryColor,
-                                width: 1.0,
-                                ),
-                              minimumSize: Size(double.infinity, 50),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(30),
-                              ),
-                              elevation: 4,
+                        ),
+                      ),
+                      SizedBox(height: 20),
+                      SizedBox(
+                        width: MediaQuery.of(context).size.width * 0.9,
+                        child: ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            // padding: EdgeInsets.symmetric(horizontal: 16),
+                            backgroundColor:
+                                const Color.fromARGB(255, 255, 255, 255),
+                            foregroundColor: secondaryColor,
+                            side: BorderSide(
+                              color: secondaryColor,
+                              width: 1.0,
                             ),
-                            onPressed: () async {
-                              await GoogleSignIn().signOut();
-                              final GoogleSignInAccount? googleUser = await GoogleSignIn().signIn();
-                          
-                              if (googleUser == null) return; // User cancelled
-                          
-                              final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
-                          
-                              final credential = GoogleAuthProvider.credential(
-                                accessToken: googleAuth.accessToken,
-                                idToken: googleAuth.idToken,
+                            minimumSize: Size(double.infinity, 50),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(30),
+                            ),
+                            elevation: 4,
+                          ),
+                          onPressed: () async {
+                            await GoogleSignIn().signOut();
+                            final GoogleSignInAccount? googleUser =
+                                await GoogleSignIn().signIn();
+
+                            if (googleUser == null) return; // User cancelled
+
+                            final GoogleSignInAuthentication googleAuth =
+                                await googleUser.authentication;
+
+                            final credential = GoogleAuthProvider.credential(
+                              accessToken: googleAuth.accessToken,
+                              idToken: googleAuth.idToken,
+                            );
+                            await _auth.signInWithCredential(credential);
+                            final SharedPreferences _prefs =
+                                await SharedPreferences.getInstance();
+
+                            if (_auth.currentUser != null) {
+                              await _prefs.setString(
+                                "email",
+                                _auth.currentUser!.email.toString(),
                               );
-                              await _auth.signInWithCredential(credential);
-                              final SharedPreferences _prefs = await SharedPreferences.getInstance();
-                          
-                              if (_auth.currentUser != null) {
-                                await _prefs.setString(
-                                  "email",
-                                  _auth.currentUser!.email.toString(),
-                                );
-                                print("${_prefs.getString("email")}  in signin");
-                              }
-                              String? studentId = await getStudentIdByEmail(_auth.currentUser?.email ?? "");
-                          
-                              if (studentId != null) {
-                                print('Student ID: $studentId');
-                                await _prefs.setString("studentId", studentId);
-                              } else {
-                                print('Student not found');
-                              }
-                          
-                              Get.offAll(HomeScreen());
-                            },
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                  Icon(Icons.g_mobiledata, size: 50),
-                                SizedBox(width: 16),
-                                // Translated text
-                                Text(
-                                  'Sign In With Google',
-                                  style: TextStyle(
-                                    fontSize: 18,
-                                    fontWeight: FontWeight.bold,
-                                    fontFamily: 'mainFont',
-                                  ),
+                              print("${_prefs.getString("email")}  in signin");
+                            }
+                            String? studentId = await getStudentIdByEmail(
+                                _auth.currentUser?.email ?? "");
+
+                            if (studentId != null) {
+                              print('Student ID: $studentId');
+                              await _prefs.setString("studentId", studentId);
+                            } else {
+                              print('Student not found');
+                            }
+
+                            Get.offAll(HomeScreen());
+                          },
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(Icons.g_mobiledata, size: 50),
+                              SizedBox(width: 16),
+                              // Translated text
+                              Text(
+                                'Sign In With Google',
+                                style: TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                  fontFamily: 'mainFont',
                                 ),
-                              ],
-                            ),
+                              ),
+                            ],
                           ),
                         ),
-                        SizedBox(height: 40),
+                      ),
+                      SizedBox(height: 40),
 
                       //sign up btn
                       TextButton(
                         onPressed: () {
-                          Get.to(SignUpScreen());
+                          Get.to(SignUpScreen(
+                            studentCode: widget.studentCode,
+                          ));
                         },
                         child: Text(
                           'sign_up_prompt'.tr,

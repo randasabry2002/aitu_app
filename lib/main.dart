@@ -1,5 +1,4 @@
 import 'package:aitu_app/screens/Splash.dart';
-import 'package:aitu_app/screens/student%20data/enterCode.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';

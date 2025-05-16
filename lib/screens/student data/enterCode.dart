@@ -3,7 +3,9 @@ import 'package:aitu_app/shared/constant.dart';
 import 'package:aitu_app/shared/reuableWidgets.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:aitu_app/services/firestore.dart';
+import 'package:aitu_app/screens/Sign_In&Up/SignUpScreen.dart';
+import 'package:aitu_app/screens/Sign_In&Up/SignInScreen.dart';
 
 class EnterStudentCode extends StatefulWidget {
   @override
@@ -12,32 +14,13 @@ class EnterStudentCode extends StatefulWidget {
 
 class _EnterStudentCodeState extends State<EnterStudentCode> {
   String studentCode = '';
-  bool isStudentCodeValid = false;
-
-  Future<void> getDataWithStudentId() async {
-    isStudentCodeValid = false;
-    QuerySnapshot querySnapshot =
-        await FirebaseFirestore.instance
-            .collection('StudentsTable')
-            .where('code', isEqualTo: studentCode)
-            .get();
-
-    if (querySnapshot.docs.isNotEmpty) {
-      isStudentCodeValid = true;
-      setState(() {});
-    } else {
-      isStudentCodeValid = false;
-      setState(() {});
-    }
-  }
 
   @override
   Widget build(BuildContext context) {
     return Directionality(
-      textDirection:
-          Get.locale?.languageCode == 'ar'
-              ? TextDirection.rtl
-              : TextDirection.ltr,
+      textDirection: Get.locale?.languageCode == 'ar'
+          ? TextDirection.rtl
+          : TextDirection.ltr,
       child: Scaffold(
         extendBodyBehindAppBar: true,
         appBar: AppBar(
@@ -118,18 +101,30 @@ class _EnterStudentCodeState extends State<EnterStudentCode> {
                             return;
                           }
 
-                          await getDataWithStudentId();
-
-                          if (isStudentCodeValid) {
-                            // Navigate to the CompleteStudentData page
-                            Get.offAll(
-                              CompleteStudentData(studentCode: studentCode),
-                            );
-                          } else {
+                          final firebaseService = FirebaseService();
+                          await firebaseService
+                              .getDataWithStudentId(studentCode)
+                              .then((student) {
+                            if (student != null) {
+                              // Store the student data in a variable or state
+                              // For example, you can use Get.put() to store it globally
+                              studentCode = student.code;
+                              if (student.email == "") {
+                                Get.offAll(Get.offAll(SignUpScreen(
+                                  studentCode: studentCode,
+                                )));
+                              } else {
+                                Get.offAll(
+                                  SignInScreen(studentCode: studentCode),
+                                );
+                              }
+                            }
+                          }).catchError((error) {
+                            print("Error fetching student data: $error");
                             ScaffoldMessenger.of(context).showSnackBar(
                               SnackBar(content: Text("code not found!".tr)),
                             );
-                          }
+                          });
                         },
                         title: Text(
                           'Start'.tr,

@@ -23,7 +23,15 @@ class _CompleteStudentDataState extends State<CompleteStudentData> {
   DocumentSnapshot? studentDoc;
   // String studentCode = '';
   String name = '';
-  List<String> academicYears = ['1st', '2nd', '3rd', '4th'];
+  List<String> academicYears = [
+    'TSS - 1st',
+    'TSS - 2nd',
+    'TSS - 3rd',
+    'ITC - 1st',
+    'ITC - 2nd',
+    'ATC - 1st',
+    'ATC - 2nd'
+  ];
   String? selectedAcademicYear;
   List<String> departments = [
     'Mechanical Technology',
@@ -33,10 +41,8 @@ class _CompleteStudentDataState extends State<CompleteStudentData> {
   String? stuedentDepartment;
   List<String> gender = ['male', 'female'];
   String? selectedGender;
-  String phoneNumber = '';
   String currentAddress = '';
   String birthAddress = '';
-  String emailAddress = '';
   String factory = '';
 
   final TextEditingController emailController = TextEditingController();
@@ -47,11 +53,10 @@ class _CompleteStudentDataState extends State<CompleteStudentData> {
   final TextEditingController birthAddressController = TextEditingController();
   final TextEditingController birthDateController = TextEditingController();
   Future<void> getDataWithStudentId() async {
-    QuerySnapshot querySnapshot =
-        await FirebaseFirestore.instance
-            .collection('StudentsTable')
-            .where('code', isEqualTo: widget.studentCode)
-            .get();
+    QuerySnapshot querySnapshot = await FirebaseFirestore.instance
+        .collection('StudentsTable')
+        .where('code', isEqualTo: widget.studentCode)
+        .get();
 
     if (querySnapshot.docs.isNotEmpty) {
       studentDoc = querySnapshot.docs.first;
@@ -66,7 +71,6 @@ class _CompleteStudentDataState extends State<CompleteStudentData> {
         stuedentDepartment != null &&
         selectedGender != null &&
         birthAddressController.text.isNotEmpty &&
-        phoneNumber.isNotEmpty &&
         currentAddress.isNotEmpty &&
         birthAddress.isNotEmpty &&
         factory.isNotEmpty) {
@@ -87,10 +91,9 @@ class _CompleteStudentDataState extends State<CompleteStudentData> {
   @override
   Widget build(BuildContext context) {
     return Directionality(
-      textDirection:
-          Get.locale?.languageCode == 'ar'
-              ? TextDirection.rtl
-              : TextDirection.ltr,
+      textDirection: Get.locale?.languageCode == 'ar'
+          ? TextDirection.rtl
+          : TextDirection.ltr,
       child: Scaffold(
         appBar: AppBar(
           elevation: 20.0,
@@ -182,7 +185,6 @@ class _CompleteStudentDataState extends State<CompleteStudentData> {
                         children: [
                           Expanded(child: Divider()),
                           SizedBox(width: 4),
-
                           Text(
                             'Complete your data'.tr,
                             style: TextStyle(
@@ -193,22 +195,12 @@ class _CompleteStudentDataState extends State<CompleteStudentData> {
                             ),
                           ),
                           SizedBox(width: 4),
-
                           Expanded(child: Divider()),
                         ],
                       ),
                       SizedBox(height: 40),
 
                       // SizedBox(height: 60),
-                      // Email
-                      CreateInput(
-                        controller: emailController,
-                        keyboardType: TextInputType.emailAddress,
-                        onChanged:
-                            (value) => setState(() => emailAddress = value),
-                        labelText: 'enter your email'.tr,
-                      ),
-                      SizedBox(height: 24.0),
                       // Factory
                       CreateInput(
                         controller: factoryController,
@@ -218,22 +210,12 @@ class _CompleteStudentDataState extends State<CompleteStudentData> {
                       ),
                       SizedBox(height: 24.0),
 
-                      // Phone number
-                      CreateInput(
-                        controller: phoneController,
-                        keyboardType: TextInputType.phone,
-                        onChanged:
-                            (value) => setState(() => phoneNumber = value),
-                        labelText: 'phone number'.tr,
-                      ),
-                      SizedBox(height: 24.0),
-
                       // Current Address
                       CreateInput(
                         controller: currentAddressController,
                         keyboardType: TextInputType.text,
-                        onChanged:
-                            (value) => setState(() => currentAddress = value),
+                        onChanged: (value) =>
+                            setState(() => currentAddress = value),
                         labelText: 'Your current address'.tr,
                       ),
                       SizedBox(height: 24.0),
@@ -242,8 +224,8 @@ class _CompleteStudentDataState extends State<CompleteStudentData> {
                       CreateInput(
                         controller: birthAddressController,
                         keyboardType: TextInputType.text,
-                        onChanged:
-                            (value) => setState(() => birthAddress = value),
+                        onChanged: (value) =>
+                            setState(() => birthAddress = value),
                         labelText: 'Birth address'.tr,
                       ),
                       SizedBox(height: 24.0),
@@ -281,10 +263,9 @@ class _CompleteStudentDataState extends State<CompleteStudentData> {
                           child: TextField(
                             readOnly: true,
                             controller: birthDateController,
-                            onChanged:
-                                (value) => setState(
-                                  () => birthAddressController.text = value,
-                                ),
+                            onChanged: (value) => setState(
+                              () => birthAddressController.text = value,
+                            ),
                             decoration: InputDecoration(
                               labelText: 'Birth date'.tr,
                               labelStyle: TextStyle(
@@ -318,7 +299,6 @@ class _CompleteStudentDataState extends State<CompleteStudentData> {
                         ),
                         child: DropdownButton<String>(
                           borderRadius: BorderRadius.circular(15),
-
                           dropdownColor: const Color.fromARGB(
                             255,
                             255,
@@ -340,22 +320,21 @@ class _CompleteStudentDataState extends State<CompleteStudentData> {
                               selectedAcademicYear = newValue;
                             });
                           },
-                          items:
-                              academicYears.map((year) {
-                                return DropdownMenuItem<String>(
-                                  value: year,
-                                  child: Text(
-                                    year,
-                                    style: TextStyle(
-                                      color: mainColor,
-                                      fontSize: 16.0,
-                                      fontFamily: 'mainFont',
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                    textAlign: TextAlign.center,
-                                  ),
-                                );
-                              }).toList(),
+                          items: academicYears.map((year) {
+                            return DropdownMenuItem<String>(
+                              value: year,
+                              child: Text(
+                                year,
+                                style: TextStyle(
+                                  color: mainColor,
+                                  fontSize: 16.0,
+                                  fontFamily: 'mainFont',
+                                  fontWeight: FontWeight.bold,
+                                ),
+                                textAlign: TextAlign.center,
+                              ),
+                            );
+                          }).toList(),
                         ),
                       ),
                       SizedBox(height: 24.0),
@@ -391,22 +370,21 @@ class _CompleteStudentDataState extends State<CompleteStudentData> {
                                 stuedentDepartment = newValue;
                               });
                             },
-                            items:
-                                departments.map((department) {
-                                  return DropdownMenuItem<String>(
-                                    value: department,
-                                    child: Text(
-                                      department,
-                                      style: TextStyle(
-                                        color: mainColor,
-                                        fontSize: 16,
-                                        fontFamily: 'mainFont',
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                      textAlign: TextAlign.center,
-                                    ),
-                                  );
-                                }).toList(),
+                            items: departments.map((department) {
+                              return DropdownMenuItem<String>(
+                                value: department,
+                                child: Text(
+                                  department,
+                                  style: TextStyle(
+                                    color: mainColor,
+                                    fontSize: 16,
+                                    fontFamily: 'mainFont',
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                  textAlign: TextAlign.center,
+                                ),
+                              );
+                            }).toList(),
                           ),
                         ),
                       ),
@@ -421,7 +399,6 @@ class _CompleteStudentDataState extends State<CompleteStudentData> {
                         ),
                         child: DropdownButton<String>(
                           borderRadius: BorderRadius.circular(15),
-
                           dropdownColor: const Color.fromARGB(
                             255,
                             255,
@@ -443,22 +420,21 @@ class _CompleteStudentDataState extends State<CompleteStudentData> {
                               selectedGender = newValue;
                             });
                           },
-                          items:
-                              gender.map((gender) {
-                                return DropdownMenuItem<String>(
-                                  value: gender,
-                                  child: Text(
-                                    gender,
-                                    style: TextStyle(
-                                      color: mainColor,
-                                      fontSize: 16,
-                                      fontFamily: 'mainFont',
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                    textAlign: TextAlign.center,
-                                  ),
-                                );
-                              }).toList(),
+                          items: gender.map((gender) {
+                            return DropdownMenuItem<String>(
+                              value: gender,
+                              child: Text(
+                                gender,
+                                style: TextStyle(
+                                  color: mainColor,
+                                  fontSize: 16,
+                                  fontFamily: 'mainFont',
+                                  fontWeight: FontWeight.bold,
+                                ),
+                                textAlign: TextAlign.center,
+                              ),
+                            );
+                          }).toList(),
                         ),
                       ),
 
@@ -482,18 +458,18 @@ class _CompleteStudentDataState extends State<CompleteStudentData> {
                                 .collection('StudentsTable')
                                 .doc(widget.studentCode)
                                 .update({
-                                  'academicYear': selectedAcademicYear,
-                                  'department': stuedentDepartment,
-                                  'gender': selectedGender,
-                                  'birthDate': birthDateController.text,
-                                  'phone': phoneNumber,
-                                  'address': currentAddress,
-                                  'birthAddress': birthAddress,
-                                  'email': emailAddress,
-                                  'factory': factory,
-                                });
+                              'academicYear': selectedAcademicYear,
+                              'department': stuedentDepartment,
+                              'gender': selectedGender,
+                              'birthDate': birthDateController.text,
+                              'address': currentAddress,
+                              'birthAddress': birthAddress,
+                              'factory': factory,
+                            });
                             // Navigate to the next page
-                            Get.offAll(SignInScreen());
+                            Get.offAll(SignInScreen(
+                              studentCode: widget.studentCode,
+                            ));
                           } else {
                             ScaffoldMessenger.of(context).showSnackBar(
                               SnackBar(

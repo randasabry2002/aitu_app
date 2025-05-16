@@ -1,18 +1,18 @@
-import 'package:aitu_app/screens/student%20data/enterCode.dart';
 import 'package:aitu_app/shared/constant.dart';
 import 'package:aitu_app/shared/reuableWidgets.dart';
 import 'package:flutter/material.dart';
-
+import 'package:aitu_app/screens/Sign_In&Up/SignInScreen.dart';
 import 'package:get/get.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-
-import '../Distribution_Pages/Instructions.dart';
+import 'package:aitu_app/screens/student data/completeStudentData.dart';
 
 class SignUpScreen extends StatefulWidget {
   @override
   State<SignUpScreen> createState() => _SignUpScreenState();
+  String studentCode = '';
+  SignUpScreen({super.key, required this.studentCode});
 }
 
 class _SignUpScreenState extends State<SignUpScreen> {
@@ -20,22 +20,18 @@ class _SignUpScreenState extends State<SignUpScreen> {
   String confirmPassword = '';
   String email = '';
   String phone = '';
-  String name = '';
-  String? academicYear;
   bool isPasswordVisible = true;
-  String? selectedMajor; // Holds the selected value
   final _auth = FirebaseAuth.instance;
   var _firestor = FirebaseFirestore.instance;
   late final SharedPreferences _prefs;
 
   addUser() async {
-    DocumentReference docRef = await _firestor.collection("StudentsTable").add({
-      "Name": name,
-      "Email": email,
-      "Major": selectedMajor,
-      "AcademicYear": academicYear,
-      "Phone": phone,
-      "Password": password,
+    DocumentReference docRef =
+        _firestor.collection("StudentsTable").doc(widget.studentCode);
+    await docRef.update({
+      "email": email,
+      "phone": phone,
+      "password": password,
     });
     // استخراج الـ ID الخاص بالمستند
     String studentId = docRef.id;
@@ -47,10 +43,9 @@ class _SignUpScreenState extends State<SignUpScreen> {
   @override
   Widget build(BuildContext context) {
     return Directionality(
-      textDirection:
-          Get.locale?.languageCode == 'ar'
-              ? TextDirection.rtl
-              : TextDirection.ltr,
+      textDirection: Get.locale?.languageCode == 'ar'
+          ? TextDirection.rtl
+          : TextDirection.ltr,
       child: Scaffold(
         appBar: AppBar(
           backgroundColor: secondaryColor,
@@ -105,17 +100,6 @@ class _SignUpScreenState extends State<SignUpScreen> {
                         ),
                       ),
                       SizedBox(height: 60),
-                      //name
-                      CreateInput(
-                        labelText: 'name'.tr,
-                        onChanged: (value) {
-                          setState(() {
-                            name = value;
-                          });
-                        },
-                        keyboardType: TextInputType.text,
-                      ),
-                      SizedBox(height: 28),
                       //email
                       CreateInput(
                         labelText: 'email'.tr,
@@ -262,15 +246,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                           ),
                         ), // Key for "Sign Up",
                         onPressed: () async {
-                          if (name.isEmpty) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text(
-                                  "enter_name".tr,
-                                ), // Key for "Enter Name"
-                              ),
-                            );
-                          } else if (email.isEmpty) {
+                          if (email.isEmpty) {
                             ScaffoldMessenger.of(context).showSnackBar(
                               SnackBar(
                                 content: Text(
@@ -330,7 +306,8 @@ class _SignUpScreenState extends State<SignUpScreen> {
 
                                 addUser();
 
-                                Get.offAll(EnterStudentCode());
+                                Get.offAll(CompleteStudentData(
+                                    studentCode: widget.studentCode));
                               }
                             } catch (e) {
                               print(e);
@@ -352,7 +329,9 @@ class _SignUpScreenState extends State<SignUpScreen> {
                       //sign in btn
                       TextButton(
                         onPressed: () {
-                          Get.back();
+                          Get.offAll(SignInScreen(
+                            studentCode: widget.studentCode,
+                          ));
                         },
                         child: Text(
                           'already_have_account'.tr,

@@ -2,7 +2,6 @@ import 'dart:async';
 import 'package:aitu_app/screens/student%20data/enterCode.dart';
 import 'package:flutter/material.dart';
 
-
 // import 'package:google_fonts/google_fonts.dart';
 import 'package:get/get.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -11,8 +10,8 @@ import 'Attendance_Part_Pages/ExitFactory.dart';
 import 'Attendance_Part_Pages/HomeScreen.dart';
 import 'Distribution_Pages/College_distribution_page.dart';
 import 'Distribution_Pages/Instructions.dart';
-import 'Sign_In&Up/SignInScreen.dart';
 
+import 'package:aitu_app/services/firestore.dart';
 
 class Splash extends StatefulWidget {
   @override
@@ -71,23 +70,18 @@ class SplashState extends State<StatefulWidget>
       // Simulate a delay for demonstration purposes
       Future.delayed(Duration(seconds: 2), () {
         if (email != 'null') {
-
-          if(attendanceId != 'null'){
+          if (attendanceId != 'null') {
             // User is logged in, and the user was in the training navigate to ExitFactory
             Get.offAll(ExitFactory());
-          }
-          else{
-            if(page == 'College_distribution_page'){
+          } else {
+            if (page == 'College_distribution_page') {
               Get.offAll(College_distribution_page());
-            }
-            else if(page == 'HomeScreen'){
+            } else if (page == 'HomeScreen') {
               Get.offAll(HomeScreen());
-            }
-            else{
+            } else {
               Get.offAll(Instructions());
             }
           }
-
         } else {
           // User is not logged in, navigate to Signin screen
           Get.offAll(EnterStudentCode());
@@ -142,12 +136,10 @@ class SplashState extends State<StatefulWidget>
                           child: Image.asset('assets/images/german_logo.jpg'),
                         );
                       },
-                    )
-                        ),
+                    )),
                   ],
                 ),
               ),
-
             ],
           ),
         ),
