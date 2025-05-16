@@ -1,3 +1,5 @@
+// ignore_for_file: must_be_immutable
+
 import 'package:aitu_app/shared/constant.dart';
 import 'package:aitu_app/shared/reuableWidgets.dart';
 import 'package:flutter/material.dart';
@@ -6,7 +8,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:google_sign_in/google_sign_in.dart';
-import '../Attendance_Part_Pages/HomeScreen.dart';
+import '../Attendance_Part_Pages/homeScreen.dart';
 import '../Distribution_Pages/Instructions.dart';
 import 'SignUpScreen.dart';
 

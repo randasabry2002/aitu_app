@@ -6,12 +6,10 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import 'Attendance_Part_Pages/ExitFactory.dart';
+import 'Attendance_Part_Pages/exitFactory.dart';
 import 'Attendance_Part_Pages/HomeScreen.dart';
 import 'Distribution_Pages/College_distribution_page.dart';
 import 'Distribution_Pages/Instructions.dart';
-
-import 'package:aitu_app/services/firestore.dart';
 
 class Splash extends StatefulWidget {
   @override

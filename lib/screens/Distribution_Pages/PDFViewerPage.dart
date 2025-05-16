@@ -1,3 +1,5 @@
+// ignore_for_file: must_be_immutable
+
 import 'dart:io';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
@@ -26,10 +28,10 @@ class _PDFViewerPageState extends State<PDFViewerPage> {
   Future<void> fetchNominationCardURL() async {
     try {
       QuerySnapshot querySnapshot =
-      await FirebaseFirestore.instance.collection("NominationCard").get();
+          await FirebaseFirestore.instance.collection("NominationCard").get();
 
       final doc = querySnapshot.docs.firstWhere(
-            (doc) => doc["Name"] == "MainNominationCard",
+        (doc) => doc["Name"] == "MainNominationCard",
         orElse: () => throw Exception("Document not found"),
       );
 
@@ -54,7 +56,8 @@ class _PDFViewerPageState extends State<PDFViewerPage> {
     if (widget.pdfType == "nominationCard") {
       await fetchNominationCardURL();
     } else if (widget.pdfType == "distributionPdf") {
-      pdfUrl = "https://drive.google.com/uc?export=download&id=1el5VyrjmC5RhgEuNO-7I3SRN0u_nnK6Q";
+      pdfUrl =
+          "https://drive.google.com/uc?export=download&id=1el5VyrjmC5RhgEuNO-7I3SRN0u_nnK6Q";
       pdfName = "Distribution_Pdf";
     }
 
@@ -152,14 +155,17 @@ class _PDFViewerPageState extends State<PDFViewerPage> {
           children: [
             Positioned.fill(
               child: localPath == null
-                  ? Center(child: CircularProgressIndicator(valueColor: AlwaysStoppedAnimation<Color>(Colors.white),))
+                  ? Center(
+                      child: CircularProgressIndicator(
+                      valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                    ))
                   : PDFView(
-                filePath: localPath!,
-                enableSwipe: true,
-                swipeHorizontal: false,
-                autoSpacing: true,
-                pageFling: true,
-              ),
+                      filePath: localPath!,
+                      enableSwipe: true,
+                      swipeHorizontal: false,
+                      autoSpacing: true,
+                      pageFling: true,
+                    ),
             ),
             Positioned(
               bottom: 30,

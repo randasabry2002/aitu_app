@@ -8,8 +8,6 @@ class InfoPage extends StatefulWidget {
 }
 
 class _InfoPageState extends State<InfoPage> {
-  bool _isChecked = false;
-
   @override
   Widget build(BuildContext context) {
     return Directionality(
@@ -22,7 +20,10 @@ class _InfoPageState extends State<InfoPage> {
           title: Center(
             child: Text(
               'instructions'.tr,
-              style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 30),
+              style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 30),
             ),
           ),
           leading: IconButton(
@@ -43,21 +44,28 @@ class _InfoPageState extends State<InfoPage> {
               // ✅ StreamBuilder لجلب التعليمات من Firestore
               Expanded(
                 child: StreamBuilder<QuerySnapshot>(
-                  stream: FirebaseFirestore.instance.collection('Instructions').snapshots(),
+                  stream: FirebaseFirestore.instance
+                      .collection('Instructions')
+                      .snapshots(),
                   builder: (context, snapshot) {
                     if (snapshot.connectionState == ConnectionState.waiting) {
                       return Center(
-                        child: CircularProgressIndicator(valueColor: AlwaysStoppedAnimation<Color>(Colors.white)),
+                        child: CircularProgressIndicator(
+                            valueColor:
+                                AlwaysStoppedAnimation<Color>(Colors.white)),
                       );
                     }
                     if (snapshot.hasError) {
                       return Center(
-                        child: Text("❌ حدث خطأ أثناء تحميل البيانات", style: TextStyle(color: Colors.white)),
+                        child: Text("❌ حدث خطأ أثناء تحميل البيانات",
+                            style: TextStyle(color: Colors.white)),
                       );
                     }
 
                     // استخراج البيانات من Firestore
-                    List<String> instructions = snapshot.data!.docs.map((doc) => doc['Content'].toString()).toList();
+                    List<String> instructions = snapshot.data!.docs
+                        .map((doc) => doc['Content'].toString())
+                        .toList();
 
                     return ListView.builder(
                       itemCount: instructions.length,
@@ -69,11 +77,15 @@ class _InfoPageState extends State<InfoPage> {
                               children: [
                                 TextSpan(
                                   text: "${index + 1}. ", // ترقيم التعليمات
-                                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white),
+                                  style: TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.white),
                                 ),
                                 TextSpan(
                                   text: instructions[index],
-                                  style: TextStyle(fontSize: 16, color: Colors.white),
+                                  style: TextStyle(
+                                      fontSize: 16, color: Colors.white),
                                 ),
                               ],
                             ),

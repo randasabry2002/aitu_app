@@ -3,7 +3,6 @@ import 'package:aitu_app/shared/reuableWidgets.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'College_distribution_page.dart';
 import 'Not_College_distribution_page.dart';
 
 class Distribution_choice extends StatefulWidget {
@@ -17,10 +16,9 @@ class _Distribution_choiceState extends State<Distribution_choice> {
   @override
   Widget build(BuildContext context) {
     return Directionality(
-      textDirection:
-          Get.locale?.languageCode == 'ar'
-              ? TextDirection.rtl
-              : TextDirection.ltr,
+      textDirection: Get.locale?.languageCode == 'ar'
+          ? TextDirection.rtl
+          : TextDirection.ltr,
       child: Scaffold(
         appBar: AppBar(
           backgroundColor: secondaryColor,
@@ -104,7 +102,6 @@ class _Distribution_choiceState extends State<Distribution_choice> {
                         ),
                         SizedBox(
                           width: double.infinity,
-
                           child: CreateButton(
                             title: Text(
                               'Other'.tr,

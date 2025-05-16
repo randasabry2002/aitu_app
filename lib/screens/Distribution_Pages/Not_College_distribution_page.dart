@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'Add_New_Factory_Request_Page.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 import 'FactoryData.dart';
 
@@ -15,8 +14,8 @@ class Not_College_distribution_page extends StatefulWidget {
       _Not_College_distribution_pageState();
 }
 
-class _Not_College_distribution_pageState extends State<Not_College_distribution_page> {
-  var _firestor = FirebaseFirestore.instance;
+class _Not_College_distribution_pageState
+    extends State<Not_College_distribution_page> {
   String? selectedGovernorate;
   List<String> governorateNames = [];
   String? selectedFactory;
@@ -102,13 +101,12 @@ class _Not_College_distribution_pageState extends State<Not_College_distribution
 
   Future<void> fetchGovernorates() async {
     QuerySnapshot querySnapshot =
-    await FirebaseFirestore.instance.collection("Governorates").get();
+        await FirebaseFirestore.instance.collection("Governorates").get();
 
     // تحويل البيانات إلى قائمة من النصوص
     setState(() {
-      governorateNames = querySnapshot.docs
-          .map((doc) => doc["GName"] as String)
-          .toList();
+      governorateNames =
+          querySnapshot.docs.map((doc) => doc["GName"] as String).toList();
     });
   }
 
@@ -117,19 +115,19 @@ class _Not_College_distribution_pageState extends State<Not_College_distribution
     selectedFactory = null;
     factoryNames = [];
     QuerySnapshot querySnapshot =
-    await FirebaseFirestore.instance.collection("Factories").get();
+        await FirebaseFirestore.instance.collection("Factories").get();
 
     // تحويل البيانات إلى قائمة من النصوص
     setState(() {
       factoryNames = querySnapshot.docs
-          .where((doc) => doc["Governorate"] == gName && doc["IN_or_OUT"] == false)
+          .where(
+              (doc) => doc["Governorate"] == gName && doc["IN_or_OUT"] == false)
           .map((doc) => doc["Name"] as String)
           .toList();
     });
-
   }
 
-@override
+  @override
   void initState() {
     super.initState();
     // addFactories();
@@ -198,73 +196,98 @@ class _Not_College_distribution_pageState extends State<Not_College_distribution
                       fontWeight: FontWeight.bold,
                       fontSize: 18),
                 ),
+
                 /// choosing the government
                 governorateNames.isEmpty
                     ? CircularProgressIndicator() // تحميل البيانات
                     : Container(
-                      width: MediaQuery.of(context).size.width * 0.8,
-                      padding: EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-                      decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(30),
-                    border: Border.all(color: Color(0xFF0187c4), width: 2),
-                                      ),
-                      child: DropdownButtonHideUnderline(
-                    child: DropdownButton<String>(
-                      isExpanded: true,
-                      value: selectedGovernorate,
-                      hint: Text("pick_governorate_name".tr, style: TextStyle(color: Color(0xFF0187c4),fontWeight: FontWeight.bold,fontSize: 17)),
-                      icon: Icon(Icons.arrow_drop_down, color: Color(0xFF0187c4)),
-                      dropdownColor: Colors.white,
-                      items: governorateNames.map((governorate) {
-                        return DropdownMenuItem<String>(
-                          value: governorate,
-                          child: Text(governorate, style: TextStyle(color: Color(0xFF0187c4),fontWeight: FontWeight.bold,fontSize: 17)),
-                        );
-                      }).toList(),
-                      onChanged: (newValue) {
-                        setState(() {
-                          selectedGovernorate = newValue;
-                          fetchFactories(selectedGovernorate!);
-                        });
-                      },
-                    ),
-                                        ),
-                    ),
+                        width: MediaQuery.of(context).size.width * 0.8,
+                        padding:
+                            EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(30),
+                          border:
+                              Border.all(color: Color(0xFF0187c4), width: 2),
+                        ),
+                        child: DropdownButtonHideUnderline(
+                          child: DropdownButton<String>(
+                            isExpanded: true,
+                            value: selectedGovernorate,
+                            hint: Text("pick_governorate_name".tr,
+                                style: TextStyle(
+                                    color: Color(0xFF0187c4),
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 17)),
+                            icon: Icon(Icons.arrow_drop_down,
+                                color: Color(0xFF0187c4)),
+                            dropdownColor: Colors.white,
+                            items: governorateNames.map((governorate) {
+                              return DropdownMenuItem<String>(
+                                value: governorate,
+                                child: Text(governorate,
+                                    style: TextStyle(
+                                        color: Color(0xFF0187c4),
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 17)),
+                              );
+                            }).toList(),
+                            onChanged: (newValue) {
+                              setState(() {
+                                selectedGovernorate = newValue;
+                                fetchFactories(selectedGovernorate!);
+                              });
+                            },
+                          ),
+                        ),
+                      ),
+
                 /// choosing the factory
                 Visibility(
-                  visible: selectedGovernorate != null && factoryNames.isNotEmpty,
+                  visible:
+                      selectedGovernorate != null && factoryNames.isNotEmpty,
                   child: factoryNames.isEmpty
                       ? CircularProgressIndicator() // تحميل البيانات
                       : Container(
-                        width: MediaQuery.of(context).size.width * 0.8,
-                        padding: EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-                        decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(30),
-                      border: Border.all(color: Color(0xFF0187c4), width: 2),
-                                          ),
-                        child: DropdownButtonHideUnderline(
-                      child: DropdownButton<String>(
-                        isExpanded: true,
-                        value: selectedFactory,
-                        hint: Text("pick_factory_name".tr, style: TextStyle(color: Color(0xFF0187c4),fontWeight: FontWeight.bold,fontSize: 17)),
-                        icon: Icon(Icons.arrow_drop_down, color: Color(0xFF0187c4)),
-                        dropdownColor: Colors.white,
-                        items: factoryNames.map((factory) {
-                          return DropdownMenuItem<String>(
-                            value: factory,
-                            child: Text(factory, style: TextStyle(color: Color(0xFF0187c4),fontWeight: FontWeight.bold,fontSize: 17)),
-                          );
-                        }).toList(),
-                        onChanged: (newValue) {
-                          setState(() {
-                            selectedFactory = newValue;
-                          });
-                        },
-                      ),
-                                            ),
-                      ),
+                          width: MediaQuery.of(context).size.width * 0.8,
+                          padding:
+                              EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(30),
+                            border:
+                                Border.all(color: Color(0xFF0187c4), width: 2),
+                          ),
+                          child: DropdownButtonHideUnderline(
+                            child: DropdownButton<String>(
+                              isExpanded: true,
+                              value: selectedFactory,
+                              hint: Text("pick_factory_name".tr,
+                                  style: TextStyle(
+                                      color: Color(0xFF0187c4),
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 17)),
+                              icon: Icon(Icons.arrow_drop_down,
+                                  color: Color(0xFF0187c4)),
+                              dropdownColor: Colors.white,
+                              items: factoryNames.map((factory) {
+                                return DropdownMenuItem<String>(
+                                  value: factory,
+                                  child: Text(factory,
+                                      style: TextStyle(
+                                          color: Color(0xFF0187c4),
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 17)),
+                                );
+                              }).toList(),
+                              onChanged: (newValue) {
+                                setState(() {
+                                  selectedFactory = newValue;
+                                });
+                              },
+                            ),
+                          ),
+                        ),
                 ),
                 Visibility(
                   visible: factoryNames.isEmpty && selectedGovernorate != null,
@@ -323,8 +346,6 @@ class _Not_College_distribution_pageState extends State<Not_College_distribution
                         fontSize: 20),
                   ),
                 ),
-
-
               ],
             ),
           ),

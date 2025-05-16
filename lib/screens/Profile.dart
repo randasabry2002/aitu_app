@@ -3,8 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import 'Sign_In&Up/SignInScreen.dart';
-
 class Profile extends StatefulWidget {
   const Profile({super.key});
 

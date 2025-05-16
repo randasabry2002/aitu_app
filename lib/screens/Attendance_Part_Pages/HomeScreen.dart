@@ -1,11 +1,10 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'AttendancePage.dart';
-import 'EnterFactory.dart';
-import 'InfoPage.dart';
-import '../Distribution_Pages/PDFViewerPage.dart';
-import '../Profile.dart';
+import 'package:aitu_app/screens/Profile.dart';
+import 'package:aitu_app/screens/Attendance_Part_Pages/EnterFactory.dart';
+import 'package:aitu_app/screens/Distribution_Pages/PDFViewerPage.dart';
+import 'package:aitu_app/screens/Attendance_Part_Pages/InfoPage.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -24,7 +23,6 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
-
     return Directionality(
       textDirection: Get.locale?.languageCode == 'ar'
           ? TextDirection.rtl
@@ -101,11 +99,14 @@ class _HomeScreenState extends State<HomeScreen> {
                     child: Text(
                       "welcome_message".tr,
                       textAlign: TextAlign.center,
-                      style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold,color: Colors.white),
+                      style: TextStyle(
+                          fontSize: 28,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white),
                     ),
                   ),
                   SizedBox(height: 10),
-              
+
                   // رسالة توضيحية
                   Padding(
                     padding: const EdgeInsets.all(10.0),
@@ -115,7 +116,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       style: TextStyle(fontSize: 20, color: Colors.white70),
                     ),
                   ),
-              
+
                   // صورة توضيحية
                   Center(
                     child: Image.asset(
@@ -123,8 +124,9 @@ class _HomeScreenState extends State<HomeScreen> {
                       height: 350,
                     ),
                   ),
-              
+
                   SizedBox(height: 20),
+
                   ///Enter factory btn
                   ElevatedButton(
                     onPressed: () async {
@@ -164,13 +166,20 @@ class _HomeScreenState extends State<HomeScreen> {
                       //التعليمات
                       OutlinedButton.icon(
                         onPressed: () {
-                          Get.to(()=>InfoPage());
+                          Get.to(() => InfoPage());
                         },
-                        icon: Icon(Icons.info_outline,color: Colors.white,),
-                        label: Text("instructions".tr,style: TextStyle(color: Colors.white),),
+                        icon: Icon(
+                          Icons.info_outline,
+                          color: Colors.white,
+                        ),
+                        label: Text(
+                          "instructions".tr,
+                          style: TextStyle(color: Colors.white),
+                        ),
                         style: OutlinedButton.styleFrom(
                           padding: EdgeInsets.all(10),
-                          textStyle: TextStyle(fontSize: 18,color: Colors.white),
+                          textStyle:
+                              TextStyle(fontSize: 18, color: Colors.white),
                           side: BorderSide(color: Colors.white),
                           backgroundColor: Colors.transparent,
                         ),
@@ -178,13 +187,22 @@ class _HomeScreenState extends State<HomeScreen> {
                       //distribution
                       OutlinedButton.icon(
                         onPressed: () {
-                          Get.to(PDFViewerPage(pdfType: "distributionPdf",));
+                          Get.to(PDFViewerPage(
+                            pdfType: "distributionPdf",
+                          ));
                         },
-                        icon: Icon(Icons.assignment,color: Colors.white,),
-                        label: Text("Show_PDF".tr,style: TextStyle(color: Colors.white),),
+                        icon: Icon(
+                          Icons.assignment,
+                          color: Colors.white,
+                        ),
+                        label: Text(
+                          "Show_PDF".tr,
+                          style: TextStyle(color: Colors.white),
+                        ),
                         style: OutlinedButton.styleFrom(
                           padding: EdgeInsets.all(10),
-                          textStyle: TextStyle(fontSize: 18,color: Colors.white),
+                          textStyle:
+                              TextStyle(fontSize: 18, color: Colors.white),
                           side: BorderSide(color: Colors.white),
                           backgroundColor: Colors.transparent,
                         ),

@@ -1,4 +1,3 @@
-import 'package:aitu_app/screens/student%20data/completeStudentData.dart';
 import 'package:aitu_app/shared/constant.dart';
 import 'package:aitu_app/shared/reuableWidgets.dart';
 import 'package:flutter/material.dart';

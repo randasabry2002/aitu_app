@@ -5,11 +5,10 @@ import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'dart:async';
-import 'package:geocoding/geocoding.dart';
-import 'ExitFactory.dart';
-import 'package:connectivity_plus/connectivity_plus.dart';
+import 'exitFactory.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:connectivity_plus/connectivity_plus.dart';
 
 class EnterFactory extends StatefulWidget {
   const EnterFactory({super.key});
@@ -276,7 +275,8 @@ class _EnterFactoryState extends State<EnterFactory> {
                       onPressed: () async {
                         if (trainingPlaceName.isEmpty) {
                           ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                            content: Text("enter_training_place_name".tr
+                            content: Text("enter_training_place_name"
+                                .tr
                                 .tr), // Key for "Enter trainingPlaceName"
                           ));
                         } else {

@@ -1,23 +1,21 @@
 import 'package:flutter/material.dart';
 
 import 'package:get/get.dart';
-import 'package:url_launcher/url_launcher.dart';
-import 'package:loading_animation_widget/loading_animation_widget.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import '../Attendance_Part_Pages/HomeScreen.dart';
+import '../Attendance_Part_Pages/homeScreen.dart';
 import 'PDFViewerPage.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-
 
 class College_distribution_page extends StatefulWidget {
   const College_distribution_page({super.key});
 
   @override
-  State<College_distribution_page> createState() => _College_distribution_pageState();
+  State<College_distribution_page> createState() =>
+      _College_distribution_pageState();
 }
 
 class _College_distribution_pageState extends State<College_distribution_page> {
-  bool loading=false;
+  bool loading = false;
 
   Future<bool> getBooleanValue() async {
     DocumentSnapshot doc = await FirebaseFirestore.instance
@@ -45,7 +43,6 @@ class _College_distribution_pageState extends State<College_distribution_page> {
       child: Scaffold(
         appBar: AppBar(
           backgroundColor: Color(0xFF0187c4),
-
           actions: <Widget>[
             // Language Selector Icon
             PopupMenuButton<String>(
@@ -84,7 +81,9 @@ class _College_distribution_pageState extends State<College_distribution_page> {
               stream: getBooleanStream(),
               builder: (context, snapshot) {
                 if (snapshot.connectionState == ConnectionState.waiting) {
-                  return CircularProgressIndicator(valueColor: AlwaysStoppedAnimation<Color>(Colors.white),);
+                  return CircularProgressIndicator(
+                    valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                  );
                 }
                 if (snapshot.hasError) {
                   return Text("حدث خطأ في جلب البيانات ❌");
@@ -98,17 +97,23 @@ class _College_distribution_pageState extends State<College_distribution_page> {
                     Padding(
                       padding: const EdgeInsets.all(10.0),
                       child: Text(
-                        value ? "College_distribution_choice_text_done".tr
+                        value
+                            ? "College_distribution_choice_text_done".tr
                             : "College_distribution_choice_text_not_yet".tr,
                         textAlign: TextAlign.center,
-                        style: TextStyle(fontSize: 20, color: Colors.white, fontWeight: FontWeight.bold),
+                        style: TextStyle(
+                            fontSize: 20,
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold),
                       ),
                     ),
                     Visibility(
                       visible: value,
                       child: ElevatedButton(
                         onPressed: () {
-                          Get.to(PDFViewerPage(pdfType: "distributionPdf",));
+                          Get.to(PDFViewerPage(
+                            pdfType: "distributionPdf",
+                          ));
                         },
                         child: Text(
                           "Show_PDF".tr,
@@ -124,9 +129,9 @@ class _College_distribution_pageState extends State<College_distribution_page> {
                       visible: value,
                       child: ElevatedButton(
                         onPressed: () async {
-                          final SharedPreferences _prefs = await SharedPreferences.getInstance();
-                          await _prefs.setString(
-                              "page", "HomeScreen");
+                          final SharedPreferences _prefs =
+                              await SharedPreferences.getInstance();
+                          await _prefs.setString("page", "HomeScreen");
                           Get.to(HomeScreen());
                         },
                         child: Text(
@@ -143,10 +148,6 @@ class _College_distribution_pageState extends State<College_distribution_page> {
                 );
               },
             ),
-
-
-
-
           ),
         ),
       ),

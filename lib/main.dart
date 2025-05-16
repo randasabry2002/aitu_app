@@ -4,7 +4,7 @@ import 'package:get/get.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'models/AppTranslations.dart';
+import 'models/appTranslations.dart';
 
 Future<void> main() async {
   // تأكد من تهيئة البنية الأساسية
