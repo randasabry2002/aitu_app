@@ -1,3 +1,4 @@
+import 'package:aitu_app/screens/student%20data/enterCode.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -16,16 +17,25 @@ class _InstructionsState extends State<Instructions> {
   @override
   Widget build(BuildContext context) {
     return Directionality(
-      textDirection: Get.locale?.languageCode == 'ar'
-          ? TextDirection.rtl
-          : TextDirection.ltr,
+      textDirection:
+          Get.locale?.languageCode == 'ar'
+              ? TextDirection.rtl
+              : TextDirection.ltr,
       child: Scaffold(
         appBar: AppBar(
+          leading: IconButton(
+            icon: Icon(Icons.arrow_back, color: Colors.white),
+            onPressed: () => Get.offAll(EnterStudentCode()),
+          ),
           backgroundColor: Color(0xFF0187c4),
           title: Center(
             child: Text(
               'instructions'.tr,
-              style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 30),
+              style: TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+                fontSize: 30,
+              ),
             ),
           ),
         ),
@@ -37,21 +47,34 @@ class _InstructionsState extends State<Instructions> {
               // ✅ StreamBuilder لجلب التعليمات من Firestore
               Expanded(
                 child: StreamBuilder<QuerySnapshot>(
-                  stream: FirebaseFirestore.instance.collection('Instructions').snapshots(),
+                  stream:
+                      FirebaseFirestore.instance
+                          .collection('Instructions')
+                          .snapshots(),
                   builder: (context, snapshot) {
                     if (snapshot.connectionState == ConnectionState.waiting) {
                       return Center(
-                        child: CircularProgressIndicator(valueColor: AlwaysStoppedAnimation<Color>(Colors.white)),
+                        child: CircularProgressIndicator(
+                          valueColor: AlwaysStoppedAnimation<Color>(
+                            Colors.white,
+                          ),
+                        ),
                       );
                     }
                     if (snapshot.hasError) {
                       return Center(
-                        child: Text("❌ حدث خطأ أثناء تحميل البيانات", style: TextStyle(color: Colors.white)),
+                        child: Text(
+                          "❌ حدث خطأ أثناء تحميل البيانات",
+                          style: TextStyle(color: Colors.white),
+                        ),
                       );
                     }
 
                     // استخراج البيانات من Firestore
-                    List<String> instructions = snapshot.data!.docs.map((doc) => doc['Content'].toString()).toList();
+                    List<String> instructions =
+                        snapshot.data!.docs
+                            .map((doc) => doc['Content'].toString())
+                            .toList();
 
                     return ListView.builder(
                       itemCount: instructions.length,
@@ -63,11 +86,18 @@ class _InstructionsState extends State<Instructions> {
                               children: [
                                 TextSpan(
                                   text: "${index + 1}. ", // ترقيم التعليمات
-                                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white),
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.white,
+                                  ),
                                 ),
                                 TextSpan(
                                   text: instructions[index],
-                                  style: TextStyle(fontSize: 16, color: Colors.white),
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    color: Colors.white,
+                                  ),
                                 ),
                               ],
                             ),
@@ -116,10 +146,15 @@ class _InstructionsState extends State<Instructions> {
 
               // زر الانتقال
               ElevatedButton(
-                onPressed: _isChecked ? () => Get.off(Distribution_choice()) : null,
+                onPressed:
+                    _isChecked ? () => Get.off(Distribution_choice()) : null,
                 child: Text(
                   "next".tr,
-                  style: TextStyle(color: Color(0xFF0187c4), fontWeight: FontWeight.bold, fontSize: 20),
+                  style: TextStyle(
+                    color: Color(0xFF0187c4),
+                    fontWeight: FontWeight.bold,
+                    fontSize: 20,
+                  ),
                 ),
               ),
             ],

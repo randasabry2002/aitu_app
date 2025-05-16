@@ -1,4 +1,5 @@
 import 'package:aitu_app/screens/Splash.dart';
+import 'package:aitu_app/screens/student%20data/enterCode.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
@@ -15,13 +16,13 @@ Future<void> main() async {
     if (Firebase.apps.isEmpty) {
       await Firebase.initializeApp(
         options: const FirebaseOptions(
-            apiKey: "AIzaSyDSFmcUOY8o32j_JOgICayGICWZyK2Em4s",
-            authDomain: "german-collage-training-78233.firebaseapp.com",
-            projectId: "german-collage-training-78233",
-            storageBucket: "german-collage-training-78233.firebasestorage.app",
-            messagingSenderId: "853561466710",
-            appId: "1:853561466710:web:63cbbcf17ad62e50e480f7",
-            measurementId: "G-WR18ZPD21J"
+          apiKey: "AIzaSyDSFmcUOY8o32j_JOgICayGICWZyK2Em4s",
+          authDomain: "german-collage-training-78233.firebaseapp.com",
+          projectId: "german-collage-training-78233",
+          storageBucket: "german-collage-training-78233.firebasestorage.app",
+          messagingSenderId: "853561466710",
+          appId: "1:853561466710:web:63cbbcf17ad62e50e480f7",
+          measurementId: "G-WR18ZPD21J",
         ),
       );
     }
@@ -33,7 +34,8 @@ Future<void> main() async {
 
   await Supabase.initialize(
     url: 'https://cjzaqgnhcpjtlswhnbda.supabase.co',
-    anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNqemFxZ25oY3BqdGxzd2huYmRhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDYyOTc2MDMsImV4cCI6MjA2MTg3MzYwM30.8oFur4LN2JzRXBauTr7b8eZOAK56Ie2fy9kw3o__Ju8',
+    anonKey:
+        'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNqemFxZ25oY3BqdGxzd2huYmRhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDYyOTc2MDMsImV4cCI6MjA2MTg3MzYwM30.8oFur4LN2JzRXBauTr7b8eZOAK56Ie2fy9kw3o__Ju8',
   );
 
   // تحميل الترجمات
@@ -64,7 +66,10 @@ class MyApp extends StatelessWidget {
       ],
       home: Splash(),
       // home: Scaffold(backgroundColor: Colors.green,),
+      routes: {
+        // Define your routes here
+        // '/home': (context) => HomeScree
+      },
     );
   }
 }
-

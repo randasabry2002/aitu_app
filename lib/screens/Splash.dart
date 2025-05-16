@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:aitu_app/screens/student%20data/enterCode.dart';
 import 'package:flutter/material.dart';
 
 
@@ -89,7 +90,7 @@ class SplashState extends State<StatefulWidget>
 
         } else {
           // User is not logged in, navigate to Signin screen
-          Get.offAll(SignInScreen());
+          Get.offAll(EnterStudentCode());
         }
       });
     });
