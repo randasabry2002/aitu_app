@@ -29,15 +29,15 @@ class _InstructionsState extends State<Instructions> {
             icon: Icon(Icons.arrow_back, color: Colors.white),
             onPressed: () => Get.offAll(EnterStudentCode()),
           ),
-          backgroundColor: Color(0xFF0187c4),
-          title: Center(
-            child: Text(
-              'instructions'.tr,
-              style: TextStyle(
-                color: Colors.white,
-                fontWeight: FontWeight.bold,
-                fontSize: 30,
-              ),
+          backgroundColor: secondaryColor,
+          centerTitle: true,
+          title: Text(
+            'instructions'.tr,
+            style: TextStyle(
+              color: Colors.white,
+              fontWeight: FontWeight.bold,
+              fontFamily: 'mainFont',
+              fontSize: 28,
             ),
           ),
         ),
@@ -67,7 +67,7 @@ class _InstructionsState extends State<Instructions> {
                           return Center(
                             child: CircularProgressIndicator(
                               valueColor: AlwaysStoppedAnimation<Color>(
-                                Colors.white,
+                                const Color.fromARGB(255, 0, 0, 0),
                               ),
                             ),
                           );
@@ -76,7 +76,7 @@ class _InstructionsState extends State<Instructions> {
                           return Center(
                             child: Text(
                               "❌ حدث خطأ أثناء تحميل البيانات",
-                              style: TextStyle(color: Colors.white),
+                              style: TextStyle(color: const Color.fromARGB(255, 0, 0, 0)),
                             ),
                           );
                         }
@@ -100,16 +100,16 @@ class _InstructionsState extends State<Instructions> {
                                       style: TextStyle(
                                         fontSize: 14,
                                         fontWeight: FontWeight.bold,
-                                        color: secondaryColor,
+                                        color: mainColor,
                                       ),
                                     ),
+
                                     // نص التعليمات
-                                    
                                     TextSpan(
                                       text: instructions[index],
                                       style: TextStyle(
                                         fontSize: 14,
-                                        color: secondaryColor,
+                                        color: const Color.fromARGB(255, 0, 0, 0),
                                       ),
                                     ),
                                   ],
@@ -126,7 +126,7 @@ class _InstructionsState extends State<Instructions> {
                   Row(
                     children: [
                       Transform.scale(
-                        scale: 1.3,
+                        scale: 1.0,
                         child: Checkbox(
                           value: _isChecked,
                           checkColor: Colors.white,
@@ -138,7 +138,7 @@ class _InstructionsState extends State<Instructions> {
                             }
                             return Colors.transparent;
                           }),
-                          side: BorderSide(color: Colors.white, width: 2),
+                          side: BorderSide(color: mainColor, width: 2),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(5),
                           ),
@@ -152,7 +152,12 @@ class _InstructionsState extends State<Instructions> {
                       Expanded(
                         child: Text(
                           "I agree to the instructions".tr,
-                          style: TextStyle(fontSize: 20, color: const Color.fromARGB(255, 255, 255, 255)),
+                          style: TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                            fontFamily: 'mainFont',
+                            color: const Color.fromARGB(255, 0, 0, 0),
+                          ),
                         ),
                       ),
                     ],
@@ -169,14 +174,13 @@ class _InstructionsState extends State<Instructions> {
                         }
                       },
                       title: Text(
-        'Next'.tr,
-        style: TextStyle(
-          fontSize: 24,
-          color: mainColor,
-          fontWeight: FontWeight.bold,
-          fontFamily: 'mainFont',
-        ),
-      ), // Key for "Sign Up",
+                        'Next'.tr,
+                        style: TextStyle(
+                          fontSize: 24,
+                          fontWeight: FontWeight.bold,
+                          fontFamily: 'mainFont',
+                        ),
+                      ), // Key for "Sign Up",
                     ),
                   ),
                 ],

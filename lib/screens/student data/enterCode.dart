@@ -39,10 +39,11 @@ class _EnterStudentCodeState extends State<EnterStudentCode> {
               ? TextDirection.rtl
               : TextDirection.ltr,
       child: Scaffold(
+        extendBodyBehindAppBar: true,
         appBar: AppBar(
           elevation: 20.0,
-          backgroundColor: mainColor,
-          automaticallyImplyLeading: false,
+          backgroundColor: secondaryColor,
+          // automaticallyImplyLeading: true,
           actions: <Widget>[
             // Language Selector Icon
             PopupMenuButton<String>(
@@ -89,9 +90,9 @@ class _EnterStudentCodeState extends State<EnterStudentCode> {
                         'Enter your code'.tr, // Translation key for "Sign Up"
                         style: TextStyle(
                           color: const Color.fromARGB(255, 0, 0, 0),
-                          fontSize: 26,
+                          fontSize: 30,
                           fontWeight: FontWeight.bold,
-                          // fontFamily: 'mainFont',
+                          fontFamily: 'mainFont',
                         ),
                       ),
                       SizedBox(height: 40),
@@ -133,8 +134,7 @@ class _EnterStudentCodeState extends State<EnterStudentCode> {
                         title: Text(
                           'Start'.tr,
                           style: TextStyle(
-                            fontSize: 24,
-                            color: mainColor,
+                            fontSize: 26,
                             fontWeight: FontWeight.bold,
                             fontFamily: 'mainFont',
                           ),
