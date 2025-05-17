@@ -340,14 +340,15 @@ class _CompleteStudentDataState extends State<CompleteStudentData> {
 
                       SizedBox(height: 24.0),
                       //grade
-                      Container(
+                        Container(
                         width: double.infinity,
                         padding: EdgeInsets.symmetric(horizontal: 18),
                         decoration: BoxDecoration(
                           border: Border.all(color: secondaryColor),
                           borderRadius: BorderRadius.circular(15),
                         ),
-                        child: DropdownButton<String>(
+                        child: DropdownButtonHideUnderline(
+                          child: DropdownButton<int>(
                           borderRadius: BorderRadius.circular(15),
                           dropdownColor: const Color.fromARGB(
                             255,
@@ -358,36 +359,36 @@ class _CompleteStudentDataState extends State<CompleteStudentData> {
                           hint: Text(
                             'select your academic year'.tr,
                             style: TextStyle(
-                              color: mainColor,
-                              fontSize: 16,
-                              fontFamily: 'mainFont',
-                              fontWeight: FontWeight.bold,
+                            color: mainColor,
+                            fontSize: 16,
+                            fontFamily: 'mainFont',
+                            fontWeight: FontWeight.bold,
                             ),
                           ),
-                          value: selectedGrade.toString(),
+                          value: selectedGrade,
                           onChanged: (newValue) {
                             setState(() {
-                              selectedGrade = newValue as int;
+                            selectedGrade = newValue;
                             });
                           },
-                          items:
-                              grade.map((grade) {
-                                return DropdownMenuItem<String>(
-                                  value: grade.toString(),
-                                  child: Text(
-                                    grade.toString(),
-                                    style: TextStyle(
-                                      color: mainColor,
-                                      fontSize: 16.0,
-                                      fontFamily: 'mainFont',
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                    textAlign: TextAlign.center,
-                                  ),
-                                );
-                              }).toList(),
+                          items: grade.map((g) {
+                            return DropdownMenuItem<int>(
+                            value: g,
+                            child: Text(
+                              g.toString(),
+                              style: TextStyle(
+                              color: mainColor,
+                              fontSize: 16.0,
+                              fontFamily: 'mainFont',
+                              fontWeight: FontWeight.bold,
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
+                            );
+                          }).toList(),
+                          ),
                         ),
-                      ),
+                        ),
                       SizedBox(height: 24.0),
                       //department
                       Container(
