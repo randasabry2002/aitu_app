@@ -49,7 +49,7 @@ class SplashState extends State<StatefulWidget>
     );
 
     // Define animation
-    _animation = Tween<double>(begin: 0.5, end: 1.0).animate(
+    _animation = Tween<double>(begin: 0.2, end: 0.8).animate(
       CurvedAnimation(
         parent: _animationController,
         curve: Curves.easeInOut,
@@ -127,11 +127,12 @@ class SplashState extends State<StatefulWidget>
                   children: [
                     Center(
                         child: AnimatedBuilder(
+                          
                       animation: _animationController,
                       builder: (context, child) {
                         return Transform.scale(
                           scale: _animation.value,
-                          child: Image.asset('assets/images/german_logo.jpg'),
+                          child: Image.asset('assets/images/logo.png'),
                         );
                       },
                     )),

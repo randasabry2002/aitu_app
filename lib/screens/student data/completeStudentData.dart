@@ -94,7 +94,7 @@ class _CompleteStudentDataState extends State<CompleteStudentData> {
       child: Scaffold(
         appBar: AppBar(
           elevation: 20.0,
-          backgroundColor: secondaryColor,
+          backgroundColor: mainColor,
           // automaticallyImplyLeading: false,
           actions: <Widget>[
             // Language Selector Icon
@@ -273,7 +273,7 @@ class _CompleteStudentDataState extends State<CompleteStudentData> {
                                 fontWeight: FontWeight.bold,
                               ),
                               enabledBorder: OutlineInputBorder(
-                                borderSide: BorderSide(color: secondaryColor),
+                                borderSide: BorderSide(color: mainColor),
                                 borderRadius: BorderRadius.circular(15),
                               ),
                               focusedBorder: OutlineInputBorder(
@@ -292,7 +292,7 @@ class _CompleteStudentDataState extends State<CompleteStudentData> {
                         width: double.infinity,
                         padding: EdgeInsets.symmetric(horizontal: 18),
                         decoration: BoxDecoration(
-                          border: Border.all(color: secondaryColor),
+                          border: Border.all(color: mainColor),
                           borderRadius: BorderRadius.circular(15),
                         ),
                         child: DropdownButtonHideUnderline(
@@ -344,7 +344,7 @@ class _CompleteStudentDataState extends State<CompleteStudentData> {
                         width: double.infinity,
                         padding: EdgeInsets.symmetric(horizontal: 18),
                         decoration: BoxDecoration(
-                          border: Border.all(color: secondaryColor),
+                          border: Border.all(color: mainColor),
                           borderRadius: BorderRadius.circular(15),
                         ),
                         child: DropdownButtonHideUnderline(
@@ -377,7 +377,7 @@ class _CompleteStudentDataState extends State<CompleteStudentData> {
                             child: Text(
                               g.toString(),
                               style: TextStyle(
-                              color: mainColor,
+                              color: const Color.fromARGB(255, 0, 0, 0),
                               fontSize: 16.0,
                               fontFamily: 'mainFont',
                               fontWeight: FontWeight.bold,
@@ -395,7 +395,7 @@ class _CompleteStudentDataState extends State<CompleteStudentData> {
                         width: double.infinity,
                         padding: EdgeInsets.symmetric(horizontal: 18),
                         decoration: BoxDecoration(
-                          border: Border.all(color: secondaryColor),
+                          border: Border.all(color: mainColor),
                           borderRadius: BorderRadius.circular(15),
                         ),
                         child: DropdownButtonHideUnderline(
@@ -429,7 +429,7 @@ class _CompleteStudentDataState extends State<CompleteStudentData> {
                                     child: Text(
                                       department,
                                       style: TextStyle(
-                                        color: mainColor,
+                                        color: const Color.fromARGB(255, 0, 0, 0),
                                         fontSize: 16,
                                         fontFamily: 'mainFont',
                                         fontWeight: FontWeight.bold,
@@ -443,14 +443,15 @@ class _CompleteStudentDataState extends State<CompleteStudentData> {
                       ),
                       SizedBox(height: 24.0),
                       //gender
-                      Container(
+                        Container(
                         width: double.infinity,
                         padding: EdgeInsets.symmetric(horizontal: 18),
                         decoration: BoxDecoration(
-                          border: Border.all(color: secondaryColor),
-                          borderRadius: BorderRadius.circular((15)),
+                          border: Border.all(color: mainColor),
+                          borderRadius: BorderRadius.circular(15),
                         ),
-                        child: DropdownButton<String>(
+                        child: DropdownButtonHideUnderline(
+                          child: DropdownButton<String>(
                           borderRadius: BorderRadius.circular(15),
                           dropdownColor: const Color.fromARGB(
                             255,
@@ -461,36 +462,36 @@ class _CompleteStudentDataState extends State<CompleteStudentData> {
                           hint: Text(
                             'your gender'.tr,
                             style: TextStyle(
-                              color: mainColor,
-                              fontSize: 16,
-                              fontFamily: 'mainFont',
-                              fontWeight: FontWeight.bold,
+                            color: mainColor,
+                            fontSize: 16,
+                            fontFamily: 'mainFont',
+                            fontWeight: FontWeight.bold,
                             ),
                           ),
                           value: selectedGender,
                           onChanged: (newValue) {
                             setState(() {
-                              selectedGender = newValue;
+                            selectedGender = newValue;
                             });
                           },
-                          items:
-                              gender.map((gender) {
-                                return DropdownMenuItem<String>(
-                                  value: gender,
-                                  child: Text(
-                                    gender,
-                                    style: TextStyle(
-                                      color: mainColor,
-                                      fontSize: 16,
-                                      fontFamily: 'mainFont',
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                    textAlign: TextAlign.center,
-                                  ),
-                                );
-                              }).toList(),
+                          items: gender.map((g) {
+                            return DropdownMenuItem<String>(
+                            value: g,
+                            child: Text(
+                              g,
+                              style: TextStyle(
+                              color: const Color.fromARGB(255, 0, 0, 0),
+                              fontSize: 16,
+                              fontFamily: 'mainFont',
+                              fontWeight: FontWeight.bold,
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
+                            );
+                          }).toList(),
+                          ),
                         ),
-                      ),
+                        ),
 
                       SizedBox(height: 60),
 

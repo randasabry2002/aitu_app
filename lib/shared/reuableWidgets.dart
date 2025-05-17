@@ -11,6 +11,9 @@ class CreateInput extends StatefulWidget {
   final bool? isPassword;
   final Widget? prefix;
   final Widget? suffix;
+  final Color? color;
+  final Color? borderColor;
+  final Color? labelColor;
   const CreateInput({
     Key? key,
     required this.onChanged,
@@ -20,6 +23,9 @@ class CreateInput extends StatefulWidget {
     this.isPassword = false,
     this.prefix,
     this.suffix,
+    this.color,
+    this.borderColor,
+    this.labelColor,
   }) : super(key: key);
   @override
   State<CreateInput> createState() => _CreateInputState();
@@ -35,18 +41,19 @@ class _CreateInputState extends State<CreateInput> {
       keyboardType: widget.keyboardType,
       
       decoration: InputDecoration(
+        
         prefixIcon: widget.prefix,
         suffixIcon: widget.suffix,
-        fillColor: const Color.fromARGB(70, 255, 255, 255),
+        fillColor: widget.color ?? const Color.fromARGB(70, 255, 255, 255),
         filled: true,
         labelText: widget.labelText.tr, // Translation key for "Email"
-        labelStyle: TextStyle(color: mainColor, fontSize: 16),
+        labelStyle: TextStyle(color: widget.labelColor ?? mainColor, fontSize: 16),
         enabledBorder: OutlineInputBorder(
           borderSide: BorderSide(color: secondaryColor),
           borderRadius: BorderRadius.circular(15),
         ),
         focusedBorder: OutlineInputBorder(
-          borderSide: BorderSide(color: mainColor),
+          borderSide: BorderSide(color:widget.borderColor?? mainColor),
           borderRadius: BorderRadius.circular(20),
         ),
       ),
@@ -71,7 +78,7 @@ class CreateButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return ElevatedButton(
       style: ElevatedButton.styleFrom(
-        backgroundColor: secondaryColor,
+        backgroundColor: mainColor,
         foregroundColor: Colors.white,
         padding: EdgeInsets.symmetric(horizontal: 80, vertical: 10),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),

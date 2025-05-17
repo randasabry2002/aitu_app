@@ -29,7 +29,7 @@ class _InstructionsState extends State<Instructions> {
             icon: Icon(Icons.arrow_back, color: Colors.white),
             onPressed: () => Get.offAll(EnterStudentCode()),
           ),
-          backgroundColor: secondaryColor,
+          backgroundColor: mainColor,
           centerTitle: true,
           title: Text(
             'instructions'.tr,
@@ -134,7 +134,7 @@ class _InstructionsState extends State<Instructions> {
                             states,
                           ) {
                             if (states.contains(MaterialState.selected)) {
-                              return secondaryColor;
+                              return mainColor;
                             }
                             return Colors.transparent;
                           }),

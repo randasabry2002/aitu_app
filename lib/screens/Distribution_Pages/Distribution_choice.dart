@@ -21,7 +21,7 @@ class _Distribution_choiceState extends State<Distribution_choice> {
           : TextDirection.ltr,
       child: Scaffold(
         appBar: AppBar(
-          backgroundColor: secondaryColor,
+          backgroundColor: mainColor,
           actions: <Widget>[
             // Language Selector Icon
             PopupMenuButton<String>(
@@ -66,7 +66,7 @@ class _Distribution_choiceState extends State<Distribution_choice> {
                         textAlign: TextAlign.center,
                         style: TextStyle(
                           fontSize: 20,
-                          color: secondaryColor,
+                          color: mainColor,
                           fontFamily: 'mainFont',
                           fontWeight: FontWeight.bold,
                         ),

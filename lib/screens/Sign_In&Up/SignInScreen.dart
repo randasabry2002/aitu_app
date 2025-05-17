@@ -58,7 +58,7 @@ class _SignInScreenState extends State<SignInScreen> {
           : TextDirection.ltr,
       child: Scaffold(
         appBar: AppBar(
-          backgroundColor: secondaryColor,
+          backgroundColor: mainColor,
           actions: <Widget>[
             // Language Selector Icon
             PopupMenuButton<String>(
@@ -235,9 +235,9 @@ class _SignInScreenState extends State<SignInScreen> {
                             // padding: EdgeInsets.symmetric(horizontal: 16),
                             backgroundColor:
                                 const Color.fromARGB(255, 255, 255, 255),
-                            foregroundColor: secondaryColor,
+                            foregroundColor: mainColor,
                             side: BorderSide(
-                              color: secondaryColor,
+                              color: mainColor,
                               width: 1.0,
                             ),
                             minimumSize: Size(double.infinity, 50),
@@ -313,7 +313,7 @@ class _SignInScreenState extends State<SignInScreen> {
                         child: Text(
                           'sign_up_prompt'.tr,
                           // Translated "Don't have an account? Sign Up"
-                          style: TextStyle(color: secondaryColor, fontSize: 12),
+                          style: TextStyle(color: mainColor, fontSize: 12),
                         ),
                       ),
                     ],

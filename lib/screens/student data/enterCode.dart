@@ -25,8 +25,8 @@ class _EnterStudentCodeState extends State<EnterStudentCode> {
       child: Scaffold(
         extendBodyBehindAppBar: true,
         appBar: AppBar(
-          elevation: 20.0,
-          backgroundColor: secondaryColor,
+          elevation: 0.0,
+          backgroundColor: const Color.fromARGB(0, 0, 115, 168),
           // automaticallyImplyLeading: true,
           actions: <Widget>[
             // Language Selector Icon
@@ -56,12 +56,9 @@ class _EnterStudentCodeState extends State<EnterStudentCode> {
         body: Stack(
           children: [
             // Background shape
-            Image(
-              image: backgroundImage,
-              fit: BoxFit.cover,
-              width: double.infinity,
-              height: double.infinity,
-            ),
+            imageBackground,
+            // Background color
+            backDark,
             //body:
             Padding(
               padding: const EdgeInsets.fromLTRB(16.0, 0, 16.0, 25.0),
@@ -69,82 +66,136 @@ class _EnterStudentCodeState extends State<EnterStudentCode> {
                 child: SingleChildScrollView(
                   child: Column(
                     children: [
-                      //title
-                      Text(
-                        'Enter your code'.tr, // Translation key for "Sign Up"
-                        style: TextStyle(
-                          color: const Color.fromARGB(255, 0, 0, 0),
-                          fontSize: 30,
-                          fontWeight: FontWeight.bold,
-                          fontFamily: 'mainFont',
+                      //logo
+                      Image.asset(
+                        'assets/images/logo.png',
+                        width: 200,
+                        height: 200,
+                      ),
+                      //ask for code
+                      Container(
+                        // height: MediaQuery.of(context).size.height * 0.6,
+                        width: double.infinity,
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 20,
+                          vertical: 60,
+                        ),
+                        decoration: BoxDecoration(
+                          color: const Color.fromARGB(0, 255, 255, 255),
+                          borderRadius: BorderRadius.circular(10),
+                          boxShadow: [
+                            BoxShadow(
+                              color: const Color.fromARGB(0, 0, 0, 0),
+                              blurRadius: 5,
+                              offset: Offset(0, 3),
+                            ),
+                          ],
+                        ),
+                        child: SingleChildScrollView(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.center,
+                            // mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                            children: [
+                              //enter your code text
+                              Text(
+                                'Enter your code'
+                                    .tr, // Translation key for "Sign Up"
+
+                                style: TextStyle(
+                                  color: const Color.fromARGB(255, 255, 255, 255),
+                                  fontSize: 24.0,
+                                  fontFamily: 'mainFont',
+                                  fontWeight: FontWeight.bold,
+                                  // fontFamily: 'mainFont',
+                                ),
+                              ),
+                              SizedBox(height: 20),
+                              CreateInput(
+                                borderColor: const Color.fromARGB(255, 255, 255, 255),
+                                labelColor: const Color.fromARGB(255, 82, 82, 82),
+                                color: const Color.fromARGB(200, 255, 255, 255),
+                                onChanged: (value) {
+                                  studentCode = value;
+                                },
+                                labelText:
+                                    'code'.tr, // Translation key for "Email"
+                                keyboardType: TextInputType.text,
+                              ),
+                              SizedBox(height: 40),
+                              //next buttno
+                              CreateButton(
+                                onPressed: () async {
+                                  if (studentCode.isEmpty) {
+                                    ScaffoldMessenger.of(
+                                      context,
+                                    ).showSnackBar(
+                                      SnackBar(
+                                        content: Text(
+                                          "please enter your code!".tr,
+                                        ),
+                                      ),
+                                    );
+                                    return;
+                                  }
+                                  final firebaseService = FirebaseService();
+                                  await firebaseService
+                                      .getDataWithStudentId(studentCode)
+                                      .then((student) {
+                                        if (student != null) {
+                                          // Store the student data in a variable or state
+                                          // For example, you can use Get.put() to store it globally]
+                                          if (student.email == "") {
+                                            Get.offAll(
+                                              Get.offAll(
+                                                SignUpScreen(
+                                                  studentCode: studentCode,
+                                                ),
+                                              ),
+                                            );
+                                          } else if (student.factory == "" &&
+                                              student.birthAddress == "") {
+                                            Get.offAll(
+                                              CompleteStudentData(
+                                                studentCode: studentCode,
+                                              ),
+                                            );
+                                          } else {
+                                            Get.offAll(
+                                              SignInScreen(
+                                                studentCode: studentCode,
+                                              ),
+                                            );
+                                          }
+                                        }
+                                      })
+                                      .catchError((error) {
+                                        print(
+                                          "Error fetching student data: $error",
+                                        );
+                                        ScaffoldMessenger.of(
+                                          context,
+                                        ).showSnackBar(
+                                          SnackBar(
+                                            content: Text(
+                                              "code not found!".tr,
+                                            ),
+                                          ),
+                                        );
+                                      });
+                                },
+                                title: Text(
+                                  'Start'.tr,
+                                  style: TextStyle(
+                                    fontSize: 26,
+                                    fontWeight: FontWeight.bold,
+                                    fontFamily: 'mainFont',
+                                  ),
+                                ), // Key for "Sign Up",
+                              ),
+                            ],
+                          ),
                         ),
                       ),
-                      SizedBox(height: 40),
-                      //code
-                      CreateInput(
-                        onChanged: (value) {
-                          studentCode = value;
-                        },
-                        labelText: 'code'.tr, // Translation key for "Email"
-                        keyboardType: TextInputType.text,
-                      ),
-                      SizedBox(height: 80),
-
-                      //next buttno
-                      CreateButton(
-                        onPressed: () async {
-                          if (studentCode.isEmpty) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text("please enter your code!".tr),
-                              ),
-                            );
-                            return;
-                          }
-                          final firebaseService = FirebaseService();
-                          await firebaseService
-                              .getDataWithStudentId(studentCode)
-                              .then((student) {
-                                if (student != null) {
-                                  // Store the student data in a variable or state
-                                  // For example, you can use Get.put() to store it globally]
-                                  if (student.email == "") {
-                                    Get.offAll(
-                                      Get.offAll(
-                                        SignUpScreen(studentCode: studentCode),
-                                      ),
-                                    );
-                                  } else if (student.factory == "" &&
-                                      student.birthAddress == "") {
-                                    Get.offAll(
-                                      CompleteStudentData(
-                                        studentCode: studentCode,
-                                      ),
-                                    );
-                                  } else {
-                                    Get.offAll(
-                                      SignInScreen(studentCode: studentCode),
-                                    );
-                                  }
-                                }
-                              })
-                              .catchError((error) {
-                                print("Error fetching student data: $error");
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(content: Text("code not found!".tr)),
-                                );
-                              });
-                        },
-                        title: Text(
-                          'Start'.tr,
-                          style: TextStyle(
-                            fontSize: 26,
-                            fontWeight: FontWeight.bold,
-                            fontFamily: 'mainFont',
-                          ),
-                        ), // Key for "Sign Up",
-                      ),
-                      SizedBox(height: 16),
                     ],
                   ),
                 ),
