@@ -23,16 +23,10 @@ class _CompleteStudentDataState extends State<CompleteStudentData> {
   DocumentSnapshot? studentDoc;
   // String studentCode = '';
   String name = '';
-  List<String> academicYears = [
-    'TSS - 1st',
-    'TSS - 2nd',
-    'TSS - 3rd',
-    'ITC - 1st',
-    'ITC - 2nd',
-    'ATC - 1st',
-    'ATC - 2nd'
-  ];
-  String? selectedAcademicYear;
+  List<String> stage = ['معهد', 'كلية', 'مدرسة'];
+  List<int> grade = [1, 2, 3, 4];
+
+  String? selectedStage;
   List<String> departments = [
     'Mechanical Technology',
     'Electrical Technology',
@@ -44,7 +38,7 @@ class _CompleteStudentDataState extends State<CompleteStudentData> {
   String currentAddress = '';
   String birthAddress = '';
   String factory = '';
-
+  int? selectedGrade;
   final TextEditingController emailController = TextEditingController();
   final TextEditingController factoryController = TextEditingController();
   final TextEditingController phoneController = TextEditingController();
@@ -53,10 +47,11 @@ class _CompleteStudentDataState extends State<CompleteStudentData> {
   final TextEditingController birthAddressController = TextEditingController();
   final TextEditingController birthDateController = TextEditingController();
   Future<void> getDataWithStudentId() async {
-    QuerySnapshot querySnapshot = await FirebaseFirestore.instance
-        .collection('StudentsTable')
-        .where('code', isEqualTo: widget.studentCode)
-        .get();
+    QuerySnapshot querySnapshot =
+        await FirebaseFirestore.instance
+            .collection('StudentsTable')
+            .where('code', isEqualTo: widget.studentCode)
+            .get();
 
     if (querySnapshot.docs.isNotEmpty) {
       studentDoc = querySnapshot.docs.first;
@@ -67,13 +62,14 @@ class _CompleteStudentDataState extends State<CompleteStudentData> {
   bool isDataCompleted = false;
 
   void checkDataComplete() {
-    if (selectedAcademicYear != null &&
+    if (selectedStage != null &&
         stuedentDepartment != null &&
         selectedGender != null &&
         birthAddressController.text.isNotEmpty &&
         currentAddress.isNotEmpty &&
         birthAddress.isNotEmpty &&
-        factory.isNotEmpty) {
+        factory.isNotEmpty &&
+        selectedGrade != null) {
       isDataCompleted = true;
     } else {
       isDataCompleted = false;
@@ -91,9 +87,10 @@ class _CompleteStudentDataState extends State<CompleteStudentData> {
   @override
   Widget build(BuildContext context) {
     return Directionality(
-      textDirection: Get.locale?.languageCode == 'ar'
-          ? TextDirection.rtl
-          : TextDirection.ltr,
+      textDirection:
+          Get.locale?.languageCode == 'ar'
+              ? TextDirection.rtl
+              : TextDirection.ltr,
       child: Scaffold(
         appBar: AppBar(
           elevation: 20.0,
@@ -214,8 +211,8 @@ class _CompleteStudentDataState extends State<CompleteStudentData> {
                       CreateInput(
                         controller: currentAddressController,
                         keyboardType: TextInputType.text,
-                        onChanged: (value) =>
-                            setState(() => currentAddress = value),
+                        onChanged:
+                            (value) => setState(() => currentAddress = value),
                         labelText: 'Your current address'.tr,
                       ),
                       SizedBox(height: 24.0),
@@ -224,8 +221,8 @@ class _CompleteStudentDataState extends State<CompleteStudentData> {
                       CreateInput(
                         controller: birthAddressController,
                         keyboardType: TextInputType.text,
-                        onChanged: (value) =>
-                            setState(() => birthAddress = value),
+                        onChanged:
+                            (value) => setState(() => birthAddress = value),
                         labelText: 'Birth address'.tr,
                       ),
                       SizedBox(height: 24.0),
@@ -263,9 +260,10 @@ class _CompleteStudentDataState extends State<CompleteStudentData> {
                           child: TextField(
                             readOnly: true,
                             controller: birthDateController,
-                            onChanged: (value) => setState(
-                              () => birthAddressController.text = value,
-                            ),
+                            onChanged:
+                                (value) => setState(
+                                  () => birthAddressController.text = value,
+                                ),
                             decoration: InputDecoration(
                               labelText: 'Birth date'.tr,
                               labelStyle: TextStyle(
@@ -289,7 +287,7 @@ class _CompleteStudentDataState extends State<CompleteStudentData> {
                       ),
                       SizedBox(height: 24.0),
 
-                      //academic year
+                      //stage
                       Container(
                         width: double.infinity,
                         padding: EdgeInsets.symmetric(horizontal: 18),
@@ -297,7 +295,60 @@ class _CompleteStudentDataState extends State<CompleteStudentData> {
                           border: Border.all(color: secondaryColor),
                           borderRadius: BorderRadius.circular(15),
                         ),
-                        child: DropdownButton<String>(
+                        child: DropdownButtonHideUnderline(
+                          child: DropdownButton<String>(
+                            borderRadius: BorderRadius.circular(15),
+                            dropdownColor: const Color.fromARGB(
+                              255,
+                              255,
+                              255,
+                              255,
+                            ),
+                            hint: Text(
+                              'stage'.tr,
+                              style: TextStyle(
+                                color: mainColor,
+                                fontSize: 16,
+                                fontFamily: 'mainFont',
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            value: selectedStage,
+                            onChanged: (newValue) {
+                              setState(() {
+                                selectedStage = newValue;
+                              });
+                            },
+                            items:
+                                stage.map((stage) {
+                                  return DropdownMenuItem<String>(
+                                    value: stage,
+                                    child: Text(
+                                      stage,
+                                      style: TextStyle(
+                                        color: Colors.black,
+                                        fontSize: 16,
+                                        fontFamily: 'mainFont',
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  );
+                                }).toList(),
+                          ),
+                        ),
+                      ),
+
+                      SizedBox(height: 24.0),
+                      //grade
+                        Container(
+                        width: double.infinity,
+                        padding: EdgeInsets.symmetric(horizontal: 18),
+                        decoration: BoxDecoration(
+                          border: Border.all(color: secondaryColor),
+                          borderRadius: BorderRadius.circular(15),
+                        ),
+                        child: DropdownButtonHideUnderline(
+                          child: DropdownButton<int>(
                           borderRadius: BorderRadius.circular(15),
                           dropdownColor: const Color.fromARGB(
                             255,
@@ -308,35 +359,36 @@ class _CompleteStudentDataState extends State<CompleteStudentData> {
                           hint: Text(
                             'select your academic year'.tr,
                             style: TextStyle(
-                              color: mainColor,
-                              fontSize: 16,
-                              fontFamily: 'mainFont',
-                              fontWeight: FontWeight.bold,
+                            color: mainColor,
+                            fontSize: 16,
+                            fontFamily: 'mainFont',
+                            fontWeight: FontWeight.bold,
                             ),
                           ),
-                          value: selectedAcademicYear,
+                          value: selectedGrade,
                           onChanged: (newValue) {
                             setState(() {
-                              selectedAcademicYear = newValue;
+                            selectedGrade = newValue;
                             });
                           },
-                          items: academicYears.map((year) {
-                            return DropdownMenuItem<String>(
-                              value: year,
-                              child: Text(
-                                year,
-                                style: TextStyle(
-                                  color: mainColor,
-                                  fontSize: 16.0,
-                                  fontFamily: 'mainFont',
-                                  fontWeight: FontWeight.bold,
-                                ),
-                                textAlign: TextAlign.center,
+                          items: grade.map((g) {
+                            return DropdownMenuItem<int>(
+                            value: g,
+                            child: Text(
+                              g.toString(),
+                              style: TextStyle(
+                              color: mainColor,
+                              fontSize: 16.0,
+                              fontFamily: 'mainFont',
+                              fontWeight: FontWeight.bold,
                               ),
+                              textAlign: TextAlign.center,
+                            ),
                             );
                           }).toList(),
+                          ),
                         ),
-                      ),
+                        ),
                       SizedBox(height: 24.0),
                       //department
                       Container(
@@ -370,21 +422,22 @@ class _CompleteStudentDataState extends State<CompleteStudentData> {
                                 stuedentDepartment = newValue;
                               });
                             },
-                            items: departments.map((department) {
-                              return DropdownMenuItem<String>(
-                                value: department,
-                                child: Text(
-                                  department,
-                                  style: TextStyle(
-                                    color: mainColor,
-                                    fontSize: 16,
-                                    fontFamily: 'mainFont',
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                  textAlign: TextAlign.center,
-                                ),
-                              );
-                            }).toList(),
+                            items:
+                                departments.map((department) {
+                                  return DropdownMenuItem<String>(
+                                    value: department,
+                                    child: Text(
+                                      department,
+                                      style: TextStyle(
+                                        color: mainColor,
+                                        fontSize: 16,
+                                        fontFamily: 'mainFont',
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                      textAlign: TextAlign.center,
+                                    ),
+                                  );
+                                }).toList(),
                           ),
                         ),
                       ),
@@ -420,21 +473,22 @@ class _CompleteStudentDataState extends State<CompleteStudentData> {
                               selectedGender = newValue;
                             });
                           },
-                          items: gender.map((gender) {
-                            return DropdownMenuItem<String>(
-                              value: gender,
-                              child: Text(
-                                gender,
-                                style: TextStyle(
-                                  color: mainColor,
-                                  fontSize: 16,
-                                  fontFamily: 'mainFont',
-                                  fontWeight: FontWeight.bold,
-                                ),
-                                textAlign: TextAlign.center,
-                              ),
-                            );
-                          }).toList(),
+                          items:
+                              gender.map((gender) {
+                                return DropdownMenuItem<String>(
+                                  value: gender,
+                                  child: Text(
+                                    gender,
+                                    style: TextStyle(
+                                      color: mainColor,
+                                      fontSize: 16,
+                                      fontFamily: 'mainFont',
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                    textAlign: TextAlign.center,
+                                  ),
+                                );
+                              }).toList(),
                         ),
                       ),
 
@@ -458,18 +512,19 @@ class _CompleteStudentDataState extends State<CompleteStudentData> {
                                 .collection('StudentsTable')
                                 .doc(widget.studentCode)
                                 .update({
-                              'academicYear': selectedAcademicYear,
-                              'department': stuedentDepartment,
-                              'gender': selectedGender,
-                              'birthDate': birthDateController.text,
-                              'address': currentAddress,
-                              'birthAddress': birthAddress,
-                              'factory': factory,
-                            });
+                                  'grade': selectedGrade,
+                                  'department': stuedentDepartment,
+                                  'gender': selectedGender,
+                                  'birthDate': birthDateController.text,
+                                  'address': currentAddress,
+                                  'birthAddress': birthAddress,
+                                  'factory': factory,
+                                  'stage': selectedStage,
+                                });
                             // Navigate to the next page
-                            Get.offAll(SignInScreen(
-                              studentCode: widget.studentCode,
-                            ));
+                            Get.offAll(
+                              SignInScreen(studentCode: widget.studentCode),
+                            );
                           } else {
                             ScaffoldMessenger.of(context).showSnackBar(
                               SnackBar(

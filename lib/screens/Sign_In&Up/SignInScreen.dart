@@ -58,7 +58,7 @@ class _SignInScreenState extends State<SignInScreen> {
           : TextDirection.ltr,
       child: Scaffold(
         appBar: AppBar(
-          backgroundColor: Color(0xFF0187c4),
+          backgroundColor: secondaryColor,
           actions: <Widget>[
             // Language Selector Icon
             PopupMenuButton<String>(

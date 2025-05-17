@@ -9,6 +9,7 @@ class FirebaseService {
         .where('code', isEqualTo: studentCode)
         .get();
     if (querySnapshot.docs.isNotEmpty) {
+      print(querySnapshot.docs[0].data());
       return Student.fromJson(
           querySnapshot.docs[0].data() as Map<String, dynamic>);
     } else {

@@ -1,5 +1,5 @@
 class Student {
-  final String academicYear;
+  final String stage;
   final String address;
   final String birthAddress;
   final String birthDate;
@@ -14,9 +14,9 @@ class Student {
   final String phone;
   final String state;
   final String? password;
-
+  final int grade;
   Student({
-    required this.academicYear,
+    required this.stage,
     required this.address,
     required this.birthAddress,
     required this.birthDate,
@@ -31,6 +31,7 @@ class Student {
     required this.phone,
     required this.state,
     this.password,
+    required this.grade,
   });
 
   static Student fromJson(Map<String, dynamic> json) {
@@ -43,13 +44,14 @@ class Student {
       address: json['address'] ?? '',
       birthAddress: json['birthAddress'] ?? '',
       birthDate: json['birthDate'] ?? '',
-      academicYear: json['academicYear'] ?? '',
+      stage: json['stage'] ?? '',
       department: json['department'] ?? '',
       factory: json['factory'] ?? '',
       factoryType: json['factoryType'] ?? true,
       state: json['state'] ?? '',
       gender: json['gender'] ?? '',
       nationalID: json['nationalID'] ?? '',
+      grade : json['grade'] ?? 0,
     );
   }
 }
