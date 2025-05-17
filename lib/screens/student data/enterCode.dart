@@ -1,3 +1,4 @@
+import 'package:aitu_app/screens/student%20data/completeStudentData.dart';
 import 'package:aitu_app/shared/constant.dart';
 import 'package:aitu_app/shared/reuableWidgets.dart';
 import 'package:flutter/material.dart';
@@ -17,9 +18,10 @@ class _EnterStudentCodeState extends State<EnterStudentCode> {
   @override
   Widget build(BuildContext context) {
     return Directionality(
-      textDirection: Get.locale?.languageCode == 'ar'
-          ? TextDirection.rtl
-          : TextDirection.ltr,
+      textDirection:
+          Get.locale?.languageCode == 'ar'
+              ? TextDirection.rtl
+              : TextDirection.ltr,
       child: Scaffold(
         extendBodyBehindAppBar: true,
         appBar: AppBar(
@@ -99,31 +101,39 @@ class _EnterStudentCodeState extends State<EnterStudentCode> {
                             );
                             return;
                           }
-
                           final firebaseService = FirebaseService();
                           await firebaseService
                               .getDataWithStudentId(studentCode)
                               .then((student) {
-                            if (student != null) {
-                              // Store the student data in a variable or state
-                              // For example, you can use Get.put() to store it globally
-                              studentCode = student.code;
-                              if (student.email == "") {
-                                Get.offAll(Get.offAll(SignUpScreen(
-                                  studentCode: studentCode,
-                                )));
-                              } else {
-                                Get.offAll(
-                                  SignInScreen(studentCode: studentCode),
+                                if (student != null) {
+                                  // Store the student data in a variable or state
+                                  // For example, you can use Get.put() to store it globally]
+                                  if (student.email == "") {
+                                    Get.offAll(
+                                      Get.offAll(
+                                        SignUpScreen(studentCode: studentCode),
+                                      ),
+                                    );
+                                  } else if (student.factory == "" &&
+                                      student.birthAddress == "") {
+                                    Get.offAll(
+                                      CompleteStudentData(
+                                        studentCode: studentCode,
+                                      ),
+                                    );
+                                  } else {
+                                    Get.offAll(
+                                      SignInScreen(studentCode: studentCode),
+                                    );
+                                  }
+                                }
+                              })
+                              .catchError((error) {
+                                print("Error fetching student data: $error");
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(content: Text("code not found!".tr)),
                                 );
-                              }
-                            }
-                          }).catchError((error) {
-                            print("Error fetching student data: $error");
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(content: Text("code not found!".tr)),
-                            );
-                          });
+                              });
                         },
                         title: Text(
                           'Start'.tr,
