@@ -92,7 +92,6 @@ class _FactoryDataState extends State<FactoryData> {
       child: Scaffold(
         appBar: AppBar(
           backgroundColor: Color(0xFF0187c4),
-          title: Text("تفاصيل المصنع", style: TextStyle(color: Colors.white)),
           centerTitle: true,
           leading: IconButton(
             icon: Icon(Icons.arrow_back, color: Colors.white),
@@ -110,59 +109,39 @@ class _FactoryDataState extends State<FactoryData> {
                     ),
                   )
                 : SingleChildScrollView(
-                    padding: const EdgeInsets.all(16.0),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        Card(
-                          shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(16)),
-                          elevation: 4,
-                          child: Padding(
-                            padding: const EdgeInsets.all(16.0),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text("📍 اسم المصنع:", style: _titleStyle),
-                                Text("${factoryData!['Name']}",
-                                    style: _valueStyle),
-                                SizedBox(height: 12),
-                                Text("🏛 المحافظة:", style: _titleStyle),
-                                Text("${factoryData!['Governorate']}",
-                                    style: _valueStyle),
-                                SizedBox(height: 12),
-                                Text("📬 العنوان:", style: _titleStyle),
-                                Text("${factoryData!['Address']}",
-                                    style: _valueStyle),
-                              ],
-                            ),
-                          ),
-                        ),
-                        // SizedBox(height: 30),
-                        //
-                        // // اختيار تاريخ البداية
-                        // _buildDateRow("📅 تاريخ بداية التدريب:", startDate, true),
-                        //
-                        // SizedBox(height: 20),
-                        //
-                        // // اختيار تاريخ النهاية
-                        // _buildDateRow("📅 تاريخ نهاية التدريب:", endDate, false),
-                        //
-                        // SizedBox(height: 40),
-                        //
-                        // // زر الإرسال
-                        // ElevatedButton.icon(
-                        //   onPressed: _submitData,
-                        //   style: ElevatedButton.styleFrom(
-                        //     backgroundColor: Color(0xFF0187c4),
-                        //     padding: EdgeInsets.symmetric(vertical: 16),
-                        //     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                        //   ),
-                        //   icon: Icon(Icons.send, color: Colors.white),
-                        //   label: Text("إرسال البيانات", style: TextStyle(fontSize: 18, color: Colors.white)),
-                        // ),
-                      ],
+                  padding: const EdgeInsets.all(16.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                    Text(
+                      "معلومات المصنع",
+                      style: TextStyle(
+                      fontSize: 22,
+                      fontWeight: FontWeight.bold,
+                      color: Color(0xFF0187c4),
+                      ),
+                      textAlign: TextAlign.center,
                     ),
+                    SizedBox(height: 24),
+                    _infoRow(
+                      icon: Icons.factory,
+                      label: "اسم المصنع",
+                      value: "${factoryData!['Name']}",
+                    ),
+                    SizedBox(height: 18),
+                    _infoRow(
+                      icon: Icons.location_city,
+                      label: "المحافظة",
+                      value: "${factoryData!['Governorate']}",
+                    ),
+                    SizedBox(height: 18),
+                    _infoRow(
+                      icon: Icons.location_on,
+                      label: "العنوان",
+                      value: "${factoryData!['Address']}",
+                    ),
+                    ],
+                  ),
                   ),
       ),
     );
@@ -171,6 +150,26 @@ class _FactoryDataState extends State<FactoryData> {
   TextStyle get _titleStyle => TextStyle(
       fontSize: 16, fontWeight: FontWeight.bold, color: Colors.black87);
   TextStyle get _valueStyle => TextStyle(fontSize: 16, color: Colors.black87);
+
+  Widget _infoRow({required IconData icon, required String label, required String value}) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Icon(icon, color: Color(0xFF0187c4)),
+        SizedBox(width: 12),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(label, style: _titleStyle),
+              SizedBox(height: 4),
+              Text(value, style: _valueStyle),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
 
   // Widget _buildDateRow(String label, DateTime? date, bool isStart) {
   //   return Row(

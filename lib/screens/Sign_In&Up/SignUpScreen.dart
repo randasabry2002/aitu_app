@@ -50,7 +50,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
           : TextDirection.ltr,
       child: Scaffold(
         appBar: AppBar(
-          backgroundColor: secondaryColor,
+          backgroundColor: mainColor,
           automaticallyImplyLeading: false,
           actions: <Widget>[
             // Language Selector Icon
@@ -319,7 +319,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                               ScaffoldMessenger.of(context).showSnackBar(
                                 const SnackBar(
                                   content: Text(
-                                    "Check Your Data, This Email may be used before",
+                                    "there is an error, please try again later",
                                   ),
                                 ),
                               );
@@ -339,7 +339,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                           'already_have_account'.tr,
                           // Key for "Already have an account? Sign In"
                           style: TextStyle(
-                            color: secondaryColor,
+                            color: mainColor,
                             fontSize: 16,
                             fontFamily: 'mainFont',
                             fontWeight: FontWeight.bold,

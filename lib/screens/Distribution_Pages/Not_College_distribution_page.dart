@@ -1,4 +1,6 @@
 import 'package:aitu_app/screens/Distribution_Pages/PDFViewerPage.dart';
+import 'package:aitu_app/shared/constant.dart';
+import 'package:aitu_app/shared/reuableWidgets.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -21,7 +23,6 @@ class _Not_College_distribution_pageState
   String? selectedFactory;
   List<String> factoryNames = [];
   String? nominationCardUrl;
-
   // addFactories() async {
   //   WriteBatch batch = FirebaseFirestore.instance.batch();
   //
@@ -119,11 +120,16 @@ class _Not_College_distribution_pageState
 
     // تحويل البيانات إلى قائمة من النصوص
     setState(() {
-      factoryNames = querySnapshot.docs
-          .where(
-              (doc) => doc["Governorate"] == gName && doc["IN_or_OUT"] == false)
-          .map((doc) => doc["Name"] as String)
-          .toList();
+
+      factoryNames =
+          querySnapshot.docs
+              .where(
+                (doc) =>
+                    doc["Governorate"] == gName && doc["IN_or_OUT"] == false,
+              )
+              .map((doc) => doc["Name"] as String)
+              .toList();
+
     });
   }
 
@@ -137,17 +143,15 @@ class _Not_College_distribution_pageState
   @override
   Widget build(BuildContext context) {
     return Directionality(
-      textDirection: Get.locale?.languageCode == 'ar'
-          ? TextDirection.rtl
-          : TextDirection.ltr,
+      textDirection:
+          Get.locale?.languageCode == 'ar'
+              ? TextDirection.rtl
+              : TextDirection.ltr,
       child: Scaffold(
         appBar: AppBar(
           backgroundColor: Color(0xFF0187c4),
           leading: IconButton(
-            icon: Icon(
-              Icons.arrow_back,
-              color: Colors.white,
-            ),
+            icon: Icon(Icons.arrow_back, color: Colors.white),
             onPressed: () {
               Get.back();
             },
@@ -155,10 +159,7 @@ class _Not_College_distribution_pageState
           actions: <Widget>[
             // Language Selector Icon
             PopupMenuButton<String>(
-              icon: Icon(
-                Icons.language,
-                color: Colors.white,
-              ),
+              icon: Icon(Icons.language, color: Colors.white),
               onSelected: (value) {
                 // Update the app's locale based on the selection
                 if (value == 'en') {
@@ -169,188 +170,247 @@ class _Not_College_distribution_pageState
               },
               itemBuilder: (BuildContext context) {
                 return [
-                  PopupMenuItem(
-                    value: 'en',
-                    child: Text('English'),
-                  ),
-                  PopupMenuItem(
-                    value: 'ar',
-                    child: Text('العربية'),
-                  ),
+                  PopupMenuItem(value: 'en', child: Text('English')),
+                  PopupMenuItem(value: 'ar', child: Text('العربية')),
                 ];
               },
             ),
           ],
         ),
-        backgroundColor: Color(0xFF0187c4),
-        body: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
-                Text(
-                  "Not_College_distribution_text".tr,
-                  style: TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 18),
-                ),
+        backgroundColor: Color.fromARGB(255, 255, 255, 255),
+        body: Stack(
+          children: [
+            // Background image
+            Image(
+              image: backgroundImage,
+              fit: BoxFit.cover,
+              width: double.infinity,
+              height: double.infinity,
+            ),
 
-                /// choosing the government
-                governorateNames.isEmpty
-                    ? CircularProgressIndicator() // تحميل البيانات
-                    : Container(
-                        width: MediaQuery.of(context).size.width * 0.8,
-                        padding:
-                            EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(30),
-                          border:
-                              Border.all(color: Color(0xFF0187c4), width: 2),
-                        ),
-                        child: DropdownButtonHideUnderline(
-                          child: DropdownButton<String>(
-                            isExpanded: true,
-                            value: selectedGovernorate,
-                            hint: Text("pick_governorate_name".tr,
-                                style: TextStyle(
-                                    color: Color(0xFF0187c4),
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 17)),
-                            icon: Icon(Icons.arrow_drop_down,
-                                color: Color(0xFF0187c4)),
-                            dropdownColor: Colors.white,
-                            items: governorateNames.map((governorate) {
-                              return DropdownMenuItem<String>(
-                                value: governorate,
-                                child: Text(governorate,
-                                    style: TextStyle(
-                                        color: Color(0xFF0187c4),
-                                        fontWeight: FontWeight.bold,
-                                        fontSize: 17)),
-                              );
-                            }).toList(),
-                            onChanged: (newValue) {
-                              setState(() {
-                                selectedGovernorate = newValue;
-                                fetchFactories(selectedGovernorate!);
-                              });
-                            },
-                          ),
-                        ),
+            Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    Text(
+                      "Not_College_distribution_text".tr,
+                      style: TextStyle(
+                        color: const Color.fromARGB(255, 0, 0, 0),
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
                       ),
+                    ),
 
-                /// choosing the factory
-                Visibility(
-                  visible:
-                      selectedGovernorate != null && factoryNames.isNotEmpty,
-                  child: factoryNames.isEmpty
-                      ? CircularProgressIndicator() // تحميل البيانات
-                      : Container(
-                          width: MediaQuery.of(context).size.width * 0.8,
-                          padding:
-                              EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                    /// choosing the government
+                    governorateNames.isEmpty
+                        ? CircularProgressIndicator() // تحميل البيانات
+                        : Container(
+                          width: MediaQuery.of(context).size.width * 0.9,
+                          padding: EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 8,
+                          ),
                           decoration: BoxDecoration(
                             color: Colors.white,
-                            borderRadius: BorderRadius.circular(30),
-                            border:
-                                Border.all(color: Color(0xFF0187c4), width: 2),
+                            borderRadius: BorderRadius.circular(20),
+                            border: Border.all(
+                              color: Color(0xFF0187c4),
+                              width: 1,
+                            ),
                           ),
                           child: DropdownButtonHideUnderline(
                             child: DropdownButton<String>(
                               isExpanded: true,
-                              value: selectedFactory,
-                              hint: Text("pick_factory_name".tr,
-                                  style: TextStyle(
-                                      color: Color(0xFF0187c4),
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 17)),
-                              icon: Icon(Icons.arrow_drop_down,
-                                  color: Color(0xFF0187c4)),
+                              value: governorateNames.contains(selectedGovernorate) ? selectedGovernorate : null,
+                              hint: Text(
+                                "pick_governorate_name".tr,
+                                textAlign: TextAlign.center,
+                                style: TextStyle(
+                                  color: Color(0xFF0187c4),
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 17,
+                                ),
+                              ),
+                              icon: Icon(
+                                Icons.arrow_drop_down,
+                                color: Color(0xFF0187c4),
+                              ),
                               dropdownColor: Colors.white,
-                              items: factoryNames.map((factory) {
-                                return DropdownMenuItem<String>(
-                                  value: factory,
-                                  child: Text(factory,
-                                      style: TextStyle(
+                              items:
+                                  governorateNames.map((governorate) {
+                                    return DropdownMenuItem<String>(
+                                      value: governorate,
+                                      child: Text(
+                                        governorate,
+                                        textAlign: TextAlign.center,
+
+                                        style: TextStyle(
                                           color: Color(0xFF0187c4),
                                           fontWeight: FontWeight.bold,
-                                          fontSize: 17)),
-                                );
-                              }).toList(),
+                                          fontSize: 17,
+                                        ),
+                                      ),
+                                    );
+                                  }).toList(),
                               onChanged: (newValue) {
                                 setState(() {
-                                  selectedFactory = newValue;
+                                  selectedFactory = null;
+                                  selectedGovernorate = newValue;
+                                  fetchFactories(selectedGovernorate!);
                                 });
                               },
                             ),
                           ),
                         ),
-                ),
-                Visibility(
-                  visible: factoryNames.isEmpty && selectedGovernorate != null,
-                  child: Text(
-                    "no_factory_data_in_this_gov".tr,
-                    style: TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 20),
-                  ),
-                ),
-                Visibility(
-                  visible: selectedFactory != null,
-                  child: ElevatedButton(
-                    onPressed: () async {
-                      Get.to(FactoryData(selectedFactory: selectedFactory));
-                    },
-                    child: Text(
-                      "factory_data".tr,
-                      style: TextStyle(
-                          color: Color(0xFF0187c4),
-                          fontWeight: FontWeight.bold,
-                          fontSize: 20),
+
+                    /// choosing the factory
+                    Visibility(
+                      visible:
+                          selectedGovernorate != null &&
+                          factoryNames.isNotEmpty,
+                      child:
+                          factoryNames.isEmpty
+                              ? CircularProgressIndicator() // تحميل البيانات
+                              : Container(
+                                // width: MediaQuery.of(context).size.width * 0.8,
+                                padding: EdgeInsets.symmetric(
+                                  horizontal: 12.0,
+                                  vertical: 4.0,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: Colors.white,
+                                  borderRadius: BorderRadius.circular(20),
+                                  border: Border.all(
+                                    color: Color(0xFF0187c4),
+                                    width: 1,
+                                  ),
+                                ),
+                                child: DropdownButtonHideUnderline(
+                                  child: DropdownButton<String>(
+                                    borderRadius: BorderRadius.circular(20),
+                                    isExpanded: true,
+                                    value: selectedFactory,
+                                    hint: Text(
+                                      "pick_factory_name".tr,
+                                      style: TextStyle(
+                                        color: Color(0xFF0187c4),
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 17,
+                                      ),
+                                    ),
+                                    icon: Icon(
+                                      Icons.arrow_drop_down,
+                                      color: Color(0xFF0187c4),
+                                    ),
+                                    dropdownColor: Colors.white,
+                                    items:
+                                        factoryNames.map((factory) {
+                                          return DropdownMenuItem<String>(
+                                            value: factory,
+                                            child: Text(
+                                              factory,
+                                              style: TextStyle(
+                                                color: Color(0xFF0187c4),
+                                                fontWeight: FontWeight.bold,
+                                                fontSize: 17,
+                                              ),
+                                            ),
+                                          );
+                                        }).toList(),
+                                    onChanged: (newValue) {
+                                      setState(() {
+                                        selectedFactory = newValue;
+
+                                      });
+                                    },
+                                  ),
+                                ),
+                              ),
                     ),
-                  ),
-                ),
-                Text(
-                  "or".tr,
-                  style: TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 35),
-                ),
-                // SizedBox(height: 40,),
-                ElevatedButton(
-                  onPressed: () async {
-                    Get.to(Add_New_Factory_Request_Page());
-                  },
-                  child: Text(
-                    "add_new_factory_request".tr,
-                    style: TextStyle(
-                        color: Color(0xFF0187c4),
+                    Visibility(
+                      visible:
+                          factoryNames.isEmpty && selectedGovernorate != null,
+                      child: Text(
+                        "no_factory_data_in_this_gov".tr,
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          color: const Color.fromARGB(255, 0, 0, 0),
+                          fontWeight: FontWeight.bold,
+                          fontSize: 12,
+                        ),
+                      ),
+                    ),
+                    Visibility(
+                      visible: selectedFactory != null,
+                      child: GestureDetector(
+                      onTap: () async {
+                        Get.to(FactoryData(selectedFactory: selectedFactory));
+                      },
+                      child: Container(
+                        padding: EdgeInsets.symmetric(
+                        horizontal: 12.0,
+                        vertical: 4.0,
+                        ),
+                        decoration: BoxDecoration(
+                        color: mainColor,
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(
+                          color: Color.fromARGB(255, 255, 255, 255),
+                          width: 1,
+                        ),
+                        ),
+                        child: Center(
+                        child: Text(
+                          "factory_data".tr,
+                          style: TextStyle(
+                          color: Color.fromARGB(255, 255, 255, 255),
+                          fontWeight: FontWeight.bold,
+                          fontSize: 20,
+                          ),
+                        ),
+                        ),
+                      ),
+                      ),
+                    ),
+                    Text(
+                      "or".tr,
+                      style: TextStyle(
+                        color: const Color.fromARGB(255, 0, 0, 0),
                         fontWeight: FontWeight.bold,
-                        fontSize: 20),
-                  ),
+                        fontFamily: 'mainFont',
+                        fontSize: 20,
+                      ),
+                    ),
+                    // SizedBox(height: 40,),
+                    CreateButton(
+                      title: Text(
+                        "add_new_factory_request".tr,
+                        textAlign: TextAlign.center,
+                      ),
+                      onPressed: () async {
+                        Get.to(Add_New_Factory_Request_Page());
+                      },
+                    ),
+                    CreateButton(
+                      title: Text(
+                        "nominationCard".tr,
+                        textAlign: TextAlign.center,
+                      ),
+                      onPressed: () async {
+                        Get.to(PDFViewerPage(pdfType: "nominationCard"));
+                      },
+                    ),
+                  ],
                 ),
-                ElevatedButton(
-                  onPressed: () async {
-                    Get.to(PDFViewerPage(pdfType: "nominationCard"));
-                  },
-                  child: Text(
-                    "nominationCard".tr,
-                    style: TextStyle(
-                        color: Color(0xFF0187c4),
-                        fontWeight: FontWeight.bold,
-                        fontSize: 20),
-                  ),
-                ),
-              ],
+              ),
             ),
-          ),
+          ],
         ),
       ),
     );
   }
 }
+
+
