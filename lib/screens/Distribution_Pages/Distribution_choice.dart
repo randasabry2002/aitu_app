@@ -1,5 +1,7 @@
+import 'package:aitu_app/screens/Distribution_Pages/College_distribution_page.dart';
+import 'package:aitu_app/screens/Distribution_Pages/Instructions.dart';
 import 'package:aitu_app/shared/constant.dart';
-import 'package:aitu_app/shared/reuableWidgets.dart';
+// import 'package:aitu_app/shared/reuableWidgets.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -16,11 +18,16 @@ class _Distribution_choiceState extends State<Distribution_choice> {
   @override
   Widget build(BuildContext context) {
     return Directionality(
-      textDirection: Get.locale?.languageCode == 'ar'
-          ? TextDirection.rtl
-          : TextDirection.ltr,
+      textDirection:
+          Get.locale?.languageCode == 'ar'
+              ? TextDirection.rtl
+              : TextDirection.ltr,
       child: Scaffold(
         appBar: AppBar(
+          leading: IconButton(
+            icon: Icon(Icons.arrow_back_ios_new_rounded, color: Colors.white),
+            onPressed: () => Get.offAll(Instructions()),
+          ),
           backgroundColor: mainColor,
           actions: <Widget>[
             // Language Selector Icon
@@ -36,8 +43,8 @@ class _Distribution_choiceState extends State<Distribution_choice> {
               },
               itemBuilder: (BuildContext context) {
                 return [
-                  PopupMenuItem(value: 'en', child: Text('English')),
-                  PopupMenuItem(value: 'ar', child: Text('العربية')),
+                  PopupMenuItem(value: 'en', child: Text('English'.tr)),
+                  PopupMenuItem(value: 'ar', child: Text('العربية'.tr)),
                 ];
               },
             ),
@@ -60,13 +67,13 @@ class _Distribution_choiceState extends State<Distribution_choice> {
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: [
                     Padding(
-                      padding: const EdgeInsets.all(10.0),
+                      padding: const EdgeInsets.all(4.0),
                       child: Text(
-                        "distribution_choice_text".tr,
+                        'distribution_choice_text'.tr,
                         textAlign: TextAlign.center,
                         style: TextStyle(
-                          fontSize: 20,
-                          color: mainColor,
+                          fontSize: 18,
+                          color: const Color.fromARGB(255, 0, 0, 0),
                           fontFamily: 'mainFont',
                           fontWeight: FontWeight.bold,
                         ),
@@ -77,16 +84,9 @@ class _Distribution_choiceState extends State<Distribution_choice> {
                       children: [
                         SizedBox(
                           width: double.infinity,
-                          child: CreateButton(
-                            title: Text(
-                              'College'.tr,
-                              style: TextStyle(
-                                fontSize: 24,
-                                fontWeight: FontWeight.bold,
-                                fontFamily: 'mainFont',
-                              ),
-                            ),
-                            onPressed: () async {
+                          child: GestureDetector(
+                            onTap: () async {
+
                               final SharedPreferences _prefs =
                                   await SharedPreferences.getInstance();
                               await _prefs.setString(
@@ -95,26 +95,74 @@ class _Distribution_choiceState extends State<Distribution_choice> {
                               );
                               Get.to(College_distribution_page());
                             },
+                            child: Container(
+                              width: double.infinity,
+                              padding: EdgeInsets.symmetric(vertical: 16),
+                              decoration: BoxDecoration(
+                                color: mainColor,
+                                borderRadius: BorderRadius.circular(20),
+
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: const Color.fromARGB(
+                                      255,
+                                      0,
+                                      0,
+                                      0,
+                                    ).withOpacity(0.3),
+                                    blurRadius: 6,
+                                    offset: Offset(0, 3),
+                                  ),
+                                ],
+                              ),
+                              child: Center(
+                                child: Text(
+                                  'college'.tr,
+                                  style: TextStyle(
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.bold,
+                                    fontFamily: 'mainFont',
+                                    color: Colors.white,
+                                  ),
+                                ),
+                              ),
+                            ),
                           ),
                         ),
-                        SizedBox(
-                          height: 20,
-                        ),
+                        SizedBox(height: 20),
                         SizedBox(
                           width: double.infinity,
-                          child: CreateButton(
-                            title: Text(
-                              'Other'.tr,
-                              style: TextStyle(
-                                fontSize: 24,
-                                fontWeight: FontWeight.bold,
-                                fontFamily: 'mainFont',
-                              ),
-                            ), // Key for "Sign Up",
-                            onPressed: () {
+                          child: GestureDetector(
+                            onTap: () {
                               // Navigate to next screen
                               Get.to(Not_College_distribution_page());
                             },
+                            child: Container(
+                              width: double.infinity,
+                              padding: EdgeInsets.symmetric(vertical: 16),
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                borderRadius: BorderRadius.circular(20),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: mainColor.withOpacity(0.3),
+                                    blurRadius: 6,
+                                    offset: Offset(0, 3),
+                                  ),
+                                ],
+                              ),
+                              child: Center(
+                                child: Text(
+                                  'choose by yourself'.tr,
+                                  style: TextStyle(
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.bold,
+                                    fontFamily: 'mainFont',
+                                    color: mainColor, // Foreground color
+                                  ),
+                                ),
+                              ),
+                            ),
                           ),
                         ),
                       ],
@@ -129,5 +177,3 @@ class _Distribution_choiceState extends State<Distribution_choice> {
     );
   }
 }
-
-class College_distribution_page {}

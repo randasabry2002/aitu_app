@@ -1,3 +1,4 @@
+import 'package:aitu_app/shared/constant.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -26,10 +27,11 @@ class _FactoryDataState extends State<FactoryData> {
     if (widget.selectedFactory == null) return;
 
     try {
-      var querySnapshot = await FirebaseFirestore.instance
-          .collection('Factories')
-          .where('Name', isEqualTo: widget.selectedFactory)
-          .get();
+      var querySnapshot =
+          await FirebaseFirestore.instance
+              .collection('Factories')
+              .where('name', isEqualTo: widget.selectedFactory)
+              .get();
 
       if (querySnapshot.docs.isNotEmpty) {
         setState(() {
@@ -86,111 +88,164 @@ class _FactoryDataState extends State<FactoryData> {
   @override
   Widget build(BuildContext context) {
     return Directionality(
-      textDirection: Get.locale?.languageCode == 'ar'
-          ? TextDirection.rtl
-          : TextDirection.ltr,
+      textDirection:
+          Get.locale?.languageCode == 'ar'
+              ? TextDirection.rtl
+              : TextDirection.ltr,
       child: Scaffold(
+        backgroundColor: Colors.white,
         appBar: AppBar(
-          backgroundColor: Color(0xFF0187c4),
+          backgroundColor: mainColor,
           centerTitle: true,
+          actions: <Widget>[
+            // Language Selector Icon
+            PopupMenuButton<String>(
+              icon: Icon(Icons.language, color: Colors.white),
+              onSelected: (value) {
+                // Update the app's locale based on the selection
+                if (value == 'en') {
+                  Get.updateLocale(Locale('en'));
+                } else if (value == 'ar') {
+                  Get.updateLocale(Locale('ar'));
+                }
+              },
+              itemBuilder: (BuildContext context) {
+                return [
+                  PopupMenuItem(value: 'en', child: Text('English')),
+                  PopupMenuItem(value: 'ar', child: Text('العربية')),
+                ];
+              },
+            ),
+          ],
           leading: IconButton(
-            icon: Icon(Icons.arrow_back, color: Colors.white),
+            icon: Icon(Icons.arrow_back_ios_new_rounded, color: Colors.white),
             onPressed: () => Get.back(),
           ),
         ),
-        backgroundColor: Colors.grey[100],
-        body: isLoading
-            ? Center(child: CircularProgressIndicator())
-            : factoryData == null
+        body:
+            isLoading
+                ? Center(child: CircularProgressIndicator())
+                : factoryData == null
                 ? Center(
-                    child: Text(
-                      "لم يتم العثور على المصنع",
-                      style: TextStyle(fontSize: 18, color: Colors.black54),
-                    ),
-                  )
+                  child: Text(
+                    "لم يتم العثور على المصنع",
+                    style: TextStyle(fontSize: 18, color: Colors.black54),
+                  ),
+                )
                 : SingleChildScrollView(
                   padding: const EdgeInsets.all(16.0),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                    Text(
-                      "معلومات المصنع",
-                      style: TextStyle(
-                      fontSize: 22,
-                      fontWeight: FontWeight.bold,
-                      color: Color(0xFF0187c4),
+                      SizedBox(height: 40),
+                      Text(
+                        "factory_data".tr,
+                        style: TextStyle(
+                          fontSize: 22,
+                          fontWeight: FontWeight.bold,
+                          fontFamily: 'mainFont',
+                          color: const Color.fromARGB(255, 0, 0, 0),
+                        ),
+                        textAlign: TextAlign.center,
                       ),
-                      textAlign: TextAlign.center,
-                    ),
-                    SizedBox(height: 24),
-                    _infoRow(
-                      icon: Icons.factory,
-                      label: "اسم المصنع",
-                      value: "${factoryData!['Name']}",
-                    ),
-                    SizedBox(height: 18),
-                    _infoRow(
-                      icon: Icons.location_city,
-                      label: "المحافظة",
-                      value: "${factoryData!['Governorate']}",
-                    ),
-                    SizedBox(height: 18),
-                    _infoRow(
-                      icon: Icons.location_on,
-                      label: "العنوان",
-                      value: "${factoryData!['Address']}",
-                    ),
+                      SizedBox(height: 40),
+                      _infoRow(
+                        icon: Icons.factory,
+                        label: 'factory_name'.tr,
+                        value: "${factoryData!['name']}",
+                      ),
+                      SizedBox(height: 18),
+                      _infoRow(
+                        icon: Icons.location_city,
+                        label: 'factory_Governorate'.tr,
+                        value: "${factoryData!['Governorate']}",
+                      ),
+                      SizedBox(height: 18),
+                      _infoRow(
+                        icon: Icons.location_on,
+                        label: 'factory_address'.tr,
+                        value: "${factoryData!['address']}",
+                      ),
+                      SizedBox(height: 18),
+                      _infoRow(
+                        icon: Icons.person,
+                        label: 'contact_name'.tr,
+                        value: "${factoryData!['contactName']}",
+                      ),
+                      SizedBox(height: 18),
+                      _infoRow(
+                        icon: Icons.phone,
+                        label: 'contact_num'.tr,
+                        value: "${factoryData!['phone']}",
+                      ),
+                      SizedBox(height: 18),
+                      _infoRow(
+                        icon: Icons.webhook_sharp,
+                        label: 'factory_industry'.tr,
+                        value: "${factoryData!['industry']}",
+                      ),
                     ],
                   ),
-                  ),
+                ),
       ),
     );
   }
 
   TextStyle get _titleStyle => TextStyle(
-      fontSize: 16, fontWeight: FontWeight.bold, color: Colors.black87);
+    fontSize: 16,
+    fontWeight: FontWeight.bold,
+    color: Colors.black87,
+    fontFamily: 'mainFont',
+  );
   TextStyle get _valueStyle => TextStyle(fontSize: 16, color: Colors.black87);
 
-  Widget _infoRow({required IconData icon, required String label, required String value}) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Icon(icon, color: Color(0xFF0187c4)),
-        SizedBox(width: 12),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(label, style: _titleStyle),
-              SizedBox(height: 4),
-              Text(value, style: _valueStyle),
-            ],
+  Widget _infoRow({
+    required IconData icon,
+    required String label,
+    required String value,
+  }) {
+    return Container(
+      margin: EdgeInsets.symmetric(vertical: 10),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(18),
+        boxShadow: [
+          BoxShadow(
+            color: const Color.fromARGB(255, 0, 0, 0).withOpacity(0.10),
+            blurRadius: 4,
+            offset: Offset(0, 4),
+          ),
+        ],
+      ),
+      child: ListTile(
+        contentPadding: EdgeInsets.symmetric(vertical: 18, horizontal: 18),
+        leading: Container(
+          decoration: BoxDecoration(
+            color: const Color.fromARGB(255, 255, 255, 255),
+            shape: BoxShape.circle,
+            border: Border.all(color: mainColor, width: 1),
+          ),
+          padding: EdgeInsets.all(10),
+          child: Icon(icon, color: mainColor, size: 30),
+        ),
+        title: Text(
+          label,
+          style: _titleStyle.copyWith(fontSize: 16, color: mainColor),
+        ),
+        subtitle: Padding(
+          padding: const EdgeInsets.only(top: 4.0),
+          child: Text(
+            value,
+            style: _valueStyle.copyWith(
+              fontWeight: FontWeight.w600,
+              fontSize: 14,
+              color: Colors.black87,
+            ),
+            maxLines: 3,
+            overflow: TextOverflow.ellipsis,
           ),
         ),
-      ],
+      ),
     );
   }
-
-  // Widget _buildDateRow(String label, DateTime? date, bool isStart) {
-  //   return Row(
-  //     mainAxisAlignment: MainAxisAlignment.spaceBetween,
-  //     children: [
-  //       Expanded(
-  //         child: Text(label, style: _titleStyle),
-  //       ),
-  //       ElevatedButton(
-  //         onPressed: () => _selectDate(context, isStart),
-  //         style: ElevatedButton.styleFrom(
-  //           backgroundColor: Colors.white,
-  //           side: BorderSide(color: Color(0xFF0187c4)),
-  //           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-  //         ),
-  //         child: Text(
-  //           date == null ? "اختر التاريخ" : "${date.toLocal()}".split(' ')[0],
-  //           style: TextStyle(color: Color(0xFF0187c4), fontWeight: FontWeight.bold),
-  //         ),
-  //       ),
-  //     ],
-  //   );
-  // }
 }

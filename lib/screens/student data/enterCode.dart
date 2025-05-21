@@ -96,101 +96,94 @@ class _EnterStudentCodeState extends State<EnterStudentCode> {
                             crossAxisAlignment: CrossAxisAlignment.center,
                             // mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                             children: [
-                              //enter your code text
+                              // Step 1: Enter your code text
                               Text(
-                                'Enter your code'
-                                    .tr, // Translation key for "Sign Up"
-
-                                style: TextStyle(
-                                  color: const Color.fromARGB(255, 255, 255, 255),
-                                  fontSize: 24.0,
-                                  fontFamily: 'mainFont',
-                                  fontWeight: FontWeight.bold,
-                                  // fontFamily: 'mainFont',
-                                ),
+                              'enter_your_code'.tr,
+                              style: TextStyle(
+                                color: const Color.fromARGB(255, 255, 255, 255),
+                                fontSize: 24.0,
+                                fontFamily: 'mainFont',
+                                fontWeight: FontWeight.bold,
+                              ),
                               ),
                               SizedBox(height: 20),
+                              // Step 2: Input field for code
                               CreateInput(
-                                borderColor: const Color.fromARGB(255, 255, 255, 255),
-                                labelColor: const Color.fromARGB(255, 82, 82, 82),
-                                color: const Color.fromARGB(200, 255, 255, 255),
-                                onChanged: (value) {
-                                  studentCode = value;
-                                },
-                                labelText:
-                                    'code'.tr, // Translation key for "Email"
-                                keyboardType: TextInputType.text,
+                              borderColor: const Color.fromARGB(255, 255, 255, 255),
+                              labelColor: const Color.fromARGB(255, 82, 82, 82),
+                              color: const Color.fromARGB(200, 255, 255, 255),
+                              onChanged: (value) {
+                                setState(() {
+                                studentCode = value;
+                                });
+                              },
+                              labelText: 'code'.tr,
+                              keyboardType: TextInputType.text,
                               ),
                               SizedBox(height: 40),
-                              //next buttno
+                              // Step 3: Next button
                               CreateButton(
-                                onPressed: () async {
-                                  if (studentCode.isEmpty) {
-                                    ScaffoldMessenger.of(
-                                      context,
-                                    ).showSnackBar(
-                                      SnackBar(
-                                        content: Text(
-                                          "please enter your code!".tr,
-                                        ),
-                                      ),
-                                    );
-                                    return;
-                                  }
-                                  final firebaseService = FirebaseService();
-                                  await firebaseService
-                                      .getDataWithStudentId(studentCode)
-                                      .then((student) {
-                                        if (student != null) {
-                                          // Store the student data in a variable or state
-                                          // For example, you can use Get.put() to store it globally]
-                                          if (student.email == "") {
-                                            Get.offAll(
-                                              Get.offAll(
-                                                SignUpScreen(
-                                                  studentCode: studentCode,
-                                                ),
-                                              ),
-                                            );
-                                          } else if (student.factory == "" &&
-                                              student.birthAddress == "") {
-                                            Get.offAll(
-                                              CompleteStudentData(
-                                                studentCode: studentCode,
-                                              ),
-                                            );
-                                          } else {
-                                            Get.offAll(
-                                              SignInScreen(
-                                                studentCode: studentCode,
-                                              ),
-                                            );
-                                          }
-                                        }
-                                      })
-                                      .catchError((error) {
-                                        print(
-                                          "Error fetching student data: $error",
-                                        );
-                                        ScaffoldMessenger.of(
-                                          context,
-                                        ).showSnackBar(
-                                          SnackBar(
-                                            content: Text(
-                                              "code not found!".tr,
-                                            ),
-                                          ),
-                                        );
-                                      });
-                                },
-                                title: Text(
-                                  'Start'.tr,
-                                  style: TextStyle(
-                                    fontSize: 26,
-                                    fontWeight: FontWeight.bold,
-                                    fontFamily: 'mainFont',
+                              onPressed: () async {
+                                if (studentCode.isEmpty) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                  content: Text("please enter your code!".tr),
                                   ),
-                                ), // Key for "Sign Up",
+                                );
+                                return;
+                                }
+                                final firebaseService = FirebaseService();
+                                try {
+                                final student = await firebaseService.getDataWithStudentId(studentCode);
+                                if (student != null) {
+                                  // Step 4: Walk through the flow based on student data
+                                  if (student.email == "") {
+                                  // Go to SignUpScreen
+                                  Get.offAll(() => SignUpScreen(studentCode: studentCode));
+                                  } else if (student.birthAddress == "") {
+                                  // Go to CompleteStudentData
+                                  Get.offAll(() => CompleteStudentData(studentCode: studentCode));
+                                  } else {
+                                  // Go to SignInScreen
+                                  Get.offAll(() => SignInScreen(studentCode: studentCode));
+                                  }
+                                } else {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text("code not found!".tr),
+                                  ),
+                                  );
+                                }
+                                } catch (error) {
+                                print("Error fetching student data: $error");
+                                showDialog(
+                                  context: context,
+                                  builder: (context) => AlertDialog(
+                                  title: Text('Error'.tr),
+                                  content: Text('An error occurred while fetching student data. \n$error'.tr),
+                                  actions: [
+                                    TextButton(
+                                    onPressed: () => Navigator.of(context).pop(),
+                                    child: Text('OK'.tr),
+                                    ),
+                                  ],
+                                  ),
+                                );
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                  content: Text("code not found!".tr),
+                                  ),
+                                );
+                                }
+                              },
+                              title: Text(
+                                'Start'.tr,
+                                style: TextStyle(
+                                fontSize: 26,
+                                fontWeight: FontWeight.bold,
+                                fontFamily: 'mainFont',
+                                ),
+                              ),
                               ),
                             ],
                           ),

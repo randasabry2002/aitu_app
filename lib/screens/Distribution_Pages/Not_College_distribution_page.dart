@@ -1,4 +1,5 @@
 import 'package:aitu_app/screens/Distribution_Pages/PDFViewerPage.dart';
+import 'package:aitu_app/screens/Distribution_Pages/uploadReport.dart';
 import 'package:aitu_app/shared/constant.dart';
 import 'package:aitu_app/shared/reuableWidgets.dart';
 import 'package:flutter/material.dart';
@@ -120,16 +121,14 @@ class _Not_College_distribution_pageState
 
     // تحويل البيانات إلى قائمة من النصوص
     setState(() {
-
       factoryNames =
           querySnapshot.docs
               .where(
                 (doc) =>
-                    doc["Governorate"] == gName && doc["IN_or_OUT"] == false,
+                    doc["Governorate"] == gName && doc["isApproved"] == true && doc["type"] == "external",
               )
-              .map((doc) => doc["Name"] as String)
+              .map((doc) => doc["name"] as String)
               .toList();
-
     });
   }
 
@@ -151,7 +150,7 @@ class _Not_College_distribution_pageState
         appBar: AppBar(
           backgroundColor: Color(0xFF0187c4),
           leading: IconButton(
-            icon: Icon(Icons.arrow_back, color: Colors.white),
+            icon: Icon(Icons.arrow_back_ios_new_rounded, color: Colors.white),
             onPressed: () {
               Get.back();
             },
@@ -178,94 +177,103 @@ class _Not_College_distribution_pageState
           ],
         ),
         backgroundColor: Color.fromARGB(255, 255, 255, 255),
-        body: Stack(
-          children: [
-            // Background image
-            Image(
-              image: backgroundImage,
-              fit: BoxFit.cover,
-              width: double.infinity,
-              height: double.infinity,
-            ),
+        body: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                Text(
+                  "Not_College_distribution_text".tr,
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    color: const Color.fromARGB(255, 0, 0, 0),
+                    fontWeight: FontWeight.bold,
+                    fontFamily: 'mainFont',
+                    fontSize: 16,
+                  ),
+                ),
 
-            Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                  children: [
-                    Text(
-                      "Not_College_distribution_text".tr,
-                      style: TextStyle(
-                        color: const Color.fromARGB(255, 0, 0, 0),
-                        fontWeight: FontWeight.bold,
-                        fontSize: 16,
+                /// choosing the government
+                governorateNames.isEmpty
+                    ? CircularProgressIndicator() // تحميل البيانات
+                    : Container(
+                      // width: MediaQuery.of(context).size.width * 0.9,
+                      padding: EdgeInsets.symmetric(
+                        horizontal: 30,
+                        vertical: 8,
+                      ),
+                      decoration: BoxDecoration(
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.grey.withOpacity(0.3),
+                            spreadRadius: 2,
+                            blurRadius: 8,
+                            offset: Offset(0, 4),
+                          ),
+                        ],
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(20),
+                        // border: Border.all(
+                        //   color: Color(0xFF0187c4),
+                        //   width: 1,
+                        // ),
+                      ),
+                      child: DropdownButtonHideUnderline(
+                        child: DropdownButton<String>(
+                          isExpanded: true,
+                          value:
+                              governorateNames.contains(selectedGovernorate)
+                                  ? selectedGovernorate
+                                  : null,
+                          hint: Text(
+                            "pick_governorate_name".tr,
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              color: Color(0xFF0187c4),
+                              fontWeight: FontWeight.bold,
+                              fontFamily: 'mainFont',
+
+                              fontSize: 16,
+                            ),
+                          ),
+                          icon: Icon(
+                            Icons.arrow_drop_down,
+                            color: Color(0xFF0187c4),
+                          ),
+                          dropdownColor: Colors.white,
+                          items:
+                              governorateNames.map((governorate) {
+                                return DropdownMenuItem<String>(
+                                  value: governorate,
+                                  child: Text(
+                                    governorate,
+                                    textAlign: TextAlign.center,
+
+                                    style: TextStyle(
+                                      color: Color(0xFF0187c4),
+                                      fontWeight: FontWeight.bold,
+                                      fontFamily: 'mainFont',
+
+                                      fontSize: 16,
+                                    ),
+                                  ),
+                                );
+                              }).toList(),
+                          onChanged: (newValue) {
+                            setState(() {
+                              selectedFactory = null;
+                              selectedGovernorate = newValue;
+                              fetchFactories(selectedGovernorate!);
+                            });
+                          },
+                        ),
                       ),
                     ),
 
-                    /// choosing the government
-                    governorateNames.isEmpty
-                        ? CircularProgressIndicator() // تحميل البيانات
-                        : Container(
-                          width: MediaQuery.of(context).size.width * 0.9,
-                          padding: EdgeInsets.symmetric(
-                            horizontal: 12,
-                            vertical: 8,
-                          ),
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(20),
-                            border: Border.all(
-                              color: Color(0xFF0187c4),
-                              width: 1,
-                            ),
-                          ),
-                          child: DropdownButtonHideUnderline(
-                            child: DropdownButton<String>(
-                              isExpanded: true,
-                              value: governorateNames.contains(selectedGovernorate) ? selectedGovernorate : null,
-                              hint: Text(
-                                "pick_governorate_name".tr,
-                                textAlign: TextAlign.center,
-                                style: TextStyle(
-                                  color: Color(0xFF0187c4),
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 17,
-                                ),
-                              ),
-                              icon: Icon(
-                                Icons.arrow_drop_down,
-                                color: Color(0xFF0187c4),
-                              ),
-                              dropdownColor: Colors.white,
-                              items:
-                                  governorateNames.map((governorate) {
-                                    return DropdownMenuItem<String>(
-                                      value: governorate,
-                                      child: Text(
-                                        governorate,
-                                        textAlign: TextAlign.center,
-
-                                        style: TextStyle(
-                                          color: Color(0xFF0187c4),
-                                          fontWeight: FontWeight.bold,
-                                          fontSize: 17,
-                                        ),
-                                      ),
-                                    );
-                                  }).toList(),
-                              onChanged: (newValue) {
-                                setState(() {
-                                  selectedFactory = null;
-                                  selectedGovernorate = newValue;
-                                  fetchFactories(selectedGovernorate!);
-                                });
-                              },
-                            ),
-                          ),
-                        ),
-
-                    /// choosing the factory
+                /// choosing the factory
+                Column(
+                  children: [
                     Visibility(
                       visible:
                           selectedGovernorate != null &&
@@ -280,12 +288,21 @@ class _Not_College_distribution_pageState
                                   vertical: 4.0,
                                 ),
                                 decoration: BoxDecoration(
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors.grey.withOpacity(0.3),
+                                      spreadRadius: 2,
+                                      blurRadius: 8,
+                                      offset: Offset(0, 4),
+                                    ),
+                                  ],
                                   color: Colors.white,
-                                  borderRadius: BorderRadius.circular(20),
-                                  border: Border.all(
-                                    color: Color(0xFF0187c4),
-                                    width: 1,
+                                  borderRadius: BorderRadius.only(
+                                    topLeft: Radius.circular(20),
+                                    topRight: Radius.circular(20),
                                   ),
+
+                                  
                                 ),
                                 child: DropdownButtonHideUnderline(
                                   child: DropdownButton<String>(
@@ -297,7 +314,8 @@ class _Not_College_distribution_pageState
                                       style: TextStyle(
                                         color: Color(0xFF0187c4),
                                         fontWeight: FontWeight.bold,
-                                        fontSize: 17,
+                                        fontSize: 16,
+                                        fontFamily: 'mainFont',
                                       ),
                                     ),
                                     icon: Icon(
@@ -314,7 +332,8 @@ class _Not_College_distribution_pageState
                                               style: TextStyle(
                                                 color: Color(0xFF0187c4),
                                                 fontWeight: FontWeight.bold,
-                                                fontSize: 17,
+                                                fontSize: 16,
+                                                fontFamily: 'mainFont',
                                               ),
                                             ),
                                           );
@@ -322,7 +341,6 @@ class _Not_College_distribution_pageState
                                     onChanged: (newValue) {
                                       setState(() {
                                         selectedFactory = newValue;
-
                                       });
                                     },
                                   ),
@@ -331,69 +349,73 @@ class _Not_College_distribution_pageState
                     ),
                     Visibility(
                       visible:
-                          factoryNames.isEmpty && selectedGovernorate != null,
-                      child: Text(
-                        "no_factory_data_in_this_gov".tr,
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          color: const Color.fromARGB(255, 0, 0, 0),
-                          fontWeight: FontWeight.bold,
-                          fontSize: 12,
-                        ),
-                      ),
-                    ),
-                    Visibility(
-                      visible: selectedFactory != null,
-                      child: GestureDetector(
-                      onTap: () async {
-                        Get.to(FactoryData(selectedFactory: selectedFactory));
-                      },
-                      child: Container(
-                        padding: EdgeInsets.symmetric(
-                        horizontal: 12.0,
-                        vertical: 4.0,
-                        ),
-                        decoration: BoxDecoration(
-                        color: mainColor,
-                        borderRadius: BorderRadius.circular(20),
-                        border: Border.all(
-                          color: Color.fromARGB(255, 255, 255, 255),
-                          width: 1,
-                        ),
-                        ),
-                        child: Center(
-                        child: Text(
-                          "factory_data".tr,
-                          style: TextStyle(
-                          color: Color.fromARGB(255, 255, 255, 255),
-                          fontWeight: FontWeight.bold,
-                          fontSize: 20,
+                          selectedGovernorate != null &&
+                          factoryNames.isNotEmpty,
+                      child: Opacity(
+                        opacity: selectedFactory != null ? 1 : 0.5,
+                        child: GestureDetector(
+                          onTap: () async {
+                            if (selectedFactory != null) {
+                              Get.to(
+                                FactoryData(selectedFactory: selectedFactory),
+                              );
+                            }
+                          },
+                          child: Container(
+                            padding: EdgeInsets.symmetric(
+                              horizontal: 12.0,
+                              vertical: 4.0,
+                            ),
+                            decoration: BoxDecoration(
+                              color: const Color.fromARGB(255, 255, 255, 255),
+                              borderRadius: BorderRadius.only(
+                                bottomLeft: Radius.circular(20),
+                                bottomRight: Radius.circular(20),
+                              ),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.grey.withOpacity(0.3),
+                                  spreadRadius: 2,
+                                  blurRadius: 8,
+                                  offset: Offset(0, 4),
+                                ),
+                              ],),
+                            child: Center(
+                              child: Text(
+                                "factory_data".tr,
+                                style: TextStyle(
+                                  color: mainColor,
+                                  fontFamily: 'mainFont',
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 16,
+                                ),
+                              ),
+                            ),
                           ),
                         ),
-                        ),
-                      ),
                       ),
                     ),
-                    Text(
-                      "or".tr,
-                      style: TextStyle(
-                        color: const Color.fromARGB(255, 0, 0, 0),
-                        fontWeight: FontWeight.bold,
-                        fontFamily: 'mainFont',
-                        fontSize: 20,
-                      ),
+                  ],
+                ),
+                Visibility(
+                  visible: factoryNames.isEmpty && selectedGovernorate != null,
+                  child: Text(
+                    "no_factory_data_in_this_gov".tr,
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      color: const Color.fromARGB(255, 0, 0, 0),
+                      fontWeight: FontWeight.bold,
+                      fontFamily: 'mainFont',
+                      fontSize: 14,
                     ),
-                    // SizedBox(height: 40,),
-                    CreateButton(
-                      title: Text(
-                        "add_new_factory_request".tr,
-                        textAlign: TextAlign.center,
-                      ),
-                      onPressed: () async {
-                        Get.to(Add_New_Factory_Request_Page());
-                      },
-                    ),
-                    CreateButton(
+                  ),
+                ),
+                Visibility(
+                  visible: selectedFactory != null,
+                  child: SizedBox(
+                    width: double.infinity,
+                    height: 40.0,
+                    child: CreateButton(
                       title: Text(
                         "nominationCard".tr,
                         textAlign: TextAlign.center,
@@ -402,15 +424,53 @@ class _Not_College_distribution_pageState
                         Get.to(PDFViewerPage(pdfType: "nominationCard"));
                       },
                     ),
+                  ),
+                ),
+
+                SizedBox(height: 40),
+                Row(
+                  children: [
+                    Expanded(child: Divider(color: Colors.grey, thickness: 1)),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                      child: Text(
+                        "or".tr,
+                        style: TextStyle(
+                          color: const Color.fromARGB(255, 0, 0, 0),
+                          fontWeight: FontWeight.bold,
+                          fontFamily: 'mainFont',
+                          fontSize: 12,
+                        ),
+                      ),
+                    ),
+                    Expanded(child: Divider(color: Colors.grey, thickness: 1)),
                   ],
                 ),
-              ),
+
+                // SizedBox(height: 40,),
+                CreateButton(
+                  title: Text(
+                    "add_new_factory_request".tr,
+                    textAlign: TextAlign.center,
+                  ),
+                  onPressed: () async {
+                    Get.to(Add_New_Factory_Request_Page());
+                  },
+                ),
+                CreateButton(
+                  title: Text(
+                    'test for up',
+                    textAlign: TextAlign.center,
+                  ),
+                  onPressed: () async {
+                    Get.to(UplooadRerport());
+                  },
+                ),
+              ],
             ),
-          ],
+          ),
         ),
       ),
     );
   }
 }
-
-

@@ -1,4 +1,5 @@
-import 'package:aitu_app/screens/Sign_In&Up/SignInScreen.dart';
+import 'package:aitu_app/screens/Distribution_Pages/Instructions.dart';
+// import 'package:aitu_app/screens/Sign_In&Up/SignInScreen.dart';
 import 'package:aitu_app/shared/constant.dart';
 import 'package:aitu_app/shared/reuableWidgets.dart';
 import 'package:flutter/material.dart';
@@ -24,7 +25,6 @@ class _CompleteStudentDataState extends State<CompleteStudentData> {
   // String studentCode = '';
   String name = '';
   List<String> stage = ['معهد', 'كلية', 'مدرسة'];
-  List<int> grade = [1, 2, 3, 4];
 
   String? selectedStage;
   List<String> departments = [
@@ -36,9 +36,10 @@ class _CompleteStudentDataState extends State<CompleteStudentData> {
   List<String> gender = ['male', 'female'];
   String? selectedGender;
   String currentAddress = '';
+  String birthDate = '';
   String birthAddress = '';
   String factory = '';
-  int? selectedGrade;
+  int? selectedbatch;
   final TextEditingController emailController = TextEditingController();
   final TextEditingController factoryController = TextEditingController();
   final TextEditingController phoneController = TextEditingController();
@@ -68,8 +69,7 @@ class _CompleteStudentDataState extends State<CompleteStudentData> {
         birthAddressController.text.isNotEmpty &&
         currentAddress.isNotEmpty &&
         birthAddress.isNotEmpty &&
-        factory.isNotEmpty &&
-        selectedGrade != null) {
+        selectedbatch != null) {
       isDataCompleted = true;
     } else {
       isDataCompleted = false;
@@ -82,6 +82,18 @@ class _CompleteStudentDataState extends State<CompleteStudentData> {
     getDataWithStudentId().then((_) {
       setState(() {});
     });
+  }
+
+  List<int> batch = [];
+  List<int> getbatch(selectedStage) {
+    if (selectedStage == 'معهد') {
+      batch = [1, 2];
+    } else if (selectedStage == 'كلية') {
+      batch = [3, 4];
+    } else if (selectedStage == 'مدرسة') {
+      batch = [1, 2, 3];
+    }
+    return batch;
   }
 
   @override
@@ -199,13 +211,13 @@ class _CompleteStudentDataState extends State<CompleteStudentData> {
 
                       // SizedBox(height: 60),
                       // Factory
-                      CreateInput(
-                        controller: factoryController,
-                        keyboardType: TextInputType.text,
-                        onChanged: (value) => setState(() => factory = value),
-                        labelText: 'factory'.tr,
-                      ),
-                      SizedBox(height: 24.0),
+                      // CreateInput(
+                      //   controller: factoryController,
+                      //   keyboardType: TextInputType.text,
+                      //   onChanged: (value) => setState(() => factory = value),
+                      //   labelText: 'factory'.tr,
+                      // ),
+                      // SizedBox(height: 24.0),
 
                       // Current Address
                       CreateInput(
@@ -253,6 +265,7 @@ class _CompleteStudentDataState extends State<CompleteStudentData> {
                             setState(() {
                               birthDateController.text =
                                   '${pickedDate.toLocal()}'.split(' ')[0];
+                              birthDate = pickedDate.toString();
                             });
                           }
                         },
@@ -316,7 +329,11 @@ class _CompleteStudentDataState extends State<CompleteStudentData> {
                             value: selectedStage,
                             onChanged: (newValue) {
                               setState(() {
+                                // Update the selected stage
                                 selectedStage = newValue;
+                                // Update the selected batch based on the new stage
+                                selectedbatch = null; // Reset selected batch
+                                // batch = getbatch(selectedStage);
                               });
                             },
                             items:
@@ -339,8 +356,8 @@ class _CompleteStudentDataState extends State<CompleteStudentData> {
                       ),
 
                       SizedBox(height: 24.0),
-                      //grade
-                        Container(
+                      //batch
+                      Container(
                         width: double.infinity,
                         padding: EdgeInsets.symmetric(horizontal: 18),
                         decoration: BoxDecoration(
@@ -349,46 +366,52 @@ class _CompleteStudentDataState extends State<CompleteStudentData> {
                         ),
                         child: DropdownButtonHideUnderline(
                           child: DropdownButton<int>(
-                          borderRadius: BorderRadius.circular(15),
-                          dropdownColor: const Color.fromARGB(
-                            255,
-                            255,
-                            255,
-                            255,
-                          ),
-                          hint: Text(
-                            'select your academic year'.tr,
-                            style: TextStyle(
-                            color: mainColor,
-                            fontSize: 16,
-                            fontFamily: 'mainFont',
-                            fontWeight: FontWeight.bold,
+                            borderRadius: BorderRadius.circular(15),
+                            dropdownColor: const Color.fromARGB(
+                              255,
+                              255,
+                              255,
+                              255,
                             ),
-                          ),
-                          value: selectedGrade,
-                          onChanged: (newValue) {
-                            setState(() {
-                            selectedGrade = newValue;
-                            });
-                          },
-                          items: grade.map((g) {
-                            return DropdownMenuItem<int>(
-                            value: g,
-                            child: Text(
-                              g.toString(),
+                            hint: Text(
+                              'select your academic year'.tr,
                               style: TextStyle(
-                              color: const Color.fromARGB(255, 0, 0, 0),
-                              fontSize: 16.0,
-                              fontFamily: 'mainFont',
-                              fontWeight: FontWeight.bold,
+                                color: mainColor,
+                                fontSize: 16,
+                                fontFamily: 'mainFont',
+                                fontWeight: FontWeight.bold,
                               ),
-                              textAlign: TextAlign.center,
                             ),
-                            );
-                          }).toList(),
+                            value: selectedbatch,
+                            onChanged: (newValue) {
+                              setState(() {
+                                selectedbatch = newValue;
+                              });
+                            },
+                            items:
+                                getbatch(selectedStage).map((g) {
+                                  return DropdownMenuItem<int>(
+                                    value: g,
+                                    child: Text(
+                                      g.toString(),
+                                      style: TextStyle(
+                                        color: const Color.fromARGB(
+                                          255,
+                                          0,
+                                          0,
+                                          0,
+                                        ),
+                                        fontSize: 16.0,
+                                        fontFamily: 'mainFont',
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                      textAlign: TextAlign.center,
+                                    ),
+                                  );
+                                }).toList(),
                           ),
                         ),
-                        ),
+                      ),
                       SizedBox(height: 24.0),
                       //department
                       Container(
@@ -429,7 +452,12 @@ class _CompleteStudentDataState extends State<CompleteStudentData> {
                                     child: Text(
                                       department,
                                       style: TextStyle(
-                                        color: const Color.fromARGB(255, 0, 0, 0),
+                                        color: const Color.fromARGB(
+                                          255,
+                                          0,
+                                          0,
+                                          0,
+                                        ),
                                         fontSize: 16,
                                         fontFamily: 'mainFont',
                                         fontWeight: FontWeight.bold,
@@ -443,7 +471,7 @@ class _CompleteStudentDataState extends State<CompleteStudentData> {
                       ),
                       SizedBox(height: 24.0),
                       //gender
-                        Container(
+                      Container(
                         width: double.infinity,
                         padding: EdgeInsets.symmetric(horizontal: 18),
                         decoration: BoxDecoration(
@@ -452,46 +480,52 @@ class _CompleteStudentDataState extends State<CompleteStudentData> {
                         ),
                         child: DropdownButtonHideUnderline(
                           child: DropdownButton<String>(
-                          borderRadius: BorderRadius.circular(15),
-                          dropdownColor: const Color.fromARGB(
-                            255,
-                            255,
-                            255,
-                            255,
-                          ),
-                          hint: Text(
-                            'your gender'.tr,
-                            style: TextStyle(
-                            color: mainColor,
-                            fontSize: 16,
-                            fontFamily: 'mainFont',
-                            fontWeight: FontWeight.bold,
+                            borderRadius: BorderRadius.circular(15),
+                            dropdownColor: const Color.fromARGB(
+                              255,
+                              255,
+                              255,
+                              255,
                             ),
-                          ),
-                          value: selectedGender,
-                          onChanged: (newValue) {
-                            setState(() {
-                            selectedGender = newValue;
-                            });
-                          },
-                          items: gender.map((g) {
-                            return DropdownMenuItem<String>(
-                            value: g,
-                            child: Text(
-                              g,
+                            hint: Text(
+                              'your gender'.tr,
                               style: TextStyle(
-                              color: const Color.fromARGB(255, 0, 0, 0),
-                              fontSize: 16,
-                              fontFamily: 'mainFont',
-                              fontWeight: FontWeight.bold,
+                                color: mainColor,
+                                fontSize: 16,
+                                fontFamily: 'mainFont',
+                                fontWeight: FontWeight.bold,
                               ),
-                              textAlign: TextAlign.center,
                             ),
-                            );
-                          }).toList(),
+                            value: selectedGender,
+                            onChanged: (newValue) {
+                              setState(() {
+                                selectedGender = newValue;
+                              });
+                            },
+                            items:
+                                gender.map((g) {
+                                  return DropdownMenuItem<String>(
+                                    value: g,
+                                    child: Text(
+                                      g,
+                                      style: TextStyle(
+                                        color: const Color.fromARGB(
+                                          255,
+                                          0,
+                                          0,
+                                          0,
+                                        ),
+                                        fontSize: 16,
+                                        fontFamily: 'mainFont',
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                      textAlign: TextAlign.center,
+                                    ),
+                                  );
+                                }).toList(),
                           ),
                         ),
-                        ),
+                      ),
 
                       SizedBox(height: 60),
 
@@ -513,18 +547,18 @@ class _CompleteStudentDataState extends State<CompleteStudentData> {
                                 .collection('StudentsTable')
                                 .doc(widget.studentCode)
                                 .update({
-                                  'grade': selectedGrade,
+                                  'batch': selectedbatch,
                                   'department': stuedentDepartment,
                                   'gender': selectedGender,
-                                  'birthDate': birthDateController.text,
+                                  'birthDate': birthDate,
                                   'address': currentAddress,
                                   'birthAddress': birthAddress,
-                                  'factory': factory,
                                   'stage': selectedStage,
+                                  'createOn': DateTime.now().toString(),
                                 });
                             // Navigate to the next page
                             Get.offAll(
-                              SignInScreen(studentCode: widget.studentCode),
+                              Instructions(),
                             );
                           } else {
                             ScaffoldMessenger.of(context).showSnackBar(

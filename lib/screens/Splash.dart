@@ -1,5 +1,9 @@
 import 'dart:async';
+import 'package:aitu_app/screens/Sign_In&Up/SignInScreen.dart';
 import 'package:aitu_app/screens/student%20data/enterCode.dart';
+import 'package:aitu_app/shared/constant.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+// import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 
 // import 'package:google_fonts/google_fonts.dart';
@@ -9,7 +13,9 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'Attendance_Part_Pages/exitFactory.dart';
 import 'Attendance_Part_Pages/HomeScreen.dart';
 import 'Distribution_Pages/College_distribution_page.dart';
-import 'Distribution_Pages/Instructions.dart';
+import 'Distribution_Pages/watingRequestAnswer.dart';
+
+// import 'Distribution_Pages/Instructions.dart';
 
 class Splash extends StatefulWidget {
   @override
@@ -38,6 +44,22 @@ class SplashState extends State<StatefulWidget>
     }
   }
 
+  String factID = '';
+  Future<bool> checkThereIsRequest() async {
+    DocumentSnapshot doc =
+        await FirebaseFirestore.instance.collection('Factories').doc().get();
+    factID = doc.id;
+    DocumentSnapshot student = await FirebaseFirestore.instance
+        .collection('StudentsTable')
+        .where('email', isEqualTo: email)
+        .limit(1)
+        .get()
+        .then((value) => value.docs.first);
+    bool isRequestFound =
+        doc['isApproved'] == false && doc['studentID'] == student['code'];
+    return isRequestFound;
+  }
+
   @override
   void initState() {
     super.initState();
@@ -50,10 +72,7 @@ class SplashState extends State<StatefulWidget>
 
     // Define animation
     _animation = Tween<double>(begin: 0.2, end: 0.8).animate(
-      CurvedAnimation(
-        parent: _animationController,
-        curve: Curves.easeInOut,
-      ),
+      CurvedAnimation(parent: _animationController, curve: Curves.easeInOut),
     );
 
     // Start the animation
@@ -66,23 +85,35 @@ class SplashState extends State<StatefulWidget>
       print("email: $email in splash");
 
       // Simulate a delay for demonstration purposes
-      Future.delayed(Duration(seconds: 2), () {
-        if (email != 'null') {
-          if (attendanceId != 'null') {
-            // User is logged in, and the user was in the training navigate to ExitFactory
-            Get.offAll(ExitFactory());
-          } else {
-            if (page == 'College_distribution_page') {
-              Get.offAll(College_distribution_page());
-            } else if (page == 'HomeScreen') {
-              Get.offAll(HomeScreen());
+      Future.delayed(Duration(seconds: 2), () async {
+        try {
+          // if (await checkThereIsRequest()) {
+          //   Get.offAll(WaitnigReqestAnswer(factoryID: factID));
+          // } else 
+          if (email != 'null') {
+            if (attendanceId != 'null') {
+              // User is logged in, and the user was in the training navigate to ExitFactory
+              Get.offAll(ExitFactory());
             } else {
-              Get.offAll(Instructions());
+              if (page == 'College_distribution_page') {
+                Get.offAll(College_distribution_page());
+              } else if (page == 'HomeScreen') {
+                Get.offAll(HomeScreen());
+              } else {
+                Get.offAll(SignInScreen());
+              }
             }
+          } else {
+            // User is not logged in, navigate to Signin screen
+            Get.offAll(EnterStudentCode());
           }
-        } else {
-          // User is not logged in, navigate to Signin screen
-          Get.offAll(EnterStudentCode());
+        } catch (e) {
+          Get.defaultDialog(
+            title: "Error",
+            middleText: "Error: $e",
+            textConfirm: "OK",
+            confirmTextColor: Colors.red,
+          );
         }
       });
     });
@@ -103,9 +134,9 @@ class SplashState extends State<StatefulWidget>
             return true; // Allow the back button press to exit the app
           } else {
             _backButtonPressedCount++;
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text('Press back again to exit')),
-            );
+            ScaffoldMessenger.of(
+              context,
+            ).showSnackBar(SnackBar(content: Text('Press back again to exit')));
 
             // Reset the back button press count after 2 seconds
             Timer(Duration(seconds: 2), () {
@@ -126,16 +157,31 @@ class SplashState extends State<StatefulWidget>
                 child: Column(
                   children: [
                     Center(
-                        child: AnimatedBuilder(
-                          
-                      animation: _animationController,
-                      builder: (context, child) {
-                        return Transform.scale(
-                          scale: _animation.value,
-                          child: Image.asset('assets/images/logo.png'),
-                        );
-                      },
-                    )),
+                      child: AnimatedBuilder(
+                        animation: _animationController,
+                        builder: (context, child) {
+                          return Transform.scale(
+                            scale: _animation.value,
+                            child: Column(
+                              children: [
+                                Image.asset('assets/images/logo.png'),
+                                if (_animation.value >= .8) ...[
+                                  LinearProgressIndicator(
+                                    backgroundColor: const Color.fromARGB(
+                                      255,
+                                      255,
+                                      255,
+                                      255,
+                                    ),
+                                    color: mainColor,
+                                  ),
+                                ],
+                              ],
+                            ),
+                          );
+                        },
+                      ),
+                    ),
                   ],
                 ),
               ),

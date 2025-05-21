@@ -1,6 +1,7 @@
 import 'package:aitu_app/screens/Distribution_Pages/watingRequestAnswer.dart';
 import 'package:aitu_app/shared/constant.dart';
 import 'package:aitu_app/shared/reuableWidgets.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -21,7 +22,7 @@ class _Add_New_Factory_Request_PageState
   Future<void> fetchGovernorates() async {
     QuerySnapshot querySnapshot =
         await FirebaseFirestore.instance.collection("Governorates").get();
-
+    selectedGovernorateID = querySnapshot.docs.first.id;
     // تحويل البيانات إلى قائمة من النصوص
     setState(() {
       governorateNames =
@@ -30,6 +31,8 @@ class _Add_New_Factory_Request_PageState
   }
 
   List<Map<String, dynamic>> governorates = [];
+  List<String> types = ['internal', 'external'];
+  String? selectedType;
   String? selectedGovernorate;
   String? selectedGovernorateID;
   String? factoryID;
@@ -61,8 +64,8 @@ class _Add_New_Factory_Request_PageState
         factoryAddressController.text.isNotEmpty &&
         contactNameController.text.isNotEmpty &&
         contactNumberController.text.isNotEmpty &&
-        industryController.text.isNotEmpty &&
-        studentsNumberController.text.isNotEmpty) {
+        industryController.text.isNotEmpty
+        ) {
       isDataCompleted = true;
     } else {
       isDataCompleted = false;
@@ -78,6 +81,21 @@ class _Add_New_Factory_Request_PageState
 
   @override
   Widget build(BuildContext context) {
+    User? currentUser = FirebaseAuth.instance.currentUser;
+    String? userEmail = currentUser?.email;
+
+    Future<String?> getStudentId() async {
+      QuerySnapshot querySnapshot =
+          await FirebaseFirestore.instance
+              .collection('StudentsTable')
+              .where('email', isEqualTo: userEmail)
+              .get();
+      if (querySnapshot.docs.isNotEmpty) {
+        return querySnapshot.docs.first.id;
+      }
+      return null;
+    }
+
     return Directionality(
       textDirection:
           Get.locale?.languageCode == 'ar'
@@ -109,12 +127,12 @@ class _Add_New_Factory_Request_PageState
         backgroundColor: Color.fromARGB(255, 255, 255, 255),
         body: Stack(
           children: [
-            Image(
-              image: backgroundImage,
-              fit: BoxFit.cover,
-              width: double.infinity,
-              height: double.infinity,
-            ),
+            // Image(
+            //   image: backgroundImage,
+            //   fit: BoxFit.cover,
+            //   width: double.infinity,
+            //   height: double.infinity,
+            // ),
             Padding(
               padding: const EdgeInsets.fromLTRB(16.0, 0, 16.0, 25.0),
               child: Center(
@@ -195,6 +213,60 @@ class _Add_New_Factory_Request_PageState
                         ),
                       ),
                       SizedBox(height: 24.0),
+                      // type
+                      // Container(
+                      //   width: double.infinity,
+                      //   padding: EdgeInsets.symmetric(horizontal: 18),
+                      //   decoration: BoxDecoration(
+                      //     border: Border.all(color: mainColor),
+                      //     borderRadius: BorderRadius.circular(15),
+                      //   ),
+                      //   child: DropdownButtonHideUnderline(
+                      //     child: DropdownButton<String>(
+                      //       isExpanded: true,
+                      //       borderRadius: BorderRadius.circular(15),
+                      //       dropdownColor: const Color.fromARGB(
+                      //         255,
+                      //         255,
+                      //         255,
+                      //         255,
+                      //       ),
+                      //       hint: Text(
+                      //         'factory type'.tr,
+                      //         style: TextStyle(
+                      //           color: mainColor,
+                      //           fontSize: 16,
+                      //           fontFamily: 'mainFont',
+                      //           fontWeight: FontWeight.bold,
+                      //         ),
+                      //       ),
+                      //       value: selectedType,
+                      //       onChanged: (newValue) {
+                      //         setState(() {
+                      //           selectedType = newValue;
+                      //         });
+                      //       },
+                      //       items:
+                      //           types
+                      //               .map(
+                      //                 (type) => DropdownMenuItem<String>(
+                      //                   value: type,
+                      //                   child: Text(
+                      //                     type,
+                      //                     style: TextStyle(
+                      //                       color: Colors.black,
+                      //                       fontSize: 16,
+                      //                       fontFamily: 'mainFont',
+                      //                       fontWeight: FontWeight.bold,
+                      //                     ),
+                      //                   ),
+                      //                 ),
+                      //               )
+                      //               .toList(),
+                      //     ),
+                      //   ),
+                      // ),
+                      // SizedBox(height: 24.0),
                       // Factory Name
                       CreateInput(
                         keyboardType: TextInputType.text,
@@ -250,18 +322,18 @@ class _Add_New_Factory_Request_PageState
                         },
                       ),
                       SizedBox(height: 24.0),
-                      // Students Number
-                      CreateInput(
-                        keyboardType: TextInputType.number,
-                        labelText: 'Students Number'.tr,
-                        onChanged: (value) {
-                          setState(() {
-                            studentsNumberController.text = value;
-                          });
-                        },
-                      ),
+                      // // Students Number
+                      // CreateInput(
+                      //   keyboardType: TextInputType.number,
+                      //   labelText: 'Students Number'.tr,
+                      //   onChanged: (value) {
+                      //     setState(() {
+                      //       studentsNumberController.text = value;
+                      //     });
+                      //   },
+                      // ),
                       SizedBox(height: 60),
-                      // Submit Button
+                      // request Button
                       CreateButton(
                         title: Text(
                           'create request'.tr,
@@ -272,68 +344,104 @@ class _Add_New_Factory_Request_PageState
                           ),
                         ),
                         onPressed: () async {
-                          checkDataComplete();
-                          if (isDataCompleted) {
-                            await FirebaseFirestore.instance
-                                .collection('Factories')
-                                .add({
-                                  'Governorate': selectedGovernorate,
-                                  'Name': factoryNameController.text,
-                                  'factory address':
-                                      factoryAddressController.text,
-                                  'Contact Name': contactNameController.text,
-                                  'Contact Num': contactNumberController.text,
-                                  'Industry': industryController.text,
-                                  'Students Number':
-                                      studentsNumberController.text,
-                                  'GevornrateID': selectedGovernorateID,
-                                  'IN_or_OUT': false,
-                                });
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text('Factory request submitted!'.tr),
-                                backgroundColor: Colors.green,
-                                duration: Duration(seconds: 2),
-                              ),
-                            );
-                            factoryNameController.clear();
-                            factoryAddressController.clear();
-                            contactNameController.clear();
-                            contactNumberController.clear();
-                            industryController.clear();
-                            studentsNumberController.clear();
-                            setState(() {
-                              selectedGovernorate = null;
-                              selectedGovernorateID = null;
-                            });
-                            QuerySnapshot querySnapshot =
-                                await FirebaseFirestore.instance
-                                    .collection('Factories')
-                                    .get();
-                            setState(() {
-                              factoryID =
-                                  querySnapshot.docs.last.id; // Get the last factory ID
-                            });
-                            Get.offAll(WaitnigReqestAnswer(factoryID: factoryID.toString()));
-                          } else if (selectedGovernorate == null) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text(
-                                  'Please select a governorate.'.tr,
+                          try {
+                            checkDataComplete();
+                            if (isDataCompleted) {
+                              await FirebaseFirestore.instance
+                                  .collection('Factories')
+                                  .add({
+                                    'Governorate': selectedGovernorate,
+                                    'name': factoryNameController.text,
+                                    'address':
+                                        factoryAddressController.text,
+                                    'contactName': contactNameController.text,
+                                    'phone': contactNumberController.text,
+                                    'industry': industryController.text,
+                                    'StudentsID': await getStudentId(),
+                                    'type': "external",
+                                    'isApproved': false,
+                                    'assignedStudents': 0,
+                                    'capacity': 0,
+                                    'id': factoryID,
+                                    'studentName': (await FirebaseFirestore.instance
+                                            .collection('StudentsTable')
+                                            .doc(await getStudentId())
+                                            .get())
+                                        .get('name'),
+                                    'students': <String>[],
+                                    'createdAt': DateTime.now().toString(),
+                                  });
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text(
+                                    'Factory request submitted!'.tr,
+                                  ),
+                                  backgroundColor: Colors.green,
+                                  duration: Duration(seconds: 2),
                                 ),
-                                backgroundColor: Colors.red,
-                                duration: Duration(seconds: 2),
-                              ),
-                            );
-                          } else {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text(
-                                  'Please complete all required fields.'.tr,
+                              );
+                              factoryNameController.clear();
+                              factoryAddressController.clear();
+                              contactNameController.clear();
+                              contactNumberController.clear();
+                              industryController.clear();
+                              studentsNumberController.clear();
+                              setState(() {
+                                selectedGovernorate = null;
+                                selectedGovernorateID = null;
+                              });
+                              QuerySnapshot querySnapshot =
+                                  await FirebaseFirestore.instance
+                                      .collection('Factories')
+                                      .get();
+                              setState(() {
+                                factoryID =
+                                    querySnapshot
+                                        .docs
+                                        .last
+                                        .id; // Get the last factory ID
+                              });
+                              Get.offAll(
+                                WaitnigReqestAnswer(
+                                  factoryID: factoryID.toString(),
                                 ),
-                                backgroundColor: Colors.red,
-                                duration: Duration(seconds: 2),
-                              ),
+                              );
+                            } else if (selectedGovernorate == null) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text(
+                                    'Please select a governorate.'.tr,
+                                  ),
+                                  backgroundColor: Colors.red,
+                                  duration: Duration(seconds: 2),
+                                ),
+                              );
+                            } else {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text(
+                                    'Please complete all required fields.'.tr,
+                                  ),
+                                  backgroundColor: Colors.red,
+                                  duration: Duration(seconds: 2),
+                                ),
+                              );
+                            }
+                          } catch (e) {
+                            showDialog(
+                              context: context,
+                              builder:
+                                  (context) => AlertDialog(
+                                    title: Text('Error'.tr),
+                                    content: Text(e.toString()),
+                                    actions: [
+                                      TextButton(
+                                        onPressed:
+                                            () => Navigator.of(context).pop(),
+                                        child: Text('OK'.tr),
+                                      ),
+                                    ],
+                                  ),
                             );
                           }
                         },
