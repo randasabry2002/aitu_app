@@ -1,5 +1,6 @@
 // ignore_for_file: must_be_immutable
 
+import 'package:aitu_app/screens/student%20data/enterCode.dart';
 import 'package:aitu_app/shared/constant.dart';
 import 'package:aitu_app/shared/reuableWidgets.dart';
 import 'package:flutter/material.dart';
@@ -15,8 +16,8 @@ import 'SignUpScreen.dart';
 class SignInScreen extends StatefulWidget {
   @override
   State<SignInScreen> createState() => _SignInScreenState();
-  String studentCode;
-  SignInScreen({super.key, required this.studentCode});
+  String? studentCode;
+  SignInScreen({super.key, this.studentCode});
 }
 
 class _SignInScreenState extends State<SignInScreen> {
@@ -58,6 +59,36 @@ class _SignInScreenState extends State<SignInScreen> {
           : TextDirection.ltr,
       child: Scaffold(
         appBar: AppBar(
+          leading: IconButton(
+            icon: Icon(Icons.arrow_back, color: Colors.white),
+            onPressed: () {
+                showDialog(
+                context: context,
+                builder: (context) => AlertDialog(
+                  title: Text('Warning'),
+                  content: Text('Are you sure you want to go back? you\'ll return to enter code page.'),
+                  actions: [
+                  TextButton(
+                    onPressed: () {
+                    Navigator.of(context).pop(); // Close dialog
+                    },
+                    child: Text('Cancel'),
+                  ),
+                  TextButton(
+                    onPressed: () {
+                    Navigator.of(context).pop(); // Close dialog
+                    Get.offAll(
+                      EnterStudentCode(),
+                    );
+                    },
+                    child: Text('Yes'),
+                  ),
+                  ],
+                ),
+                );
+          
+            },
+          ),
           backgroundColor: mainColor,
           actions: <Widget>[
             // Language Selector Icon
@@ -290,7 +321,7 @@ class _SignInScreenState extends State<SignInScreen> {
                               SizedBox(width: 16),
                               // Translated text
                               Text(
-                                'Sign In With Google',
+                                'signIn_with_google'.tr,
                                 style: TextStyle(
                                   fontSize: 18,
                                   fontWeight: FontWeight.bold,
@@ -307,7 +338,7 @@ class _SignInScreenState extends State<SignInScreen> {
                       TextButton(
                         onPressed: () {
                           Get.to(SignUpScreen(
-                            studentCode: widget.studentCode,
+                            studentCode: widget.studentCode ?? '',
                           ));
                         },
                         child: Text(

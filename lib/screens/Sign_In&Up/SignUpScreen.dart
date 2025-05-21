@@ -28,13 +28,10 @@ class _SignUpScreenState extends State<SignUpScreen> {
   late final SharedPreferences _prefs;
 
   addUser() async {
-    DocumentReference docRef =
-        _firestor.collection("StudentsTable").doc(widget.studentCode);
-    await docRef.update({
-      "email": email,
-      "phone": phone,
-      "password": password,
-    });
+    DocumentReference docRef = _firestor
+        .collection("StudentsTable")
+        .doc(widget.studentCode);
+    await docRef.update({"email": email, "phone": phone, "password": password});
     // استخراج الـ ID الخاص بالمستند
     String studentId = docRef.id;
     print("تمت إضافة الطالب بنجاح، ID الخاص به هو: $studentId");
@@ -45,9 +42,10 @@ class _SignUpScreenState extends State<SignUpScreen> {
   @override
   Widget build(BuildContext context) {
     return Directionality(
-      textDirection: Get.locale?.languageCode == 'ar'
-          ? TextDirection.rtl
-          : TextDirection.ltr,
+      textDirection:
+          Get.locale?.languageCode == 'ar'
+              ? TextDirection.rtl
+              : TextDirection.ltr,
       child: Scaffold(
         appBar: AppBar(
           backgroundColor: mainColor,
@@ -256,20 +254,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                                 ), // Key for "Enter Email"
                               ),
                             );
-                          }
-                          // else if (selectedMajor != 'IT' && selectedMajor != 'electrical' && selectedMajor != 'mechanics') {
-                          // ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                          //   content: Text(
-                          //     "select_major".tr), // Key for "Select Major"
-                          // ));
-                          // }
-                          // else if (academicYear != '1' && academicYear != '2' && academicYear != '3' && academicYear != '4') {
-                          // ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                          //   content: Text(
-                          //     "select_academicYear".tr), // Key for "Select AcademicYear"
-                          // ));
-                          // }
-                          else if (phone.isEmpty) {
+                          } else if (phone.isEmpty) {
                             ScaffoldMessenger.of(context).showSnackBar(
                               SnackBar(
                                 content: Text(
@@ -308,18 +293,22 @@ class _SignUpScreenState extends State<SignUpScreen> {
 
                                 addUser();
 
-                                Get.offAll(CompleteStudentData(
-                                    studentCode: widget.studentCode));
+                                Get.offAll(
+                                  CompleteStudentData(
+                                    studentCode: widget.studentCode,
+                                  ),
+                                );
                               }
                             } catch (e) {
                               print(e);
                               print(
-                                "Check Your Data, This Email may be used before $e",
+                                "Check Your Data, This Email may be used before",
                               );
+
                               ScaffoldMessenger.of(context).showSnackBar(
                                 const SnackBar(
                                   content: Text(
-                                    "there is an error, please try again later",
+                                    "this account is already created, just try to sign in or sign up with another one",
                                   ),
                                 ),
                               );
@@ -331,9 +320,9 @@ class _SignUpScreenState extends State<SignUpScreen> {
                       //sign in btn
                       TextButton(
                         onPressed: () {
-                          Get.offAll(SignInScreen(
-                            studentCode: widget.studentCode,
-                          ));
+                          Get.offAll(
+                            SignInScreen(studentCode: widget.studentCode),
+                          );
                         },
                         child: Text(
                           'already_have_account'.tr,

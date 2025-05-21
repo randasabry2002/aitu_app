@@ -1,4 +1,4 @@
-import 'package:aitu_app/screens/student%20data/enterCode.dart';
+// import 'package:aitu_app/screens/student%20data/enterCode.dart';
 import 'package:aitu_app/shared/constant.dart';
 import 'package:aitu_app/shared/reuableWidgets.dart';
 import 'package:flutter/material.dart';
@@ -27,10 +27,30 @@ class _InstructionsState extends State<Instructions> {
         appBar: AppBar(
           leading: IconButton(
             icon: Icon(Icons.arrow_back, color: Colors.white),
-            onPressed: () => Get.offAll(EnterStudentCode()),
+            onPressed: () => Get.back(),
           ),
           backgroundColor: mainColor,
           centerTitle: true,
+          actions: <Widget>[
+            // Language Selector Icon
+            PopupMenuButton<String>(
+              icon: Icon(Icons.language, color: Colors.white),
+              onSelected: (value) {
+                // Update the app's locale based on the selection
+                if (value == 'en') {
+                  Get.updateLocale(Locale('en'));
+                } else if (value == 'ar') {
+                  Get.updateLocale(Locale('ar'));
+                }
+              },
+              itemBuilder: (BuildContext context) {
+                return [
+                  PopupMenuItem(value: 'en', child: Text('English')),
+                  PopupMenuItem(value: 'ar', child: Text('العربية')),
+                ];
+              },
+            ),
+          ],
           title: Text(
             'instructions'.tr,
             style: TextStyle(
@@ -76,7 +96,9 @@ class _InstructionsState extends State<Instructions> {
                           return Center(
                             child: Text(
                               "❌ حدث خطأ أثناء تحميل البيانات",
-                              style: TextStyle(color: const Color.fromARGB(255, 0, 0, 0)),
+                              style: TextStyle(
+                                color: const Color.fromARGB(255, 0, 0, 0),
+                              ),
                             ),
                           );
                         }
@@ -109,7 +131,12 @@ class _InstructionsState extends State<Instructions> {
                                       text: instructions[index],
                                       style: TextStyle(
                                         fontSize: 14,
-                                        color: const Color.fromARGB(255, 0, 0, 0),
+                                        color: const Color.fromARGB(
+                                          255,
+                                          0,
+                                          0,
+                                          0,
+                                        ),
                                       ),
                                     ),
                                   ],
