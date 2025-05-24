@@ -1,5 +1,6 @@
 // ignore_for_file: must_be_immutable
 
+import 'package:aitu_app/screens/student%20data/enterCode.dart';
 import 'package:aitu_app/shared/constant.dart';
 import 'package:aitu_app/shared/reuableWidgets.dart';
 import 'package:flutter/material.dart';
@@ -48,60 +49,78 @@ class _SignUpScreenState extends State<SignUpScreen> {
               : TextDirection.ltr,
       child: Scaffold(
         appBar: AppBar(
-          backgroundColor: mainColor,
+          backgroundColor: const Color.fromARGB(255, 255, 255, 255),
           automaticallyImplyLeading: false,
-          actions: <Widget>[
-            // Language Selector Icon
-            PopupMenuButton<String>(
-              icon: Icon(Icons.language, color: Colors.white),
-              onSelected: (value) {
-                // Update the app's locale based on the selection
-                if (value == 'en') {
-                  Get.updateLocale(Locale('en'));
-                } else if (value == 'ar') {
-                  Get.updateLocale(Locale('ar'));
-                }
-              },
-              itemBuilder: (BuildContext context) {
-                return [
-                  PopupMenuItem(value: 'en', child: Text('English')),
-                  PopupMenuItem(value: 'ar', child: Text('العربية')),
-                ];
-              },
+          leading: IconButton(
+            icon: Icon(
+              Icons.arrow_back_ios_new_rounded,
+              color: const Color.fromARGB(255, 0, 0, 0),
             ),
-          ],
+            onPressed: () {
+              Get.offAll(EnterStudentCode());
+            },
+          ),
+
+          // actions: <Widget>[
+          //   // Language Selector Icon
+          //   PopupMenuButton<String>(
+          //     icon: Icon(Icons.language, color: Colors.white),
+          //     onSelected: (value) {
+          //       // Update the app's locale based on the selection
+          //       if (value == 'en') {
+          //         Get.updateLocale(Locale('en'));
+          //       } else if (value == 'ar') {
+          //         Get.updateLocale(Locale('ar'));
+          //       }
+          //     },
+          //     itemBuilder: (BuildContext context) {
+          //       return [
+          //         PopupMenuItem(value: 'en', child: Text('English')),
+          //         PopupMenuItem(value: 'ar', child: Text('العربية')),
+          //       ];
+          //     },
+          //   ),
+          // ],
         ),
         backgroundColor: Color.fromARGB(255, 255, 255, 255),
         body: Stack(
           children: [
-            // Background Image
-            Image(
-              image: backgroundImage,
-              fit: BoxFit.cover,
-              width: double.infinity,
-              height: double.infinity,
-            ),
+            // // Background Image
+            // Image(
+            //   image: backgroundImage,
+            //   fit: BoxFit.cover,
+            //   width: double.infinity,
+            //   height: double.infinity,
+            // ),
             Padding(
               padding: const EdgeInsets.fromLTRB(16.0, 0, 16.0, 25.0),
               child: Center(
                 child: SingleChildScrollView(
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
-                      SizedBox(height: 40),
-
+                      // SizedBox(height: 40),
+                    Image.asset('assets/images/account.png',width: 100,height: 100,),
                       Text(
-                        'sign_up'.tr, // Translation key for "Sign Up"
+                        'انشاء حساب'.tr, // Translation key for "Sign Up"
                         style: TextStyle(
-                          color: mainColor,
-                          fontSize: 32,
+                          color: const Color.fromARGB(255, 0, 0, 0),
+                          fontSize: 22,
                           fontWeight: FontWeight.bold,
-                          fontFamily: 'mainFont',
+                          fontFamily: 'Tajawal',
                         ),
                       ),
                       SizedBox(height: 60),
                       //email
                       CreateInput(
+                        textAlign: TextAlign.center,
+                        focusedBorderColor: const Color.fromARGB(
+                          255,
+                          0,
+                          255,
+                          234,
+                        ),
                         labelText: 'email'.tr,
                         onChanged: (value) {
                           setState(() {
@@ -110,7 +129,8 @@ class _SignUpScreenState extends State<SignUpScreen> {
                         },
                         keyboardType: TextInputType.emailAddress,
                       ),
-                      SizedBox(height: 28),
+                   
+                      SizedBox(height: 36),
                       //   //major
                       //   DropdownButtonFormField<String>(
                       //   value: selectedMajor,
@@ -178,6 +198,15 @@ class _SignUpScreenState extends State<SignUpScreen> {
                       //   SizedBox(height: 24),
                       //phone
                       CreateInput(
+                        textAlign: TextAlign.center,
+
+                        focusedBorderColor: const Color.fromARGB(
+                          255,
+                          0,
+                          255,
+                          234,
+                        ),
+
                         labelText: 'phone'.tr,
                         onChanged: (value) {
                           setState(() {
@@ -186,9 +215,17 @@ class _SignUpScreenState extends State<SignUpScreen> {
                         },
                         keyboardType: TextInputType.phone,
                       ),
-                      SizedBox(height: 28),
+                      SizedBox(height: 36),
                       //password
                       CreateInput(
+                        textAlign: TextAlign.center,
+                        focusedBorderColor: const Color.fromARGB(
+                          255,
+                          0,
+                          255,
+                          234,
+                        ),
+
                         labelText: 'password'.tr,
                         onChanged: (value) {
                           setState(() {
@@ -210,9 +247,17 @@ class _SignUpScreenState extends State<SignUpScreen> {
                           },
                         ),
                       ),
-                      SizedBox(height: 28),
+                      SizedBox(height: 36),
                       //confirm password
                       CreateInput(
+                        textAlign: TextAlign.center,
+                        focusedBorderColor: const Color.fromARGB(
+                          255,
+                          0,
+                          255,
+                          234,
+                        ),
+
                         labelText: 'confirm_password'.tr,
                         onChanged: (value) {
                           setState(() {
@@ -234,21 +279,23 @@ class _SignUpScreenState extends State<SignUpScreen> {
                           },
                         ),
                       ),
-                      SizedBox(height: 28),
+                      SizedBox(height: 36),
                       //sign up btn
                       CreateButton(
                         title: Text(
-                          'sign up'.tr,
+                          'تسجيل'.tr,
                           style: TextStyle(
+                            color: const Color.fromARGB(255, 255, 255, 255),
                             fontSize: 24,
                             fontWeight: FontWeight.bold,
-                            fontFamily: 'mainFont',
+                            fontFamily: 'Tajawal',
                           ),
                         ), // Key for "Sign Up",
                         onPressed: () async {
                           if (email.isEmpty) {
                             ScaffoldMessenger.of(context).showSnackBar(
                               SnackBar(
+                                backgroundColor: const Color.fromARGB(255, 160, 11, 0),
                                 content: Text(
                                   "enter_email".tr,
                                 ), // Key for "Enter Email"
@@ -257,6 +304,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                           } else if (phone.isEmpty) {
                             ScaffoldMessenger.of(context).showSnackBar(
                               SnackBar(
+                                backgroundColor: const Color.fromARGB(255, 160, 11, 0),
                                 content: Text(
                                   "enter_phone".tr,
                                 ), // Key for "Enter Phone"
@@ -265,6 +313,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                           } else if (password.isEmpty) {
                             ScaffoldMessenger.of(context).showSnackBar(
                               SnackBar(
+                                backgroundColor: const Color.fromARGB(255, 160, 11, 0),
                                 content: Text(
                                   "enter_password".tr,
                                 ), // Key for "Enter Password"
@@ -273,6 +322,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                           } else if (confirmPassword != password) {
                             ScaffoldMessenger.of(context).showSnackBar(
                               SnackBar(
+                                backgroundColor: const Color.fromARGB(255, 160, 11, 0),
                                 content: Text(
                                   "password_mismatch".tr,
                                 ), // Key for "Check Your Password"
@@ -302,39 +352,47 @@ class _SignUpScreenState extends State<SignUpScreen> {
                             } catch (e) {
                               print(e);
                               print(
-                                "Check Your Data, This Email may be used before",
+                                "تحقق من بياناتك، قد يكون هذا البريد الإلكتروني مستخدمًا من قبل",
                               );
 
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
+                              showDialog(
+                                context: context,
+                                builder: (context) => AlertDialog(
+                                  title: Text('تنبيه'.tr),
                                   content: Text(
-                                    "this account is already created, just try to sign in or sign up with another one",
+                                    'هذا الحساب موجود بالفعل، يرجى تسجيل الدخول أو إنشاء حساب جديد'.tr,
                                   ),
+                                  actions: [
+                                    TextButton(
+                                      onPressed: () => Navigator.of(context).pop(),
+                                      child: Text('حسنا'.tr),
+                                    ),
+                                  ],
                                 ),
                               );
                             }
                           }
                         },
                       ),
-                      SizedBox(height: 28),
+                      // SizedBox(height: 36),
                       //sign in btn
-                      TextButton(
-                        onPressed: () {
-                          Get.offAll(
-                            SignInScreen(studentCode: widget.studentCode),
-                          );
-                        },
-                        child: Text(
-                          'already_have_account'.tr,
-                          // Key for "Already have an account? Sign In"
-                          style: TextStyle(
-                            color: mainColor,
-                            fontSize: 16,
-                            fontFamily: 'mainFont',
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
+                      // TextButton(
+                      //   onPressed: () {
+                      //     Get.offAll(
+                      //       SignInScreen(studentCode: widget.studentCode),
+                      //     );
+                      //   },
+                      //   child: Text(
+                      //     'already_have_account'.tr,
+                      //     // Key for "Already have an account? Sign In"
+                      //     style: TextStyle(
+                      //       color: mainColor,
+                      //       fontSize: 16,
+                      //       fontFamily: 'Tajawal',
+                      //       fontWeight: FontWeight.bold,
+                      //     ),
+                      //   ),
+                      // ),
                     ],
                   ),
                 ),

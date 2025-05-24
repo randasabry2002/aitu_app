@@ -1,3 +1,4 @@
+import 'package:aitu_app/screens/Distribution_Pages/Instructions.dart';
 import 'package:flutter/material.dart';
 
 import 'package:get/get.dart';
@@ -42,6 +43,12 @@ class _College_distribution_pageState extends State<College_distribution_page> {
           : TextDirection.ltr,
       child: Scaffold(
         appBar: AppBar(
+          leading: IconButton(
+            icon: Icon(Icons.arrow_back_ios_new_rounded, color: Colors.white),
+            onPressed: () {
+              Get.to(() => const Instructions());
+            },
+          ),
           backgroundColor: Color(0xFF0187c4),
           actions: <Widget>[
             // Language Selector Icon

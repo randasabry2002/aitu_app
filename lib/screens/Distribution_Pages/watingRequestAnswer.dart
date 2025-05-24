@@ -1,92 +1,179 @@
-import 'dart:async';
-import 'package:aitu_app/screens/Distribution_Pages/Distribution_choice.dart';
-import 'package:aitu_app/screens/Distribution_Pages/PDFViewerPage.dart';
-import 'package:aitu_app/shared/constant.dart';
+import 'package:aitu_app/shared/reuableWidgets.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:aitu_app/screens/Distribution_Pages/Distribution_choice.dart';
+import 'package:aitu_app/screens/Distribution_Pages/PDFViewerPage.dart';
+import 'package:aitu_app/shared/constant.dart';
 
-class WaitnigReqestAnswer extends StatefulWidget {
-  final String factoryID;
+class WaitnigReqestAnswer extends StatelessWidget {
+  final String fatoryGovernorate;
+  final String factoryName;
+  final String factoryLocation;
+  final String factoryIndustry;
 
-  WaitnigReqestAnswer({required this.factoryID});
-
-  @override
-  State<WaitnigReqestAnswer> createState() => _WaitnigReqestAnswerState();
-}
-
-class _WaitnigReqestAnswerState extends State<WaitnigReqestAnswer> {
-  bool? isApproved;
-  bool documentExists = true;
-  Timer? timer;
-
-  @override
-  void initState() {
-    super.initState();
-    fetchApprovalStatus();
-    timer = Timer.periodic(Duration(seconds: 5), (timer) {
-      fetchApprovalStatus();
-    });
-  }
-
-  @override
-  void dispose() {
-    timer?.cancel();
-    super.dispose();
-  }
-
-  Future<void> fetchApprovalStatus() async {
-    try {
-      DocumentSnapshot doc =
-          await FirebaseFirestore.instance
-              .collection('Factories')
-              .doc(widget.factoryID)
-              .get();
-
-      if (!doc.exists) {
-        setState(() {
-          documentExists = false;
-          isApproved = null;
-        });
-        return;
-      }
-
-      setState(() {
-        documentExists = true;
-        isApproved = doc.get('isApproved');
-      });
-    } catch (e) {
-      print("Error fetching approval status: $e");
-    }
-  }
+  const WaitnigReqestAnswer({
+    Key? key,
+    required this.fatoryGovernorate,
+    required this.factoryName,
+    required this.factoryLocation,
+    required this.factoryIndustry,
+  }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    if (isApproved == null && documentExists) {
-      return _buildScaffold(body: Center(child: CircularProgressIndicator()));
-    }
-
-    return _buildScaffold(
-      body: Stack(
-        children: [
-          imageBackground,
-          backDark,
-          Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Container(
-                    padding: EdgeInsets.all(20),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(20),
+    return Directionality(
+      textDirection:
+          Get.locale?.languageCode == 'ar'
+              ? TextDirection.rtl
+              : TextDirection.ltr,
+      child: Scaffold(
+        extendBodyBehindAppBar: true,
+        appBar: AppBar(
+          backgroundColor: const Color.fromARGB(0, 1, 134, 196),
+          leading: IconButton(
+            icon: const Icon(
+              Icons.arrow_back_ios_new_rounded,
+              color: Colors.white,
+            ),
+            onPressed: () {
+              showDialog(
+                context: context,
+                builder:
+                    (context) => AlertDialog(
+                      title: const Text(
+                        'هل تريد إلغاء الطلب؟',
+                        style: TextStyle(fontFamily: 'Tajawal', fontSize: 18),
+                      ),
+                      actions: [
+                        TextButton(
+                          onPressed: () => Navigator.of(context).pop(),
+                          child: const Text(
+                            'رجوع',
+                            style: TextStyle(
+                              fontFamily: 'Tajawal',
+                              color: mainColor,
+                            ),
+                          ),
+                        ),
+                        TextButton(
+                          onPressed: () {
+                            Navigator.of(context).pop();
+                            Get.offAll(() => const Distribution_choice());
+                          },
+                          child: const Text(
+                            'إلغاء الطلب',
+                            style: TextStyle(
+                              fontFamily: 'Tajawal',
+                              color: Colors.red,
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
-                    child: _buildStatusWidget(isApproved, documentExists),
-                  ),
-                ],
+              );
+            },
+          ),
+        ),
+        body: Stack(
+          children: [
+            imageBackground,
+            backDark,
+            Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Center(
+                child: StreamBuilder<QuerySnapshot>(
+                  stream:
+                      FirebaseFirestore.instance
+                          .collection('Factories')
+                          .where('name', isEqualTo: factoryName)
+                          .where('address', isEqualTo: factoryLocation)
+                          .where('industry', isEqualTo: factoryIndustry)
+                          .where('Governorate', isEqualTo: fatoryGovernorate)
+                          .where('type', isEqualTo: 'external')
+                          .limit(1)
+                          .snapshots(),
+                  builder: (context, snapshot) {
+                    if (snapshot.connectionState == ConnectionState.waiting) {
+                      return const Center(
+                        child: CircularProgressIndicator(color: mainColor),
+                      );
+                    }
+
+                    if (snapshot.hasError) {
+                      return Center(
+                        child: Text(
+                          'حدث خطأ أثناء تحميل البيانات.',
+                          style: TextStyle(
+                            fontFamily: 'Tajawal',
+                            color: Colors.red,
+                            fontSize: 16,
+                          ),
+                        ),
+                      );
+                    }
+
+                    if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+                      return _buildRejectedWidget();
+                    }
+
+                    final data =
+                        snapshot.data!.docs.first.data()
+                            as Map<String, dynamic>;
+                    final bool isApproved = data['isApproved'] ?? false;
+
+                    return Container(
+                      padding: const EdgeInsets.all(20),
+                      height: MediaQuery.of(context).size.height * 0.4,
+                      decoration: BoxDecoration(
+                      color: const Color.fromARGB(52, 0, 0, 0),
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child:
+                          isApproved
+                              ? _buildAcceptedWidget()
+                              : _buildPendingWidget(),
+                    );
+                  },
+                ),
               ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildRejectedWidget() {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      // height: MediaQuery.of(context).size.height * 0.4,
+      decoration: BoxDecoration(
+        color: const Color.fromARGB(52, 0, 0, 0),
+        // color: const Color.fromARGB(12, 255, 255, 255),
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: const [
+          Icon(Icons.cancel, color: Colors.red, size: 60),
+          SizedBox(height: 20),
+          Text(
+            "تم رفض الطلب",
+            style: TextStyle(
+              fontSize: 24,
+              color: Colors.red,
+              fontWeight: FontWeight.bold,
+              fontFamily: 'Tajawal',
+            ),
+          ),
+          SizedBox(height: 20),
+          Text(
+            "تم حذف مستند الطلب",
+            style: TextStyle(
+              fontSize: 16,
+              color: Colors.redAccent,
+              fontFamily: 'Tajawal',
             ),
           ),
         ],
@@ -94,139 +181,40 @@ class _WaitnigReqestAnswerState extends State<WaitnigReqestAnswer> {
     );
   }
 
-  Directionality _buildScaffold({required Widget body}) {
-    return Directionality(
-      textDirection:
-          Get.locale?.languageCode == 'ar'
-              ? TextDirection.rtl
-              : TextDirection.ltr,
-      child: Scaffold(
-        appBar: AppBar(
-          backgroundColor: Color(0xFF0187c4),
-          leading: IconButton(
-            icon: Icon(Icons.arrow_back_ios_new_rounded, color: Colors.white),
-            onPressed: () {
-              showDialog(
-                context: context,
-                builder:
-                    (context) => AlertDialog(
-                      title: Text(' Do you want to discard the request?'),
-                      actions: [
-                        TextButton(
-                          onPressed: () {
-                            Navigator.of(context).pop();
-                          },
-                          child: Text('Return'),
-                        ),
-                        TextButton(
-                          onPressed: () async {
-                            await FirebaseFirestore.instance
-                                .collection('Factories')
-                                .doc(widget.factoryID)
-                                .delete();
-                            Navigator.of(context).pop();
-                            Get.offAll(Distribution_choice());
-                          },
-                          child: Text('Discard Request'),
-                        ),
-                      ],
-                    ),
-              );
-            },
-          ),
-          actions: [
-            PopupMenuButton<String>(
-              icon: Icon(Icons.language, color: Colors.white),
-              onSelected: (value) {
-                if (value == 'en') {
-                  Get.updateLocale(Locale('en'));
-                } else if (value == 'ar') {
-                  Get.updateLocale(Locale('ar'));
-                }
-              },
-              itemBuilder:
-                  (context) => [
-                    PopupMenuItem(value: 'en', child: Text('English')),
-                    PopupMenuItem(value: 'ar', child: Text('العربية')),
-                  ],
-            ),
-          ],
-        ),
-        backgroundColor: Colors.white,
-        body: body,
-      ),
-    );
-  }
-
-  Widget _buildStatusWidget(bool? isApproved, bool documentExists) {
-    if (!documentExists) return _buildRejectedWidget();
-    if (isApproved == true) return _buildAcceptedWidget();
-    return _buildPendingWidget();
-  }
-
-  Widget _buildRejectedWidget() {
-    return Column(
-      children: [
-        Icon(Icons.cancel, color: Colors.red, size: 60),
-        SizedBox(height: 20),
-        Text(
-          "Request Rejected",
-          style: TextStyle(
-            fontSize: 24,
-            color: Colors.red,
-            fontWeight: FontWeight.bold,
-            fontFamily: 'mainFont',
-          ),
-        ),
-        SizedBox(height: 20),
-        Text(
-          "The request document has been deleted",
-          style: TextStyle(
-            fontSize: 16,
-            color: Colors.red[300],
-            fontFamily: 'mainFont',
-          ),
-        ),
-      ],
-    );
-  }
-
   Widget _buildAcceptedWidget() {
     return Column(
+      mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        Icon(
+        const Icon(
           Icons.check_circle,
-          color: const Color.fromARGB(255, 22, 150, 27),
+          color: Color.fromARGB(255, 22, 150, 27),
           size: 60,
         ),
-        SizedBox(height: 20),
-        Text(
-          "Request Accepted",
+        const SizedBox(height: 20),
+        const Text(
+          "تم قبول الطلب",
           textAlign: TextAlign.center,
-
           style: TextStyle(
             fontSize: 24,
-            color: const Color.fromARGB(255, 22, 150, 27),
+            color: Color.fromARGB(255, 22, 150, 27),
             fontWeight: FontWeight.bold,
-            fontFamily: 'mainFont',
+            fontFamily: 'Tajawal',
           ),
         ),
-        SizedBox(height: 30),
-        ElevatedButton.icon(
+        const SizedBox(height: 30),
+        CreateButton(
+          title: const Text(
+            'عرض بطاقة الترشيح',
+            style: TextStyle(
+              color: Colors.white,
+              fontFamily: 'Tajawal',
+              fontSize: 16.0,
+              fontWeight: FontWeight.w800,
+            ),
+          ),
           onPressed: () {
-            Get.to(PDFViewerPage(pdfType: 'nominationCard'));
+            Get.to(() => PDFViewerPage(pdfType: 'distributionPdf'));
           },
-          icon: Icon(Icons.picture_as_pdf),
-          label: Text(
-            "View Nomination Card",
-            style: TextStyle(fontFamily: 'mainFont'),
-            textAlign: TextAlign.center,
-          ),
-          style: ElevatedButton.styleFrom(
-            backgroundColor: mainColor,
-            padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-            foregroundColor: Colors.white,
-          ),
         ),
       ],
     );
@@ -234,40 +222,41 @@ class _WaitnigReqestAnswerState extends State<WaitnigReqestAnswer> {
 
   Widget _buildPendingWidget() {
     return Column(
+      mainAxisAlignment: MainAxisAlignment.center,
       children: [
         LinearProgressIndicator(
           valueColor: AlwaysStoppedAnimation<Color>(mainColor),
           backgroundColor: Colors.grey[300],
         ),
-        SizedBox(height: 20),
-        Text(
-          "Waiting for Factory Response...",
+        const SizedBox(height: 20),
+        const Text(
+          "في انتظار رد الكلية...",
           textAlign: TextAlign.center,
           style: TextStyle(
             fontSize: 24,
             color: mainColor,
-            fontFamily: 'mainFont',
+            fontFamily: 'Tajawal',
           ),
         ),
-        SizedBox(height: 20),
+        const SizedBox(height: 20),
         Container(
-          padding: EdgeInsets.all(10),
+          padding: const EdgeInsets.all(10),
           decoration: BoxDecoration(
             color: Colors.yellow[100],
             borderRadius: BorderRadius.circular(10),
           ),
           child: Row(
-            children: [
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: const [
               Icon(Icons.hourglass_empty, color: Colors.orange),
               SizedBox(width: 10),
               Text(
-                "Your request is being reviewed",
+                "جاري مراجعة طلبك",
                 textAlign: TextAlign.center,
-
                 style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
-                  fontFamily: 'mainFont',
+                  fontFamily: 'Tajawal',
                 ),
               ),
             ],

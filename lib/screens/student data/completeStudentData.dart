@@ -1,4 +1,5 @@
 import 'package:aitu_app/screens/Distribution_Pages/Instructions.dart';
+import 'package:aitu_app/screens/Sign_In&Up/SignUpScreen.dart';
 // import 'package:aitu_app/screens/Sign_In&Up/SignInScreen.dart';
 import 'package:aitu_app/shared/constant.dart';
 import 'package:aitu_app/shared/reuableWidgets.dart';
@@ -24,13 +25,13 @@ class _CompleteStudentDataState extends State<CompleteStudentData> {
   DocumentSnapshot? studentDoc;
   // String studentCode = '';
   String name = '';
-  List<String> stage = ['معهد', 'كلية', 'مدرسة'];
+  List<String> stage = ['كلية متوسطة', 'كلية عليا', 'مدرسة'];
 
   String? selectedStage;
   List<String> departments = [
-    'Mechanical Technology',
-    'Electrical Technology',
-    'Information Technology',
+    'تكنولوجيا ميكانيكية',
+    'تكنولوجيا كهربائية',
+    'تكنولوجيا المعلومات',
   ];
   String? stuedentDepartment;
   List<String> gender = ['male', 'female'];
@@ -86,9 +87,9 @@ class _CompleteStudentDataState extends State<CompleteStudentData> {
 
   List<int> batch = [];
   List<int> getbatch(selectedStage) {
-    if (selectedStage == 'معهد') {
+    if (selectedStage == 'كلية متوسطة') {
       batch = [1, 2];
-    } else if (selectedStage == 'كلية') {
+    } else if (selectedStage == 'كلية عليا') {
       batch = [3, 4];
     } else if (selectedStage == 'مدرسة') {
       batch = [1, 2, 3];
@@ -99,45 +100,23 @@ class _CompleteStudentDataState extends State<CompleteStudentData> {
   @override
   Widget build(BuildContext context) {
     return Directionality(
-      textDirection:
-          Get.locale?.languageCode == 'ar'
-              ? TextDirection.rtl
-              : TextDirection.ltr,
+      textDirection: TextDirection.rtl,
       child: Scaffold(
         appBar: AppBar(
-          elevation: 20.0,
-          backgroundColor: mainColor,
-          // automaticallyImplyLeading: false,
-          actions: <Widget>[
-            // Language Selector Icon
-            PopupMenuButton<String>(
-              icon: Icon(Icons.language, color: Colors.white),
-              onSelected: (value) {
-                // Update the app's locale based on the selection
-                if (value == 'en') {
-                  Get.updateLocale(Locale('en'));
-                } else if (value == 'ar') {
-                  Get.updateLocale(Locale('ar'));
-                }
-              },
-              itemBuilder: (BuildContext context) {
-                return [
-                  PopupMenuItem(value: 'en', child: Text('English')),
-                  PopupMenuItem(value: 'ar', child: Text('العربية')),
-                ];
-              },
+          backgroundColor: const Color.fromARGB(255, 255, 255, 255),
+          leading: IconButton(
+            icon: Icon(
+              Icons.arrow_back_ios_new_rounded,
+              color: const Color.fromARGB(255, 0, 0, 0),
             ),
-          ],
+            onPressed: () {
+              Get.offAll(SignUpScreen(studentCode: widget.studentCode));
+            },
+          ),
         ),
         backgroundColor: Color.fromARGB(255, 255, 255, 255),
         body: Stack(
           children: [
-            Image(
-              image: backgroundImage,
-              fit: BoxFit.cover,
-              width: double.infinity,
-              height: double.infinity,
-            ),
             Padding(
               padding: const EdgeInsets.fromLTRB(16.0, 0, 16.0, 25.0),
               child: Center(
@@ -150,74 +129,60 @@ class _CompleteStudentDataState extends State<CompleteStudentData> {
                       //name
                       Container(
                         width: double.infinity,
-                        padding: EdgeInsets.symmetric(vertical: 4.0),
-                        // margin: EdgeInsets.symmetric(horizontal: 20.0),
+                        padding: EdgeInsets.symmetric(vertical: 14.0),
                         decoration: BoxDecoration(
-                          color: const Color.fromARGB(199, 255, 255, 255),
+                          color: const Color.fromARGB(255, 255, 255, 255),
                           borderRadius: BorderRadius.circular(20),
-                          border: Border.all(color: mainColor, width: 2),
+                          border: Border.all(
+                            color: const Color.fromARGB(0, 94, 94, 94),
+                            width: 0.5,
+                          ),
                         ),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.start,
-                          children: [
-                            //name and avatar
-                            CircleAvatar(
-                              radius: 20,
-                              backgroundColor: const Color.fromARGB(
-                                255,
-                                255,
-                                255,
-                                255,
+                        child: RichText(
+                          textAlign: TextAlign.center,
+                          text: TextSpan(
+                            children: [
+                              TextSpan(
+                                text: 'مرحبا\n ',
+                                style: TextStyle(
+                                  color: const Color.fromARGB(255, 0, 0, 0),
+                                  fontSize: 22,
+                                  fontFamily: 'Tajawal',
+                                  fontWeight: FontWeight.w500,
+                                ),
                               ),
-                              child: Icon(
-                                Icons.account_circle,
-                                size: 30,
-                                color: mainColor,
+                              TextSpan(
+                                text: name,
+                                style: TextStyle(
+                                  color: mainColor,
+                                  fontSize: 22,
+                                  fontFamily: 'Tajawal',
+                                  fontWeight: FontWeight.w500,
+                                ),
                               ),
-                            ),
-                            SizedBox(width: 20),
-                            Text(
-                              name.tr,
-                              style: TextStyle(
-                                color: const Color.fromARGB(255, 0, 0, 0),
-                                fontSize: 22,
-                                fontFamily: 'mainFont',
-                                fontWeight: FontWeight.bold,
-                              ),
-                              textAlign: TextAlign.center,
-                            ),
-                          ],
+                            ],
+                          ),
                         ),
                       ),
                       SizedBox(height: 40),
                       Row(
                         children: [
-                          Expanded(child: Divider()),
+                          Expanded(child: Divider(thickness: 0.5)),
                           SizedBox(width: 4),
                           Text(
-                            'Complete your data'.tr,
+                            'أكمل بياناتك',
                             style: TextStyle(
                               color: const Color.fromARGB(255, 63, 63, 63),
                               fontSize: 14,
-                              fontFamily: 'mainFont',
-                              fontWeight: FontWeight.bold,
+                              fontFamily: 'Tajawal',
+                              fontWeight: FontWeight.w500,
                             ),
                           ),
                           SizedBox(width: 4),
-                          Expanded(child: Divider()),
+                          Expanded(child: Divider(thickness: 0.5)),
                         ],
                       ),
                       SizedBox(height: 40),
-
-                      // SizedBox(height: 60),
-                      // Factory
-                      // CreateInput(
-                      //   controller: factoryController,
-                      //   keyboardType: TextInputType.text,
-                      //   onChanged: (value) => setState(() => factory = value),
-                      //   labelText: 'factory'.tr,
-                      // ),
-                      // SizedBox(height: 24.0),
 
                       // Current Address
                       CreateInput(
@@ -225,9 +190,19 @@ class _CompleteStudentDataState extends State<CompleteStudentData> {
                         keyboardType: TextInputType.text,
                         onChanged:
                             (value) => setState(() => currentAddress = value),
-                        labelText: 'Your current address'.tr,
+                        labelText: 'مكانك الحالي',
+                        textAlign: TextAlign.center,
+                        focusedBorderColor: const Color.fromARGB(
+                          255,
+                          0,
+                          255,
+                          234,
+                        ),
+                        color: const Color.fromARGB(70, 255, 255, 255),
+                        borderColor: secondaryColor,
+                        labelColor: mainColor,
                       ),
-                      SizedBox(height: 24.0),
+                      SizedBox(height: 30.0),
 
                       // Birth Address
                       CreateInput(
@@ -235,12 +210,41 @@ class _CompleteStudentDataState extends State<CompleteStudentData> {
                         keyboardType: TextInputType.text,
                         onChanged:
                             (value) => setState(() => birthAddress = value),
-                        labelText: 'Birth address'.tr,
+                        labelText: 'مكان الميلاد',
+                        textAlign: TextAlign.center,
+                        focusedBorderColor: const Color.fromARGB(
+                          255,
+                          0,
+                          255,
+                          234,
+                        ),
+                        color: const Color.fromARGB(70, 255, 255, 255),
+                        borderColor: secondaryColor,
+                        labelColor: mainColor,
                       ),
-                      SizedBox(height: 24.0),
+                      SizedBox(height: 30.0),
 
                       // Birth Date
-                      GestureDetector(
+                      CreateInput(
+                        controller: birthDateController,
+                        keyboardType: TextInputType.text,
+                        onChanged: (value) {
+                          setState(() {
+                            birthDate = value;
+                          });
+                        },
+                        labelText: 'تاريخ الميلاد',
+                        textAlign: TextAlign.center,
+                        focusedBorderColor: const Color.fromARGB(
+                          255,
+                          0,
+                          255,
+                          234,
+                        ),
+                        color: const Color.fromARGB(70, 255, 255, 255),
+                        borderColor: secondaryColor,
+                        labelColor: mainColor,
+                        isReadOnly: true,
                         onTap: () async {
                           DateTime? pickedDate = await showDatePicker(
                             context: context,
@@ -269,41 +273,16 @@ class _CompleteStudentDataState extends State<CompleteStudentData> {
                             });
                           }
                         },
-                        child: AbsorbPointer(
-                          child: TextField(
-                            readOnly: true,
-                            controller: birthDateController,
-                            onChanged:
-                                (value) => setState(
-                                  () => birthAddressController.text = value,
-                                ),
-                            decoration: InputDecoration(
-                              labelText: 'Birth date'.tr,
-                              labelStyle: TextStyle(
-                                color: mainColor,
-                                fontSize: 16,
-                                fontFamily: 'mainFont',
-                                fontWeight: FontWeight.bold,
-                              ),
-                              enabledBorder: OutlineInputBorder(
-                                borderSide: BorderSide(color: mainColor),
-                                borderRadius: BorderRadius.circular(15),
-                              ),
-                              focusedBorder: OutlineInputBorder(
-                                borderSide: BorderSide(color: mainColor),
-                                borderRadius: BorderRadius.circular(20),
-                              ),
-                            ),
-                            style: TextStyle(color: Colors.black, fontSize: 16),
-                          ),
-                        ),
                       ),
-                      SizedBox(height: 24.0),
+                      SizedBox(height: 30.0),
 
                       //stage
                       Container(
                         width: double.infinity,
-                        padding: EdgeInsets.symmetric(horizontal: 18),
+                        padding: EdgeInsets.symmetric(
+                          horizontal: 18,
+                          vertical: 4.0,
+                        ),
                         decoration: BoxDecoration(
                           border: Border.all(color: mainColor),
                           borderRadius: BorderRadius.circular(15),
@@ -318,22 +297,19 @@ class _CompleteStudentDataState extends State<CompleteStudentData> {
                               255,
                             ),
                             hint: Text(
-                              'stage'.tr,
+                              'المرحلة الدراسية',
                               style: TextStyle(
                                 color: mainColor,
                                 fontSize: 16,
-                                fontFamily: 'mainFont',
-                                fontWeight: FontWeight.bold,
+                                fontFamily: 'Tajawal',
+                                fontWeight: FontWeight.w500,
                               ),
                             ),
                             value: selectedStage,
                             onChanged: (newValue) {
                               setState(() {
-                                // Update the selected stage
                                 selectedStage = newValue;
-                                // Update the selected batch based on the new stage
-                                selectedbatch = null; // Reset selected batch
-                                // batch = getbatch(selectedStage);
+                                selectedbatch = null;
                               });
                             },
                             items:
@@ -345,8 +321,8 @@ class _CompleteStudentDataState extends State<CompleteStudentData> {
                                       style: TextStyle(
                                         color: Colors.black,
                                         fontSize: 16,
-                                        fontFamily: 'mainFont',
-                                        fontWeight: FontWeight.bold,
+                                        fontFamily: 'Tajawal',
+                                        fontWeight: FontWeight.w500,
                                       ),
                                     ),
                                   );
@@ -354,12 +330,15 @@ class _CompleteStudentDataState extends State<CompleteStudentData> {
                           ),
                         ),
                       ),
+                      SizedBox(height: 30.0),
 
-                      SizedBox(height: 24.0),
                       //batch
                       Container(
                         width: double.infinity,
-                        padding: EdgeInsets.symmetric(horizontal: 18),
+                        padding: EdgeInsets.symmetric(
+                          horizontal: 18,
+                          vertical: 4.0,
+                        ),
                         decoration: BoxDecoration(
                           border: Border.all(color: mainColor),
                           borderRadius: BorderRadius.circular(15),
@@ -374,12 +353,12 @@ class _CompleteStudentDataState extends State<CompleteStudentData> {
                               255,
                             ),
                             hint: Text(
-                              'select your academic year'.tr,
+                              'السنة الدراسية',
                               style: TextStyle(
                                 color: mainColor,
                                 fontSize: 16,
-                                fontFamily: 'mainFont',
-                                fontWeight: FontWeight.bold,
+                                fontFamily: 'Tajawal',
+                                fontWeight: FontWeight.w500,
                               ),
                             ),
                             value: selectedbatch,
@@ -393,17 +372,12 @@ class _CompleteStudentDataState extends State<CompleteStudentData> {
                                   return DropdownMenuItem<int>(
                                     value: g,
                                     child: Text(
-                                      g.toString(),
+                                      'سنة ' + g.toString(),
                                       style: TextStyle(
-                                        color: const Color.fromARGB(
-                                          255,
-                                          0,
-                                          0,
-                                          0,
-                                        ),
-                                        fontSize: 16.0,
-                                        fontFamily: 'mainFont',
-                                        fontWeight: FontWeight.bold,
+                                        color: Colors.black,
+                                        fontSize: 16,
+                                        fontFamily: 'Tajawal',
+                                        fontWeight: FontWeight.w500,
                                       ),
                                       textAlign: TextAlign.center,
                                     ),
@@ -412,11 +386,15 @@ class _CompleteStudentDataState extends State<CompleteStudentData> {
                           ),
                         ),
                       ),
-                      SizedBox(height: 24.0),
+                      SizedBox(height: 30.0),
+
                       //department
                       Container(
                         width: double.infinity,
-                        padding: EdgeInsets.symmetric(horizontal: 18),
+                        padding: EdgeInsets.symmetric(
+                          horizontal: 18,
+                          vertical: 4.0,
+                        ),
                         decoration: BoxDecoration(
                           border: Border.all(color: mainColor),
                           borderRadius: BorderRadius.circular(15),
@@ -431,12 +409,12 @@ class _CompleteStudentDataState extends State<CompleteStudentData> {
                               255,
                             ),
                             hint: Text(
-                              'department'.tr,
+                              'القسم',
                               style: TextStyle(
                                 color: mainColor,
                                 fontSize: 16,
-                                fontFamily: 'mainFont',
-                                fontWeight: FontWeight.bold,
+                                fontFamily: 'Tajawal',
+                                fontWeight: FontWeight.w500,
                               ),
                             ),
                             value: stuedentDepartment,
@@ -452,15 +430,10 @@ class _CompleteStudentDataState extends State<CompleteStudentData> {
                                     child: Text(
                                       department,
                                       style: TextStyle(
-                                        color: const Color.fromARGB(
-                                          255,
-                                          0,
-                                          0,
-                                          0,
-                                        ),
+                                        color: Colors.black,
                                         fontSize: 16,
-                                        fontFamily: 'mainFont',
-                                        fontWeight: FontWeight.bold,
+                                        fontFamily: 'Tajawal',
+                                        fontWeight: FontWeight.w500,
                                       ),
                                       textAlign: TextAlign.center,
                                     ),
@@ -469,11 +442,15 @@ class _CompleteStudentDataState extends State<CompleteStudentData> {
                           ),
                         ),
                       ),
-                      SizedBox(height: 24.0),
+                      SizedBox(height: 30.0),
+
                       //gender
                       Container(
                         width: double.infinity,
-                        padding: EdgeInsets.symmetric(horizontal: 18),
+                        padding: EdgeInsets.symmetric(
+                          horizontal: 18,
+                          vertical: 4.0,
+                        ),
                         decoration: BoxDecoration(
                           border: Border.all(color: mainColor),
                           borderRadius: BorderRadius.circular(15),
@@ -488,12 +465,12 @@ class _CompleteStudentDataState extends State<CompleteStudentData> {
                               255,
                             ),
                             hint: Text(
-                              'your gender'.tr,
+                              'الجنس',
                               style: TextStyle(
                                 color: mainColor,
                                 fontSize: 16,
-                                fontFamily: 'mainFont',
-                                fontWeight: FontWeight.bold,
+                                fontFamily: 'Tajawal',
+                                fontWeight: FontWeight.w500,
                               ),
                             ),
                             value: selectedGender,
@@ -507,17 +484,12 @@ class _CompleteStudentDataState extends State<CompleteStudentData> {
                                   return DropdownMenuItem<String>(
                                     value: g,
                                     child: Text(
-                                      g,
+                                      g == 'male' ? 'ذكر' : 'أنثى',
                                       style: TextStyle(
-                                        color: const Color.fromARGB(
-                                          255,
-                                          0,
-                                          0,
-                                          0,
-                                        ),
+                                        color: Colors.black,
                                         fontSize: 16,
-                                        fontFamily: 'mainFont',
-                                        fontWeight: FontWeight.bold,
+                                        fontFamily: 'Tajawal',
+                                        fontWeight: FontWeight.w500,
                                       ),
                                       textAlign: TextAlign.center,
                                     ),
@@ -532,16 +504,16 @@ class _CompleteStudentDataState extends State<CompleteStudentData> {
                       //next button
                       CreateButton(
                         title: Text(
-                          'Next'.tr,
+                          'التالي',
                           style: TextStyle(
                             fontSize: 24,
-                            fontWeight: FontWeight.bold,
-                            fontFamily: 'mainFont',
+                            color: Colors.white,
+                            fontWeight: FontWeight.w600,
+                            fontFamily: 'Tajawal',
                           ),
-                        ), // Key for "Sign Up",
+                        ),
                         onPressed: () async {
                           checkDataComplete();
-                          // Check if all required fields are filled
                           if (isDataCompleted == true) {
                             await FirebaseFirestore.instance
                                 .collection('StudentsTable')
@@ -556,17 +528,25 @@ class _CompleteStudentDataState extends State<CompleteStudentData> {
                                   'stage': selectedStage,
                                   'createOn': DateTime.now().toString(),
                                 });
-                            // Navigate to the next page
-                            Get.offAll(
-                              Instructions(),
-                            );
+                            Get.offAll(Instructions());
                           } else {
                             ScaffoldMessenger.of(context).showSnackBar(
                               SnackBar(
                                 content: Text(
-                                  'Please complete all required fields.'.tr,
+                                  'يرجى إكمال جميع الحقول المطلوبة',
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 16,
+                                    fontFamily: 'Tajawal',
+                                    fontWeight: FontWeight.w500,
+                                  ),
                                 ),
-                                backgroundColor: Colors.red,
+                                backgroundColor: const Color.fromARGB(
+                                  255,
+                                  160,
+                                  11,
+                                  0,
+                                ),
                                 duration: Duration(seconds: 2),
                               ),
                             );

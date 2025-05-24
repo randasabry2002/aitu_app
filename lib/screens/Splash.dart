@@ -1,5 +1,7 @@
 import 'dart:async';
+import 'package:aitu_app/screens/Distribution_Pages/watingRequestAnswer.dart';
 import 'package:aitu_app/screens/Sign_In&Up/SignInScreen.dart';
+import 'package:aitu_app/screens/student%20data/completeStudentData.dart';
 import 'package:aitu_app/screens/student%20data/enterCode.dart';
 import 'package:aitu_app/shared/constant.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -13,7 +15,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'Attendance_Part_Pages/exitFactory.dart';
 import 'Attendance_Part_Pages/HomeScreen.dart';
 import 'Distribution_Pages/College_distribution_page.dart';
-import 'Distribution_Pages/watingRequestAnswer.dart';
+// import 'Distribution_Pages/watingRequestAnswer.dart';
 
 // import 'Distribution_Pages/Instructions.dart';
 
@@ -43,21 +45,57 @@ class SplashState extends State<StatefulWidget>
       print('sharedpref $key: ${prefs.get(key)}'); // طباعة المفتاح والقيمة
     }
   }
-
   String factID = '';
+  String factName = '';
+  String factAddress = '';
+  String factIndustry = '';
+  String factGovernorate = '';
+
   Future<bool> checkThereIsRequest() async {
-    DocumentSnapshot doc =
-        await FirebaseFirestore.instance.collection('Factories').doc().get();
-    factID = doc.id;
-    DocumentSnapshot student = await FirebaseFirestore.instance
-        .collection('StudentsTable')
-        .where('email', isEqualTo: email)
-        .limit(1)
-        .get()
-        .then((value) => value.docs.first);
-    bool isRequestFound =
-        doc['isApproved'] == false && doc['studentID'] == student['code'];
-    return isRequestFound;
+    try {
+      // Get student document first
+      QuerySnapshot studentQuery = await FirebaseFirestore.instance
+          .collection('StudentsTable')
+          .where('email', isEqualTo: email)
+          .limit(1)
+          .get();
+
+      if (studentQuery.docs.isEmpty) {
+        print('No student found with email: $email');
+        return false;
+      }
+
+      DocumentSnapshot student = studentQuery.docs.first;
+      String studentCode = student['code'] ?? '';
+
+      // Query factories collection for matching request
+      QuerySnapshot factoryQuery = await FirebaseFirestore.instance
+          .collection('Factories')
+          .where('StudentsID', isEqualTo: student.id)
+          .where('isApproved', isEqualTo: false)
+          .limit(1)
+          .get();
+
+      if (factoryQuery.docs.isEmpty) {
+        return false;
+      }
+
+      DocumentSnapshot factory = factoryQuery.docs.first;
+      
+      // Update factory details
+      setState(() {
+        factID = factory.id;
+        factName = factory['name'] ?? '';
+        factAddress = factory['address'] ?? '';
+        factGovernorate = factory['Governorate'] ?? '';
+        factIndustry = factory['industry'] ?? '';
+      });
+
+      return true;
+    } catch (e) {
+      print('Error checking factory request: $e');
+      return false;
+    }
   }
 
   @override
@@ -83,14 +121,35 @@ class SplashState extends State<StatefulWidget>
       attendanceId = value.getString("attendanceId").toString();
       page = value.getString("page").toString();
       print("email: $email in splash");
+      QueryDocumentSnapshot? _student;
+      Future<String> getStudentCode() async {
+        try {
+          QuerySnapshot querySnapshot =
+              await FirebaseFirestore.instance
+                  .collection('StudentsTable')
+                  .where('email', isEqualTo: email)
+                  .limit(1)
+                  .get();
+
+          if (querySnapshot.docs.isNotEmpty) {
+            _student = querySnapshot.docs.first;
+            return _student!['code'] ?? '';
+          }
+          return '';
+        } catch (e) {
+          print('Error getting student code: $e');
+          return '';
+        }
+      }
 
       // Simulate a delay for demonstration purposes
       Future.delayed(Duration(seconds: 2), () async {
         try {
           // if (await checkThereIsRequest()) {
           //   Get.offAll(WaitnigReqestAnswer(factoryID: factID));
-          // } else 
+          // } else
           if (email != 'null') {
+            String studentCode = await getStudentCode();
             if (attendanceId != 'null') {
               // User is logged in, and the user was in the training navigate to ExitFactory
               Get.offAll(ExitFactory());
@@ -99,6 +158,15 @@ class SplashState extends State<StatefulWidget>
                 Get.offAll(College_distribution_page());
               } else if (page == 'HomeScreen') {
                 Get.offAll(HomeScreen());
+              } else if (_student?['stage'] == null) {
+                Get.offAll(CompleteStudentData(studentCode: studentCode));
+              } else if (await checkThereIsRequest()) {
+                Get.offAll(WaitnigReqestAnswer(
+                  fatoryGovernorate: factGovernorate,
+                  factoryName: factName,
+                  factoryLocation: factAddress,
+                  factoryIndustry: factIndustry,
+                ));
               } else {
                 Get.offAll(SignInScreen());
               }

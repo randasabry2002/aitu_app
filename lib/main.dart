@@ -52,7 +52,7 @@ class MyApp extends StatelessWidget {
     return GetMaterialApp(
       debugShowCheckedModeBanner: false,
       translations: AppTranslations(), // Provide translations
-      locale: Get.deviceLocale, // Use device's locale
+      locale: Locale('ar'), // Set Arabic as default language
       fallbackLocale: Locale('en'), // Fallback to English
       supportedLocales: [
         Locale('en'), // English

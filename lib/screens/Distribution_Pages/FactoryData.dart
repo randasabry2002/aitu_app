@@ -88,37 +88,26 @@ class _FactoryDataState extends State<FactoryData> {
   @override
   Widget build(BuildContext context) {
     return Directionality(
-      textDirection:
-          Get.locale?.languageCode == 'ar'
-              ? TextDirection.rtl
-              : TextDirection.ltr,
+      textDirection: TextDirection.rtl,
       child: Scaffold(
         backgroundColor: Colors.white,
         appBar: AppBar(
-          backgroundColor: mainColor,
+          backgroundColor: const Color.fromARGB(255, 255, 255, 255),
           centerTitle: true,
-          actions: <Widget>[
-            // Language Selector Icon
-            PopupMenuButton<String>(
-              icon: Icon(Icons.language, color: Colors.white),
-              onSelected: (value) {
-                // Update the app's locale based on the selection
-                if (value == 'en') {
-                  Get.updateLocale(Locale('en'));
-                } else if (value == 'ar') {
-                  Get.updateLocale(Locale('ar'));
-                }
-              },
-              itemBuilder: (BuildContext context) {
-                return [
-                  PopupMenuItem(value: 'en', child: Text('English')),
-                  PopupMenuItem(value: 'ar', child: Text('العربية')),
-                ];
-              },
+          title: Text(
+            'بيانات المصنع',
+            style: TextStyle(
+              color: Colors.black,
+              fontFamily: 'Tajawal',
+              fontSize: 22.0,
+              fontWeight: FontWeight.w500,
             ),
-          ],
+          ),
           leading: IconButton(
-            icon: Icon(Icons.arrow_back_ios_new_rounded, color: Colors.white),
+            icon: Icon(
+              Icons.arrow_back_ios_new_rounded,
+              color: const Color.fromARGB(255, 0, 0, 0),
+            ),
             onPressed: () => Get.back(),
           ),
         ),
@@ -129,7 +118,11 @@ class _FactoryDataState extends State<FactoryData> {
                 ? Center(
                   child: Text(
                     "لم يتم العثور على المصنع",
-                    style: TextStyle(fontSize: 18, color: Colors.black54),
+                    style: TextStyle(
+                      fontSize: 18,
+                      color: Colors.black54,
+                      fontFamily: 'Tajawal',
+                    ),
                   ),
                 )
                 : SingleChildScrollView(
@@ -138,50 +131,42 @@ class _FactoryDataState extends State<FactoryData> {
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
                       SizedBox(height: 40),
-                      Text(
-                        "factory_data".tr,
-                        style: TextStyle(
-                          fontSize: 22,
-                          fontWeight: FontWeight.bold,
-                          fontFamily: 'mainFont',
-                          color: const Color.fromARGB(255, 0, 0, 0),
-                        ),
-                        textAlign: TextAlign.center,
-                      ),
-                      SizedBox(height: 40),
+                  
+                      // SizedBox(height: 20),
+
                       _infoRow(
                         icon: Icons.factory,
-                        label: 'factory_name'.tr,
+                        label: 'اسم المصنع',
                         value: "${factoryData!['name']}",
                       ),
                       SizedBox(height: 18),
                       _infoRow(
                         icon: Icons.location_city,
-                        label: 'factory_Governorate'.tr,
+                        label: 'المحافظة',
                         value: "${factoryData!['Governorate']}",
                       ),
                       SizedBox(height: 18),
                       _infoRow(
                         icon: Icons.location_on,
-                        label: 'factory_address'.tr,
+                        label: 'العنوان',
                         value: "${factoryData!['address']}",
                       ),
                       SizedBox(height: 18),
                       _infoRow(
                         icon: Icons.person,
-                        label: 'contact_name'.tr,
+                        label: 'اسم المسؤول',
                         value: "${factoryData!['contactName']}",
                       ),
                       SizedBox(height: 18),
                       _infoRow(
                         icon: Icons.phone,
-                        label: 'contact_num'.tr,
+                        label: 'رقم الهاتف',
                         value: "${factoryData!['phone']}",
                       ),
                       SizedBox(height: 18),
                       _infoRow(
                         icon: Icons.webhook_sharp,
-                        label: 'factory_industry'.tr,
+                        label: 'الصناعة',
                         value: "${factoryData!['industry']}",
                       ),
                     ],
@@ -195,9 +180,10 @@ class _FactoryDataState extends State<FactoryData> {
     fontSize: 16,
     fontWeight: FontWeight.bold,
     color: Colors.black87,
-    fontFamily: 'mainFont',
+    fontFamily: 'Tajawal',
   );
-  TextStyle get _valueStyle => TextStyle(fontSize: 16, color: Colors.black87);
+  TextStyle get _valueStyle =>
+      TextStyle(fontSize: 16, color: Colors.black87, fontFamily: 'Tajawal');
 
   Widget _infoRow({
     required IconData icon,
@@ -223,7 +209,10 @@ class _FactoryDataState extends State<FactoryData> {
           decoration: BoxDecoration(
             color: const Color.fromARGB(255, 255, 255, 255),
             shape: BoxShape.circle,
-            border: Border.all(color: mainColor, width: 1),
+            border: Border.all(
+              color: Color.fromARGB(255, 0, 255, 234),
+              width: 0.5,
+            ),
           ),
           padding: EdgeInsets.all(10),
           child: Icon(icon, color: mainColor, size: 30),
