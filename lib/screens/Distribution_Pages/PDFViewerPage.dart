@@ -1,3 +1,5 @@
+// ignore_for_file: must_be_immutable, use_build_context_synchronously
+
 import 'dart:io';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
@@ -8,28 +10,31 @@ import 'package:get/get.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:permission_handler/permission_handler.dart';
 
+/// A page to view and download PDFs, supporting both remote and local files.
 class PDFViewerPage extends StatefulWidget {
   String pdfType = "";
 
+  // Accepts a pdfType to determine which PDF to load.
   PDFViewerPage({super.key, required this.pdfType});
 
   @override
-  _PDFViewerPageState createState() => _PDFViewerPageState();
+  PDFViewerPageState createState() => PDFViewerPageState();
 }
 
-class _PDFViewerPageState extends State<PDFViewerPage> {
-  // String pdfUrl = "https://drive.google.com/uc?export=download&id=1el5VyrjmC5RhgEuNO-7I3SRN0u_nnK6Q";
-  String? localPath;
-  String pdfUrl = "";
-  String pdfName = "";
+class PDFViewerPageState extends State<PDFViewerPage> {
+  String? localPath; // Local path of the downloaded PDF
+  String pdfUrl = ""; // URL of the PDF to download
+  String pdfName = ""; // Name of the PDF
 
+  /// Fetches the URL and name of the nomination card PDF from Firestore.
   Future<void> fetchNominationCardURL() async {
     try {
       QuerySnapshot querySnapshot =
-      await FirebaseFirestore.instance.collection("NominationCard").get();
+          await FirebaseFirestore.instance.collection("NominationCard").get();
 
+      // Find the document with Name == "MainNominationCard"
       final doc = querySnapshot.docs.firstWhere(
-            (doc) => doc["Name"] == "MainNominationCard",
+        (doc) => doc["id"] == "1",
         orElse: () => throw Exception("Document not found"),
       );
 
@@ -38,7 +43,8 @@ class _PDFViewerPageState extends State<PDFViewerPage> {
         pdfName = doc["Name"] as String;
       });
     } catch (e) {
-      print("❌ Error fetching nomination card URL: $e");
+      // Use logging instead of print in production
+      debugPrint("❌ Error fetching nomination card URL: $e");
     }
   }
 
@@ -46,45 +52,47 @@ class _PDFViewerPageState extends State<PDFViewerPage> {
   void initState() {
     super.initState();
     initializePDF();
-
-    downloadAndSavePDF();
   }
 
+  /// Initializes the PDF URL and name based on the pdfType.
   Future<void> initializePDF() async {
     if (widget.pdfType == "nominationCard") {
       await fetchNominationCardURL();
     } else if (widget.pdfType == "distributionPdf") {
-      pdfUrl = "https://drive.google.com/uc?export=download&id=1el5VyrjmC5RhgEuNO-7I3SRN0u_nnK6Q";
+      pdfUrl =
+          "https://drive.google.com/uc?export=download&id=1el5VyrjmC5RhgEuNO-7I3SRN0u_nnK6Q";
       pdfName = "Distribution_Pdf";
     }
 
-    // تأكد إن الرابط صالح قبل التحميل
+    // Check if the URL is valid before downloading
     if (pdfUrl.isNotEmpty && Uri.tryParse(pdfUrl)?.hasAbsolutePath == true) {
       await downloadAndSavePDF();
     } else {
-      print("❌ Invalid or empty PDF URL: $pdfUrl");
+      debugPrint("❌ Invalid or empty PDF URL: $pdfUrl");
     }
   }
 
+  /// Downloads the PDF from [pdfUrl] and saves it locally.
   Future<void> downloadAndSavePDF() async {
     try {
       final dir = await getApplicationDocumentsDirectory();
       final file = File("${dir.path}/document.pdf");
 
+      // Check for internet connectivity
       var connectivityResult = await (Connectivity().checkConnectivity());
       bool hasInternet = connectivityResult != ConnectivityResult.none;
 
       if (hasInternet) {
+        // Delete old file if exists
         if (file.existsSync()) {
           await file.delete();
         }
 
+        // Download the PDF
         var response = await Dio().download(
           pdfUrl,
           file.path,
-          options: Options(
-            headers: {"Cache-Control": "no-cache"},
-          ),
+          options: Options(headers: {"Cache-Control": "no-cache"}),
         );
 
         if (response.statusCode == 200) {
@@ -93,25 +101,27 @@ class _PDFViewerPageState extends State<PDFViewerPage> {
           });
         }
       } else {
+        // If offline, use the old file if available
         if (file.existsSync()) {
           setState(() {
             localPath = file.path;
           });
-          print("⚠ لا يوجد إنترنت، يتم استخدام النسخة القديمة من PDF.");
+          debugPrint("⚠️ No internet, using old PDF file.");
         } else {
-          print("❌ لا يوجد إنترنت ولا يوجد ملف PDF محفوظ.");
+          debugPrint("❌ No internet and no saved PDF file.");
         }
       }
     } catch (e) {
-      print("Error downloading PDF: $e");
+      debugPrint("Error downloading PDF: $e");
     }
   }
 
+  /// Downloads the PDF to the device's Downloads folder.
   Future<void> downloadPDFToDownloads() async {
     try {
-      // طلب إذن الوصول إلى التخزين
+      // Request storage permission
       if (await Permission.manageExternalStorage.request().isGranted) {
-        // الحصول على مجلد التنزيلات
+        // Get the Downloads directory
         Directory? downloadsDir = Directory('/storage/emulated/0/Download');
         if (!downloadsDir.existsSync()) {
           downloadsDir = await getExternalStorageDirectory();
@@ -119,59 +129,88 @@ class _PDFViewerPageState extends State<PDFViewerPage> {
 
         String savePath = "${downloadsDir!.path}/$pdfName.pdf";
 
-        //  تحميل الملف
+        // Download the file
         await Dio().download(pdfUrl, savePath);
-
+        if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("✅ تم تحميل الملف بنجاح في التنزيلات")),
+          SnackBar(
+            content: Text("✅ File downloaded successfully to Downloads"),
+          ),
         );
-        print("✅ PDF تم تحميله إلى: $savePath");
+        debugPrint("✅ PDF downloaded to: $savePath");
       } else {
+        if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("❌ تم رفض الإذن، الرجاء منحه من الإعدادات")),
+          SnackBar(
+            content: Text("❌ Permission denied, please allow in settings"),
+          ),
         );
-        openAppSettings(); //  فتح إعدادات الهاتف لمنح الإذن يدويًا
+        openAppSettings(); // Open app settings for manual permission grant
       }
     } catch (e) {
-      print("❌ خطأ في تحميل PDF: $e");
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("❌ فشل تحميل الملف")),
-      );
+      debugPrint("❌ Error downloading PDF: $e");
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text("❌ Failed to download file")));
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return Directionality(
-      textDirection: Get.locale?.languageCode == 'ar'
-          ? TextDirection.rtl
-          : TextDirection.ltr,
+      textDirection:
+          Get.locale?.languageCode == 'ar'
+              ? TextDirection.rtl
+              : TextDirection.ltr,
       child: Scaffold(
+        
         backgroundColor: Color(0xFF0187c4),
         body: Stack(
           children: [
+            // PDF Viewer or loading indicator
             Positioned.fill(
-              child: localPath == null
-                  ? Center(child: CircularProgressIndicator(valueColor: AlwaysStoppedAnimation<Color>(Colors.white),))
-                  : PDFView(
-                filePath: localPath!,
-                enableSwipe: true,
-                swipeHorizontal: false,
-                autoSpacing: true,
-                pageFling: true,
-              ),
+              child:
+                  localPath == null
+                      ? Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            CircularProgressIndicator(
+                              valueColor: AlwaysStoppedAnimation<Color>(
+                                Colors.white,
+                              ),
+                            ),
+                            SizedBox(height: 16),
+                            Text(
+                              'downloading'.tr,
+                              style: TextStyle(
+                                color: Colors.white,
+                              ),
+                            ),
+                          ],
+                        ),
+                      )
+                      : PDFView(
+                        filePath: localPath!,
+                        enableSwipe: true,
+                        swipeHorizontal: false,
+                        autoSpacing: true,
+                        pageFling: true,
+                      ),
             ),
+            // Download button
             Positioned(
               bottom: 30,
               right: 20,
               child: Visibility(
-                visible: !(localPath == null),
+                visible: localPath != null,
                 child: FloatingActionButton.extended(
                   onPressed: () {
                     downloadPDFToDownloads();
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text("جاري التحميل...")),
-                    );
+                    ScaffoldMessenger.of(
+                      context,
+                    ).showSnackBar(SnackBar(content: Text("Downloading...")));
                   },
                   label: Text(
                     "Download",

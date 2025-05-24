@@ -24,34 +24,34 @@ class _EnterStudentCodeState extends State<EnterStudentCode> {
               : TextDirection.ltr,
       child: Scaffold(
         extendBodyBehindAppBar: true,
-        appBar: AppBar(
-          elevation: 0.0,
-          backgroundColor: const Color.fromARGB(0, 0, 115, 168),
-          // automaticallyImplyLeading: true,
-          actions: <Widget>[
-            // Language Selector Icon
-            PopupMenuButton<String>(
-              icon: Icon(
-                Icons.language,
-                color: const Color.fromARGB(255, 255, 255, 255),
-              ),
-              onSelected: (value) {
-                // Update the app's locale based on the selection
-                if (value == 'en') {
-                  Get.updateLocale(Locale('en'));
-                } else if (value == 'ar') {
-                  Get.updateLocale(Locale('ar'));
-                }
-              },
-              itemBuilder: (BuildContext context) {
-                return [
-                  PopupMenuItem(value: 'en', child: Text('English')),
-                  PopupMenuItem(value: 'ar', child: Text('العربية')),
-                ];
-              },
-            ),
-          ],
-        ),
+        // appBar: AppBar(
+        //   elevation: 0.0,
+        //   backgroundColor: const Color.fromARGB(0, 0, 115, 168),
+        //   // automaticallyImplyLeading: true,
+        //   actions: <Widget>[
+        //     // Language Selector Icon
+        //     PopupMenuButton<String>(
+        //       icon: Icon(
+        //         Icons.language,
+        //         color: const Color.fromARGB(255, 255, 255, 255),
+        //       ),
+        //       onSelected: (value) {
+        //         // Update the app's locale based on the selection
+        //         if (value == 'en') {
+        //           Get.updateLocale(Locale('en'));
+        //         } else if (value == 'ar') {
+        //           Get.updateLocale(Locale('ar'));
+        //         }
+        //       },
+        //       itemBuilder: (BuildContext context) {
+        //         return [
+        //           PopupMenuItem(value: 'en', child: Text('English')),
+        //           PopupMenuItem(value: 'ar', child: Text('العربية')),
+        //         ];
+        //       },
+        //     ),
+        //   ],
+        // ),
         backgroundColor: const Color.fromARGB(255, 255, 255, 255),
         body: Stack(
           children: [
@@ -67,125 +67,150 @@ class _EnterStudentCodeState extends State<EnterStudentCode> {
                   child: Column(
                     children: [
                       //logo
-                      Image.asset(
-                        'assets/images/logo.png',
-                        width: 200,
-                        height: 200,
+                      Container(
+                        child: Image.asset(
+                          'assets/images/logo.png',
+                          width: 180,
+                          height: 180,
+                          fit: BoxFit.contain,
+                        ),
                       ),
                       //ask for code
                       Container(
-                        // height: MediaQuery.of(context).size.height * 0.6,
                         width: double.infinity,
                         padding: const EdgeInsets.symmetric(
                           horizontal: 20,
-                          vertical: 60,
+                          vertical: 40,
                         ),
                         decoration: BoxDecoration(
-                          color: const Color.fromARGB(0, 255, 255, 255),
-                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(color: mainColor, width: 1.4),
+                          color: const Color.fromARGB(57, 255, 255, 255),
+                          borderRadius: BorderRadius.circular(20),
                           boxShadow: [
                             BoxShadow(
-                              color: const Color.fromARGB(0, 0, 0, 0),
-                              blurRadius: 5,
-                              offset: Offset(0, 3),
+                              color: Colors.black.withOpacity(0.1),
+                              blurRadius: 10,
+                              offset: Offset(0, 5),
                             ),
                           ],
                         ),
-                        child: SingleChildScrollView(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.center,
-                            // mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                            children: [
-                              // Step 1: Enter your code text
-                              Text(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          children: [
+                            Text(
                               'enter_your_code'.tr,
                               style: TextStyle(
                                 color: const Color.fromARGB(255, 255, 255, 255),
-                                fontSize: 24.0,
-                                fontFamily: 'mainFont',
-                                fontWeight: FontWeight.bold,
+                                fontSize: 22.0,
+                                fontFamily: 'Tajawal',
+                                fontWeight: FontWeight.w400,
                               ),
-                              ),
-                              SizedBox(height: 20),
-                              // Step 2: Input field for code
-                              CreateInput(
-                              borderColor: const Color.fromARGB(255, 255, 255, 255),
-                              labelColor: const Color.fromARGB(255, 82, 82, 82),
-                              color: const Color.fromARGB(200, 255, 255, 255),
+                            ),
+                            SizedBox(height: 20),
+                            CreateInput(
+                              focusedBorderColor: Colors.transparent,
+                              textAlign: TextAlign.center,
+                              borderColor: const Color.fromARGB(0, 82, 82, 82),
+                              labelColor: mainColor,
+                              color: Colors.white,
                               onChanged: (value) {
                                 setState(() {
-                                studentCode = value;
+                                  studentCode = value;
                                 });
                               },
-                              labelText: 'code'.tr,
+                              labelText: ''.tr,
                               keyboardType: TextInputType.text,
+                            ),
+                            SizedBox(height: 60),
+                          ],
+                        ),
+                      ),
+                      Transform.translate(
+                        offset: Offset(0, -32),
+                        child: Container(
+                          width: 68,
+                          height: 68,
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              colors: [mainColor, Color.fromARGB(255, 0, 243, 223)],
+                              begin: Alignment.centerLeft,
+                              end: Alignment.centerRight,
+                            ),
+                            shape: BoxShape.circle,
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.2),
+                                blurRadius: 8,
+                                offset: Offset(0, 4),
                               ),
-                              SizedBox(height: 40),
-                              // Step 3: Next button
-                              CreateButton(
-                              onPressed: () async {
+                            ],
+                          ),
+                          child: Material(
+                            color: Colors.transparent,
+                            child: InkWell(
+                              borderRadius: BorderRadius.circular(30),
+                              onTap: () async {
                                 if (studentCode.isEmpty) {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(
-                                  content: Text("please enter your code!".tr),
-                                  ),
-                                );
-                                return;
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      backgroundColor: const Color.fromARGB(255, 160, 11, 0),
+                                      content: Text("يرجى ادخال الكود!".tr),
+                                    ),
+                                  );
+                                  return;
                                 }
                                 final firebaseService = FirebaseService();
                                 try {
-                                final student = await firebaseService.getDataWithStudentId(studentCode);
-                                if (student != null) {
-                                  // Step 4: Walk through the flow based on student data
-                                  if (student.email == "") {
-                                  // Go to SignUpScreen
-                                  Get.offAll(() => SignUpScreen(studentCode: studentCode));
-                                  } else if (student.birthAddress == "") {
-                                  // Go to CompleteStudentData
-                                  Get.offAll(() => CompleteStudentData(studentCode: studentCode));
+                                  final student = await firebaseService
+                                      .getDataWithStudentId(studentCode);
+                                  if (student != null) {
+                                    if (student.email == "") {
+                                      Get.offAll(
+                                        () => SignUpScreen(studentCode: studentCode),
+                                      );
+                                    } else if (student.birthAddress == "") {
+                                      Get.offAll(
+                                        () => CompleteStudentData(
+                                          studentCode: studentCode,
+                                        ),
+                                      );
+                                    } else {
+                                      Get.offAll(
+                                        () => SignInScreen(studentCode: studentCode),
+                                      );
+                                    }
                                   } else {
-                                  // Go to SignInScreen
-                                  Get.offAll(() => SignInScreen(studentCode: studentCode));
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      
+                                      SnackBar(content: Text("الكود غير موجود!".tr)),
+                                    );
                                   }
-                                } else {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(
-                                    content: Text("code not found!".tr),
-                                  ),
-                                  );
-                                }
                                 } catch (error) {
-                                print("Error fetching student data: $error");
-                                showDialog(
-                                  context: context,
-                                  builder: (context) => AlertDialog(
-                                  title: Text('Error'.tr),
-                                  content: Text('An error occurred while fetching student data. \n$error'.tr),
-                                  actions: [
-                                    TextButton(
-                                    onPressed: () => Navigator.of(context).pop(),
-                                    child: Text('OK'.tr),
+                                  print("Error fetching student data: $error");
+                                  showDialog(
+                                    context: context,
+                                    builder: (context) => AlertDialog(
+                                      title: Text('لا يوجد طالب بهذا الكود'.tr),
+                                      content: Text(
+                                        'يرجى التحقق من الكود المدخل\n اذا كنت متأكد منه قم بالطلب من احد اعضاء الشئون الطلابية والتأكد من اضافتك للبرنامج. \n'.tr,
+                                      ),
+                                      actions: [
+                                        TextButton(
+                                          onPressed: () => Navigator.of(context).pop(),
+                                          child: Text('حسنا'.tr),
+                                        ),
+                                      ],
                                     ),
-                                  ],
-                                  ),
-                                );
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(
-                                  content: Text("code not found!".tr),
-                                  ),
-                                );
+                                  );
+                                 
                                 }
                               },
-                              title: Text(
-                                'Start'.tr,
-                                style: TextStyle(
-                                fontSize: 26,
-                                fontWeight: FontWeight.bold,
-                                fontFamily: 'mainFont',
-                                ),
+                              child: Icon(
+                                Icons.arrow_back_ios_new_rounded,
+                                color: Colors.white,
+                                size: 30.0,
                               ),
-                              ),
-                            ],
+                            ),
                           ),
                         ),
                       ),

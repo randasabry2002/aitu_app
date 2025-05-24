@@ -112,25 +112,36 @@ class _Not_College_distribution_pageState
     });
   }
 
-  // دالة لجلب بيانات المصانع من Firestore
-  Future<void> fetchFactories(String gName) async {
-    selectedFactory = null;
-    factoryNames = [];
+Future<void> fetchFactories(String gName) async {
+  selectedFactory = null;
+  factoryNames = [];
+
+  try {
     QuerySnapshot querySnapshot =
         await FirebaseFirestore.instance.collection("Factories").get();
 
-    // تحويل البيانات إلى قائمة من النصوص
+    List<QueryDocumentSnapshot> filteredDocs = querySnapshot.docs.where((doc) {
+      final data = doc.data() as Map<String, dynamic>;
+
+      return data.containsKey("Governorate") &&
+          data.containsKey("isApproved") &&
+          data.containsKey("type") &&
+          data.containsKey("name") &&
+          data["Governorate"] == gName &&
+          data["isApproved"] == true &&
+          data["type"] == "external";
+    }).toList();
+
     setState(() {
+      
+
       factoryNames =
-          querySnapshot.docs
-              .where(
-                (doc) =>
-                    doc["Governorate"] == gName && doc["isApproved"] == true && doc["type"] == "external",
-              )
-              .map((doc) => doc["name"] as String)
-              .toList();
+          filteredDocs.map((doc) => doc["name"] as String).toList();
     });
+  } catch (e) {
+    print("🔥 Error fetching factories: $e");
   }
+}
 
   @override
   void initState() {
@@ -148,33 +159,36 @@ class _Not_College_distribution_pageState
               : TextDirection.ltr,
       child: Scaffold(
         appBar: AppBar(
-          backgroundColor: Color(0xFF0187c4),
+          backgroundColor: Color.fromARGB(255, 255, 255, 255),
           leading: IconButton(
-            icon: Icon(Icons.arrow_back_ios_new_rounded, color: Colors.white),
+            icon: Icon(
+              Icons.arrow_back_ios_new_rounded,
+              color: const Color.fromARGB(255, 10, 10, 10),
+            ),
             onPressed: () {
               Get.back();
             },
           ),
-          actions: <Widget>[
-            // Language Selector Icon
-            PopupMenuButton<String>(
-              icon: Icon(Icons.language, color: Colors.white),
-              onSelected: (value) {
-                // Update the app's locale based on the selection
-                if (value == 'en') {
-                  Get.updateLocale(Locale('en'));
-                } else if (value == 'ar') {
-                  Get.updateLocale(Locale('ar'));
-                }
-              },
-              itemBuilder: (BuildContext context) {
-                return [
-                  PopupMenuItem(value: 'en', child: Text('English')),
-                  PopupMenuItem(value: 'ar', child: Text('العربية')),
-                ];
-              },
-            ),
-          ],
+          // actions: <Widget>[
+          //   // Language Selector Icon
+          //   PopupMenuButton<String>(
+          //     icon: Icon(Icons.language, color: Colors.white),
+          //     onSelected: (value) {
+          //       // Update the app's locale based on the selection
+          //       if (value == 'en') {
+          //         Get.updateLocale(Locale('en'));
+          //       } else if (value == 'ar') {
+          //         Get.updateLocale(Locale('ar'));
+          //       }
+          //     },
+          //     itemBuilder: (BuildContext context) {
+          //       return [
+          //         PopupMenuItem(value: 'en', child: Text('English')),
+          //         PopupMenuItem(value: 'ar', child: Text('العربية')),
+          //       ];
+          //     },
+          //   ),
+          // ],
         ),
         backgroundColor: Color.fromARGB(255, 255, 255, 255),
         body: Padding(
@@ -188,12 +202,12 @@ class _Not_College_distribution_pageState
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     color: const Color.fromARGB(255, 0, 0, 0),
-                    fontWeight: FontWeight.bold,
-                    fontFamily: 'mainFont',
-                    fontSize: 16,
+                    fontWeight: FontWeight.w500,
+                    fontFamily: 'Tajawal',
+                    fontSize: 16.0,
                   ),
                 ),
-
+                SizedBox(height: 20.0),
                 /// choosing the government
                 governorateNames.isEmpty
                     ? CircularProgressIndicator() // تحميل البيانات
@@ -231,8 +245,8 @@ class _Not_College_distribution_pageState
                             textAlign: TextAlign.center,
                             style: TextStyle(
                               color: Color(0xFF0187c4),
-                              fontWeight: FontWeight.bold,
-                              fontFamily: 'mainFont',
+                              fontWeight: FontWeight.w500,
+                              fontFamily: 'Tajawal',
 
                               fontSize: 16,
                             ),
@@ -252,8 +266,8 @@ class _Not_College_distribution_pageState
 
                                     style: TextStyle(
                                       color: Color(0xFF0187c4),
-                                      fontWeight: FontWeight.bold,
-                                      fontFamily: 'mainFont',
+                                      fontWeight: FontWeight.w500,
+                                      fontFamily: 'Tajawal',
 
                                       fontSize: 16,
                                     ),
@@ -262,9 +276,9 @@ class _Not_College_distribution_pageState
                               }).toList(),
                           onChanged: (newValue) {
                             setState(() {
-                              selectedFactory = null;
+                              // selectedFactory = null;
                               selectedGovernorate = newValue;
-                              fetchFactories(selectedGovernorate!);
+                              fetchFactories(newValue!);
                             });
                           },
                         ),
@@ -301,8 +315,6 @@ class _Not_College_distribution_pageState
                                     topLeft: Radius.circular(20),
                                     topRight: Radius.circular(20),
                                   ),
-
-                                  
                                 ),
                                 child: DropdownButtonHideUnderline(
                                   child: DropdownButton<String>(
@@ -312,10 +324,10 @@ class _Not_College_distribution_pageState
                                     hint: Text(
                                       "pick_factory_name".tr,
                                       style: TextStyle(
-                                        color: Color(0xFF0187c4),
-                                        fontWeight: FontWeight.bold,
+                                        color: Color.fromARGB(255, 0, 0, 0),
+                                        fontWeight: FontWeight.w500,
                                         fontSize: 16,
-                                        fontFamily: 'mainFont',
+                                        fontFamily: 'Tajawal',
                                       ),
                                     ),
                                     icon: Icon(
@@ -331,9 +343,9 @@ class _Not_College_distribution_pageState
                                               factory,
                                               style: TextStyle(
                                                 color: Color(0xFF0187c4),
-                                                fontWeight: FontWeight.bold,
+                                                fontWeight: FontWeight.w500,
                                                 fontSize: 16,
-                                                fontFamily: 'mainFont',
+                                                fontFamily: 'Tajawal',
                                               ),
                                             ),
                                           );
@@ -379,14 +391,15 @@ class _Not_College_distribution_pageState
                                   blurRadius: 8,
                                   offset: Offset(0, 4),
                                 ),
-                              ],),
+                              ],
+                            ),
                             child: Center(
                               child: Text(
                                 "factory_data".tr,
                                 style: TextStyle(
                                   color: mainColor,
-                                  fontFamily: 'mainFont',
-                                  fontWeight: FontWeight.bold,
+                                  fontFamily: 'Tajawal',
+                                  fontWeight: FontWeight.w500,
                                   fontSize: 16,
                                 ),
                               ),
@@ -404,8 +417,8 @@ class _Not_College_distribution_pageState
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       color: const Color.fromARGB(255, 0, 0, 0),
-                      fontWeight: FontWeight.bold,
-                      fontFamily: 'mainFont',
+                      fontWeight: FontWeight.w500,
+                      fontFamily: 'Tajawal',
                       fontSize: 14,
                     ),
                   ),
@@ -418,6 +431,7 @@ class _Not_College_distribution_pageState
                     child: CreateButton(
                       title: Text(
                         "nominationCard".tr,
+                        style: TextStyle(color: Colors.white, fontFamily: 'Tajawal', fontSize: 14.0, fontWeight: FontWeight.w800),
                         textAlign: TextAlign.center,
                       ),
                       onPressed: () async {
@@ -437,8 +451,8 @@ class _Not_College_distribution_pageState
                         "or".tr,
                         style: TextStyle(
                           color: const Color.fromARGB(255, 0, 0, 0),
-                          fontWeight: FontWeight.bold,
-                          fontFamily: 'mainFont',
+                          fontWeight: FontWeight.w500,
+                          fontFamily: 'Tajawal',
                           fontSize: 12,
                         ),
                       ),
@@ -451,21 +465,22 @@ class _Not_College_distribution_pageState
                 CreateButton(
                   title: Text(
                     "add_new_factory_request".tr,
+                    style: TextStyle(
+                      color:Colors.white,
+                      fontFamily: 'Tajawal'
+                    ),
                     textAlign: TextAlign.center,
                   ),
                   onPressed: () async {
                     Get.to(Add_New_Factory_Request_Page());
                   },
                 ),
-                CreateButton(
-                  title: Text(
-                    'test for up',
-                    textAlign: TextAlign.center,
-                  ),
-                  onPressed: () async {
-                    Get.to(UplooadRerport());
-                  },
-                ),
+                // CreateButton(
+                //   title: Text('test for up', textAlign: TextAlign.center),
+                //   onPressed: () async {
+                //     Get.to(UplooadRerport());
+                //   },
+                // ),
               ],
             ),
           ),

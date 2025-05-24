@@ -14,7 +14,7 @@ const AssetImage backgroundImage = AssetImage('assets/images/background2.jpg');
 // );
 
 Image imageBackground = Image.asset(
-  'assets/images/backSchool.jpg',
+  'assets/images/college.jpg',
   fit: BoxFit.cover,
   width: double.infinity,
   height: double.infinity,
@@ -22,5 +22,12 @@ Image imageBackground = Image.asset(
 
 Container backDark = Container(
   width: double.infinity,
-  decoration: BoxDecoration(color: const Color.fromARGB(200, 0, 0, 0)),
+  decoration: BoxDecoration(
+    // color: const Color.fromARGB(206, 0, 0, 0),
+    gradient: LinearGradient(
+      begin: Alignment.topLeft,
+      end: Alignment.bottomRight,
+      colors: [Color.fromARGB(230, 0, 0, 0), Color.fromARGB(200, 0, 0, 0)],
+    ),
+  ),
 );

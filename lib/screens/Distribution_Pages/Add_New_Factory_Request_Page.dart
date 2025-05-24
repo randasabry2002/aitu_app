@@ -64,8 +64,7 @@ class _Add_New_Factory_Request_PageState
         factoryAddressController.text.isNotEmpty &&
         contactNameController.text.isNotEmpty &&
         contactNumberController.text.isNotEmpty &&
-        industryController.text.isNotEmpty
-        ) {
+        industryController.text.isNotEmpty) {
       isDataCompleted = true;
     } else {
       isDataCompleted = false;
@@ -103,26 +102,35 @@ class _Add_New_Factory_Request_PageState
               : TextDirection.ltr,
       child: Scaffold(
         appBar: AppBar(
-          elevation: 20.0,
-          backgroundColor: mainColor,
-          actions: <Widget>[
-            PopupMenuButton<String>(
-              icon: Icon(Icons.language, color: Colors.white),
-              onSelected: (value) {
-                if (value == 'en') {
-                  Get.updateLocale(Locale('en'));
-                } else if (value == 'ar') {
-                  Get.updateLocale(Locale('ar'));
-                }
-              },
-              itemBuilder: (BuildContext context) {
-                return [
-                  PopupMenuItem(value: 'en', child: Text('English')),
-                  PopupMenuItem(value: 'ar', child: Text('العربية')),
-                ];
-              },
+          elevation: 0.0,
+          leading: IconButton(
+            icon: Icon(
+              Icons.arrow_back_ios_new_rounded,
+              color: const Color.fromARGB(255, 0, 0, 0),
             ),
-          ],
+            onPressed: () {
+              Get.back();
+            },
+          ),
+          backgroundColor: const Color.fromARGB(255, 255, 255, 255),
+          // actions: <Widget>[
+          //   PopupMenuButton<String>(
+          //     icon: Icon(Icons.language, color: Colors.white),
+          //     onSelected: (value) {
+          //       if (value == 'en') {
+          //         Get.updateLocale(Locale('en'));
+          //       } else if (value == 'ar') {
+          //         Get.updateLocale(Locale('ar'));
+          //       }
+          //     },
+          //     itemBuilder: (BuildContext context) {
+          //       return [
+          //         PopupMenuItem(value: 'en', child: Text('English')),
+          //         PopupMenuItem(value: 'ar', child: Text('العربية')),
+          //       ];
+          //     },
+          //   ),
+          // ],
         ),
         backgroundColor: Color.fromARGB(255, 255, 255, 255),
         body: Stack(
@@ -142,35 +150,148 @@ class _Add_New_Factory_Request_PageState
                     children: [
                       SizedBox(height: 40),
                       Text(
-                        'Add New Factory'.tr,
+                        'طلب على مصنع خارجي'.tr,
                         style: TextStyle(
                           fontSize: 28,
                           fontWeight: FontWeight.bold,
                           color: mainColor,
-                          fontFamily: 'mainFont',
+                          fontFamily: 'Tajawal',
                         ),
                         textAlign: TextAlign.center,
                       ),
                       SizedBox(height: 12),
                       Text(
-                        'Here you can submit a request to create a new factory. Please fill in the details below to help us understand your idea and process your request.'
+                        'هنا يمكنك تقديم طلب لإنشاء مصنع جديد. يُرجى ملء التفاصيل أدناه لمساعدتنا في فهم فكرتك ومعالجة طلبك.'
                             .tr,
                         style: TextStyle(fontSize: 12, color: Colors.black87),
                         textAlign: TextAlign.center,
                       ),
                       SizedBox(height: 40),
+                      // Factory Name
+                      CreateInput(
+                        // controller: factoryNameController,
+                        keyboardType: TextInputType.text,
+                        labelText: 'اسم المصنع',
+                        onChanged: (value) {
+                          setState(() {
+                            factoryNameController.text = value;
+                          });
+                        },
+                        textAlign: TextAlign.center,
+                        focusedBorderColor: const Color.fromARGB(
+                          255,
+                          0,
+                          255,
+                          234,
+                        ),
+                        color: const Color.fromARGB(70, 255, 255, 255),
+                        borderColor: secondaryColor,
+                        labelColor: mainColor,
+                      ),
+                      SizedBox(height: 30.0),
+                      // Factory Address
+                      CreateInput(
+                        // controller: factoryAddressController,
+                        keyboardType: TextInputType.text,
+                        labelText: 'عنوان المصنع',
+                        onChanged: (value) {
+                          setState(() {
+                            factoryAddressController.text = value;
+                          });
+                        },
+                        textAlign: TextAlign.center,
+                        focusedBorderColor: const Color.fromARGB(
+                          255,
+                          0,
+                          255,
+                          234,
+                        ),
+                        color: const Color.fromARGB(70, 255, 255, 255),
+                        borderColor: secondaryColor,
+                        labelColor: mainColor,
+                      ),
+                      SizedBox(height: 30.0),
+                      // Contact Name
+                      CreateInput(
+                        // controller: contactNameController,
+                        keyboardType: TextInputType.text,
+                        labelText: 'اسم المسؤول',
+                        onChanged: (value) {
+                          setState(() {
+                            contactNameController.text = value;
+                          });
+                        },
+                        textAlign: TextAlign.center,
+                        focusedBorderColor: const Color.fromARGB(
+                          255,
+                          0,
+                          255,
+                          234,
+                        ),
+                        color: const Color.fromARGB(70, 255, 255, 255),
+                        borderColor: secondaryColor,
+                        labelColor: mainColor,
+                      ),
+                      SizedBox(height: 30.0),
+                      // Contact Number
+                      CreateInput(
+                        // controller: contactNumberController,
+                        keyboardType: TextInputType.phone,
+                        labelText: 'رقم الهاتف',
+                        onChanged: (value) {
+                          setState(() {
+                            contactNumberController.text = value;
+                          });
+                        },
+                        textAlign: TextAlign.center,
+                        focusedBorderColor: const Color.fromARGB(
+                          255,
+                          0,
+                          255,
+                          234,
+                        ),
+                        color: const Color.fromARGB(70, 255, 255, 255),
+                        borderColor: secondaryColor,
+                        labelColor: mainColor,
+                      ),
+                      SizedBox(height: 30.0),
+                      // Industry
+                      CreateInput(
+                        // controller: industryController,
+                        keyboardType: TextInputType.text,
+                        labelText: 'الصناعة',
+                        onChanged: (value) {
+                          setState(() {
+                            industryController.text = value;
+                          });
+                        },
+                        textAlign: TextAlign.center,
+                        focusedBorderColor: const Color.fromARGB(
+                          255,
+                          0,
+                          255,
+                          234,
+                        ),
+                        color: const Color.fromARGB(70, 255, 255, 255),
+                        borderColor: secondaryColor,
+                        labelColor: mainColor,
+                      ),
+                      SizedBox(height: 30.0),
                       // Governorate Dropdown
                       Container(
                         width: double.infinity,
-                        padding: EdgeInsets.symmetric(horizontal: 18),
+                        padding: EdgeInsets.symmetric(
+                          horizontal: 18,
+                          vertical: 4.0,
+                        ),
                         decoration: BoxDecoration(
                           border: Border.all(color: mainColor),
-                          borderRadius: BorderRadius.circular(15),
+                          borderRadius: BorderRadius.circular(20),
                         ),
                         child: DropdownButtonHideUnderline(
                           child: DropdownButton<String>(
                             isExpanded: true,
-                            borderRadius: BorderRadius.circular(15),
+                            borderRadius: BorderRadius.circular(20),
                             dropdownColor: const Color.fromARGB(
                               255,
                               255,
@@ -178,12 +299,12 @@ class _Add_New_Factory_Request_PageState
                               255,
                             ),
                             hint: Text(
-                              'Choose Governorate'.tr,
+                              'اختر المحافظة',
                               style: TextStyle(
                                 color: mainColor,
                                 fontSize: 16,
-                                fontFamily: 'mainFont',
-                                fontWeight: FontWeight.bold,
+                                fontFamily: 'Tajawal',
+                                fontWeight: FontWeight.w500,
                               ),
                             ),
                             value: selectedGovernorate,
@@ -202,9 +323,10 @@ class _Add_New_Factory_Request_PageState
                                           style: TextStyle(
                                             color: Colors.black,
                                             fontSize: 16,
-                                            fontFamily: 'mainFont',
-                                            fontWeight: FontWeight.bold,
+                                            fontFamily: 'Tajawal',
+                                            fontWeight: FontWeight.w500,
                                           ),
+                                          textAlign: TextAlign.center,
                                         ),
                                       ),
                                     )
@@ -212,135 +334,17 @@ class _Add_New_Factory_Request_PageState
                           ),
                         ),
                       ),
-                      SizedBox(height: 24.0),
-                      // type
-                      // Container(
-                      //   width: double.infinity,
-                      //   padding: EdgeInsets.symmetric(horizontal: 18),
-                      //   decoration: BoxDecoration(
-                      //     border: Border.all(color: mainColor),
-                      //     borderRadius: BorderRadius.circular(15),
-                      //   ),
-                      //   child: DropdownButtonHideUnderline(
-                      //     child: DropdownButton<String>(
-                      //       isExpanded: true,
-                      //       borderRadius: BorderRadius.circular(15),
-                      //       dropdownColor: const Color.fromARGB(
-                      //         255,
-                      //         255,
-                      //         255,
-                      //         255,
-                      //       ),
-                      //       hint: Text(
-                      //         'factory type'.tr,
-                      //         style: TextStyle(
-                      //           color: mainColor,
-                      //           fontSize: 16,
-                      //           fontFamily: 'mainFont',
-                      //           fontWeight: FontWeight.bold,
-                      //         ),
-                      //       ),
-                      //       value: selectedType,
-                      //       onChanged: (newValue) {
-                      //         setState(() {
-                      //           selectedType = newValue;
-                      //         });
-                      //       },
-                      //       items:
-                      //           types
-                      //               .map(
-                      //                 (type) => DropdownMenuItem<String>(
-                      //                   value: type,
-                      //                   child: Text(
-                      //                     type,
-                      //                     style: TextStyle(
-                      //                       color: Colors.black,
-                      //                       fontSize: 16,
-                      //                       fontFamily: 'mainFont',
-                      //                       fontWeight: FontWeight.bold,
-                      //                     ),
-                      //                   ),
-                      //                 ),
-                      //               )
-                      //               .toList(),
-                      //     ),
-                      //   ),
-                      // ),
-                      // SizedBox(height: 24.0),
-                      // Factory Name
-                      CreateInput(
-                        keyboardType: TextInputType.text,
-                        labelText: 'Factory Name'.tr,
-                        onChanged: (value) {
-                          setState(() {
-                            factoryNameController.text = value;
-                          });
-                        },
-                      ),
-                      SizedBox(height: 24.0),
-                      // Factory Address
-                      CreateInput(
-                        keyboardType: TextInputType.text,
-                        labelText: 'Factory Address'.tr,
-                        onChanged: (value) {
-                          setState(() {
-                            factoryAddressController.text = value;
-                          });
-                        },
-                      ),
-                      SizedBox(height: 24.0),
-                      // Contact Name
-                      CreateInput(
-                        keyboardType: TextInputType.text,
-                        labelText: 'Contact Name'.tr,
-                        onChanged: (value) {
-                          setState(() {
-                            contactNameController.text = value;
-                          });
-                        },
-                      ),
-                      SizedBox(height: 24.0),
-                      // Contact Number
-                      CreateInput(
-                        keyboardType: TextInputType.phone,
-                        labelText: 'Contact Number'.tr,
-                        onChanged: (value) {
-                          setState(() {
-                            contactNumberController.text = value;
-                          });
-                        },
-                      ),
-                      SizedBox(height: 24.0),
-                      // Industry
-                      CreateInput(
-                        keyboardType: TextInputType.text,
-                        labelText: 'Industry'.tr,
-                        onChanged: (value) {
-                          setState(() {
-                            industryController.text = value;
-                          });
-                        },
-                      ),
-                      SizedBox(height: 24.0),
-                      // // Students Number
-                      // CreateInput(
-                      //   keyboardType: TextInputType.number,
-                      //   labelText: 'Students Number'.tr,
-                      //   onChanged: (value) {
-                      //     setState(() {
-                      //       studentsNumberController.text = value;
-                      //     });
-                      //   },
-                      // ),
+                      SizedBox(height: 30.0),
                       SizedBox(height: 60),
                       // request Button
                       CreateButton(
                         title: Text(
-                          'create request'.tr,
+                          'إنشاء طلب',
                           style: TextStyle(
                             fontSize: 20,
-                            fontWeight: FontWeight.bold,
-                            fontFamily: 'mainFont',
+                            color: Colors.white,
+                            fontWeight: FontWeight.w600,
+                            fontFamily: 'Tajawal',
                           ),
                         ),
                         onPressed: () async {
@@ -352,8 +356,7 @@ class _Add_New_Factory_Request_PageState
                                   .add({
                                     'Governorate': selectedGovernorate,
                                     'name': factoryNameController.text,
-                                    'address':
-                                        factoryAddressController.text,
+                                    'address': factoryAddressController.text,
                                     'contactName': contactNameController.text,
                                     'phone': contactNumberController.text,
                                     'industry': industryController.text,
@@ -363,7 +366,8 @@ class _Add_New_Factory_Request_PageState
                                     'assignedStudents': 0,
                                     'capacity': 0,
                                     'id': factoryID,
-                                    'studentName': (await FirebaseFirestore.instance
+                                    'studentName': (await FirebaseFirestore
+                                            .instance
                                             .collection('StudentsTable')
                                             .doc(await getStudentId())
                                             .get())
@@ -374,22 +378,19 @@ class _Add_New_Factory_Request_PageState
                               ScaffoldMessenger.of(context).showSnackBar(
                                 SnackBar(
                                   content: Text(
-                                    'Factory request submitted!'.tr,
+                                    'تم إرسال طلب المصنع بنجاح!',
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 16,
+                                      fontFamily: 'Tajawal',
+                                      fontWeight: FontWeight.w500,
+                                    ),
                                   ),
                                   backgroundColor: Colors.green,
                                   duration: Duration(seconds: 2),
                                 ),
                               );
-                              factoryNameController.clear();
-                              factoryAddressController.clear();
-                              contactNameController.clear();
-                              contactNumberController.clear();
-                              industryController.clear();
-                              studentsNumberController.clear();
-                              setState(() {
-                                selectedGovernorate = null;
-                                selectedGovernorateID = null;
-                              });
+
                               QuerySnapshot querySnapshot =
                                   await FirebaseFirestore.instance
                                       .collection('Factories')
@@ -403,16 +404,44 @@ class _Add_New_Factory_Request_PageState
                               });
                               Get.offAll(
                                 WaitnigReqestAnswer(
-                                  factoryID: factoryID.toString(),
+                                  // factoryID: factoryID.toString(),
+                                  factoryIndustry: industryController.text,
+                                  fatoryGovernorate:
+                                      selectedGovernorate.toString(),
+                                  factoryName: factoryNameController.text,
+                                  factoryLocation:
+                                      factoryAddressController.text,
                                 ),
                               );
+
+                              factoryNameController.clear();
+                              factoryAddressController.clear();
+                              contactNameController.clear();
+                              contactNumberController.clear();
+                              industryController.clear();
+                              studentsNumberController.clear();
+                              setState(() {
+                                selectedGovernorate = null;
+                                selectedGovernorateID = null;
+                              });
                             } else if (selectedGovernorate == null) {
                               ScaffoldMessenger.of(context).showSnackBar(
                                 SnackBar(
                                   content: Text(
-                                    'Please select a governorate.'.tr,
+                                    'الرجاء اختيار المحافظة',
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 16,
+                                      fontFamily: 'Tajawal',
+                                      fontWeight: FontWeight.w500,
+                                    ),
                                   ),
-                                  backgroundColor: Colors.red,
+                                  backgroundColor: const Color.fromARGB(
+                                    255,
+                                    160,
+                                    11,
+                                    0,
+                                  ),
                                   duration: Duration(seconds: 2),
                                 ),
                               );
@@ -420,9 +449,20 @@ class _Add_New_Factory_Request_PageState
                               ScaffoldMessenger.of(context).showSnackBar(
                                 SnackBar(
                                   content: Text(
-                                    'Please complete all required fields.'.tr,
+                                    'يرجى إكمال جميع الحقول المطلوبة',
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 16,
+                                      fontFamily: 'Tajawal',
+                                      fontWeight: FontWeight.w500,
+                                    ),
                                   ),
-                                  backgroundColor: Colors.red,
+                                  backgroundColor: const Color.fromARGB(
+                                    255,
+                                    160,
+                                    11,
+                                    0,
+                                  ),
                                   duration: Duration(seconds: 2),
                                 ),
                               );
