@@ -73,22 +73,24 @@ class _EnterFactoryState extends State<EnterFactory> {
 
   Future<bool> _showLocationChangeWarning() async {
     return await showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text('تحذير'),
-        content: Text('هل أنت متأكد من تغيير الموقع؟'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: Text('إلغاء'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(context, true),
-            child: Text('متابعة'),
-          ),
-        ],
-      ),
-    ) ?? false;
+          context: context,
+          builder:
+              (context) => AlertDialog(
+                title: Text('تحذير'),
+                content: Text('هل أنت متأكد من تغيير الموقع؟'),
+                actions: [
+                  TextButton(
+                    onPressed: () => Navigator.pop(context, false),
+                    child: Text('إلغاء'),
+                  ),
+                  TextButton(
+                    onPressed: () => Navigator.pop(context, true),
+                    child: Text('متابعة'),
+                  ),
+                ],
+              ),
+        ) ??
+        false;
   }
 
   Future<void> _checkExistingAttendance() async {
@@ -97,13 +99,14 @@ class _EnterFactoryState extends State<EnterFactory> {
       String studentId = prefs.getString("studentId") ?? '';
       String factoryId = prefs.getString("factoryId") ?? '';
 
-      QuerySnapshot query = await _firestor
-          .collection("Attendances")
-          .where("Student_ID", isEqualTo: studentId)
-          .where("factory", isEqualTo: factoryId)
-          .where("EnteringLocation", isNull: true)
-          .limit(1)
-          .get();
+      QuerySnapshot query =
+          await _firestor
+              .collection("Attendances")
+              .where("Student_ID", isEqualTo: studentId)
+              .where("factory", isEqualTo: factoryId)
+              .where("EnteringLocation", isNull: true)
+              .limit(1)
+              .get();
 
       setState(() {
         _hasExistingAttendance = query.docs.isNotEmpty;
@@ -185,40 +188,59 @@ class _EnterFactoryState extends State<EnterFactory> {
   }
 
   addAttendanceEnterTraining() async {
-    DateTime dateOnly = DateTime(date.year, date.month, date.day); // بدون الوقت
+    try {
+      DateTime dateOnly = DateTime(date.year, date.month, date.day);
 
-    SharedPreferences.getInstance().then((value) async {
-      studentId = value.getString("studentId").toString();
-      print("studentId: $studentId in EnterFactory");
+      final SharedPreferences prefs = await SharedPreferences.getInstance();
+      String email = prefs.getString("email") ?? '';
 
-      if (studentId != "") {
-        DocumentReference docRef = await _firestor
-            .collection("Attendances")
-            .add({
-              "Student_ID": studentId,
-              "Date": Timestamp.fromDate(dateOnly),
-              "EnteringTime": DateTime.now(),
-              "EnteringLocation": GeoPoint(latitude, longitude),
-              "ExitingTime": "Not yet",
-              "ExitingLocation": "Not yet",
-              "BenefitRating": 0,
-              "SupervisorRating": 0,
-              "EnvironmentRating": 0,
-              "attendsDays": ++attendsDays,
-            });
+      // Get student ID from StudentsTable using email
+      QuerySnapshot studentSnapshot =
+          await _firestor
+              .collection('StudentsTable')
+              .where('email', isEqualTo: email)
+              .limit(1)
+              .get();
 
-        // استخراج الـ ID الخاص بالمستند
-        attendanceId = docRef.id;
-        print("تمت إضافة حضور الطالب بنجاح، ID الخاص به هو: $attendanceId");
-      } else {
-        print(
-          "************************************** error in the student id **************************************",
-        );
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("error".tr), duration: Duration(seconds: 3)),
-        );
+      if (studentSnapshot.docs.isEmpty) {
+        throw Exception("Student not found");
       }
-    });
+
+      String studentId = studentSnapshot.docs.first.id;
+      print("Found student ID: $studentId");
+
+      // Add attendance record
+      DocumentReference docRef = await _firestor.collection("Attendances").add({
+        "Student_ID": studentId,
+        "Student_Email": email,
+        "Date": Timestamp.fromDate(dateOnly),
+        "EnteringTime": DateTime.now(),
+        "EnteringLocation": GeoPoint(latitude, longitude),
+        "ExitingTime": "Not yet",
+        "ExitingLocation": "Not yet",
+        "BenefitRating": 0,
+        "SupervisorRating": 0,
+        "EnvironmentRating": 0,
+        "attendsDays": ++attendsDays,
+        "factory": factoryData?['id'] ?? '',
+      });
+
+      // Get the attendance ID
+      attendanceId = docRef.id;
+      print("تمت إضافة حضور الطالب بنجاح، ID الخاص به هو: $attendanceId");
+
+      // Store attendance ID in SharedPreferences
+      await prefs.setString("attendanceId", attendanceId);
+    } catch (e) {
+      print("Error adding attendance: $e");
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text("حدث خطأ أثناء تسجيل الحضور: $e"),
+          duration: Duration(seconds: 3),
+        ),
+      );
+      throw e;
+    }
   }
 
   @override
@@ -504,29 +526,23 @@ class _EnterFactoryState extends State<EnterFactory> {
                     child: CreateButton(
                       onPressed: () async {
                         try {
-                          // setState(() {
-                          //   spinkitVisable_submit = true;
-                          // });
+                          setState(() {
+                            spinkitVisable_submit = true;
+                          });
 
-                          // await addAttendanceEnterTraining();
+                          await addAttendanceEnterTraining();
 
-                          // Future.delayed(Duration(seconds: 2), () async {
-                          //   while (true) {
-                          //     if (attendanceId.isNotEmpty) {
-                          //       final SharedPreferences _prefs =
-                          //           await SharedPreferences.getInstance();
-                          //       await _prefs.setString(
-                          //         "attendanceId",
-                          //         attendanceId,
-                          //       );
-                          await Get.offAll(() => ExitFactory());
-                          //       break;
-                          //     }
-                          //   }
-                          // });
+                          // Navigate to ExitFactory after successful attendance registration
+                          Get.offAll(() => ExitFactory());
                         } catch (e) {
+                          setState(() {
+                            spinkitVisable_submit = false;
+                          });
                           ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(content: Text("An error occurred: $e")),
+                            SnackBar(
+                              content: Text("حدث خطأ أثناء تسجيل الحضور: $e"),
+                              duration: Duration(seconds: 3),
+                            ),
                           );
                         }
                       },

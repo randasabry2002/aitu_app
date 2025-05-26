@@ -1,5 +1,6 @@
 // ignore_for_file: must_be_immutable
 
+import 'package:aitu_app/screens/Attendance_Part_Pages/AttendancePage.dart';
 import 'package:aitu_app/screens/student%20data/enterCode.dart';
 import 'package:aitu_app/shared/constant.dart';
 import 'package:aitu_app/shared/reuableWidgets.dart';
@@ -212,33 +213,46 @@ class _SignInScreenState extends State<SignInScreen> {
                     child: CreateButton(
                       onPressed: () async {
                         try {
+                          // First check if student exists in StudentsTable
+                          QuerySnapshot studentQuery =
+                              await FirebaseFirestore.instance
+                                  .collection('StudentsTable')
+                                  .where('email', isEqualTo: email)
+                                  .where('password', isEqualTo: password)
+                                  .limit(1)
+                                  .get();
+
+                          if (studentQuery.docs.isEmpty) {
+                            throw Exception("invalid_credentials");
+                          }
+
+                          // If student exists, proceed with Firebase Auth
                           await _auth.signInWithEmailAndPassword(
                             email: email,
                             password: password,
                           );
+
                           if (_auth.currentUser != null) {
                             final SharedPreferences _prefs =
                                 await SharedPreferences.getInstance();
-                            await _prefs.setString(
-                              "email",
-                              _auth.currentUser!.email.toString(),
-                            );
-                            print("${_prefs.getString("email")}  in signin");
 
-                            String? studentId = await getStudentIdByEmail(
-                              email,
-                            );
+                            // Store email
+                            await _prefs.setString("email", email);
+                            print("${_prefs.getString("email")} in signin");
 
-                            if (studentId != null) {
-                              print('Student ID: $studentId');
-                              await _prefs.setString("studentId", studentId);
-                            } else {
-                              print('Student not found');
-                            }
+                            // Get and store student ID
+                            String studentId = studentQuery.docs.first.id;
+                            print('Student ID: $studentId');
+                            await _prefs.setString("studentId", studentId);
 
-                            Get.offAll(HomeScreen(studentEmail: email),);
+                            Get.offAll(HomeScreen(studentEmail: email));
                           }
                         } catch (e) {
+                          String errorMessage =
+                              e.toString().contains("invalid_credentials")
+                                  ? "invalid_credentials".tr
+                                  : "حدث خطأ أثناء تسجيل الدخول";
+
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(
                               backgroundColor: const Color.fromARGB(
@@ -247,8 +261,7 @@ class _SignInScreenState extends State<SignInScreen> {
                                 11,
                                 0,
                               ),
-
-                              content: Text("invalid_credentials".tr),
+                              content: Text(errorMessage),
                             ),
                           );
                         }
@@ -344,7 +357,7 @@ class _SignInScreenState extends State<SignInScreen> {
                   // ),
                   // SizedBox(height: 40),
 
-                  //sign up btn
+                  // //sign up btn
                   TextButton(
                     onPressed: () async {
                       final email = await FirebaseFirestore.instance
@@ -355,10 +368,10 @@ class _SignInScreenState extends State<SignInScreen> {
                           .then(
                             (snapshot) => snapshot.docs.first['email'] ?? '',
                           );
-                      Get.to(HomeScreen(studentEmail: email));
+                      Get.to(AttendancePage());
                     },
                     child: Text(
-                      'الصفحة الرئيسية (اختبار)'.tr,
+                      'test'.tr,
                       // Translated "Don't have an account? Sign Up"
                       style: TextStyle(
                         color: const Color.fromARGB(255, 7, 30, 41),
@@ -368,7 +381,8 @@ class _SignInScreenState extends State<SignInScreen> {
                       ),
                     ),
                   ),
-
+                 
+                 
                   TextButton(
                     onPressed: () {
                       Get.to(

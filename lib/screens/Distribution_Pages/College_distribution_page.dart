@@ -19,10 +19,11 @@ class _College_distribution_pageState extends State<College_distribution_page> {
   bool loading = false;
 
   Future<bool> getBooleanValue() async {
-    DocumentSnapshot doc = await FirebaseFirestore.instance
-        .collection('Distripution_College_done')
-        .doc('1')
-        .get();
+    DocumentSnapshot doc =
+        await FirebaseFirestore.instance
+            .collection('Distribution_College_done')
+            .doc('1')
+            .get();
 
     return doc['Uploaded'] ?? false;
   }
@@ -38,9 +39,10 @@ class _College_distribution_pageState extends State<College_distribution_page> {
   @override
   Widget build(BuildContext context) {
     return Directionality(
-      textDirection: Get.locale?.languageCode == 'ar'
-          ? TextDirection.rtl
-          : TextDirection.ltr,
+      textDirection:
+          Get.locale?.languageCode == 'ar'
+              ? TextDirection.rtl
+              : TextDirection.ltr,
       child: Scaffold(
         appBar: AppBar(
           leading: IconButton(
@@ -53,10 +55,7 @@ class _College_distribution_pageState extends State<College_distribution_page> {
           actions: <Widget>[
             // Language Selector Icon
             PopupMenuButton<String>(
-              icon: Icon(
-                Icons.language,
-                color: Colors.white,
-              ),
+              icon: Icon(Icons.language, color: Colors.white),
               onSelected: (value) {
                 // Update the app's locale based on the selection
                 if (value == 'en') {
@@ -67,14 +66,8 @@ class _College_distribution_pageState extends State<College_distribution_page> {
               },
               itemBuilder: (BuildContext context) {
                 return [
-                  PopupMenuItem(
-                    value: 'en',
-                    child: Text('English'),
-                  ),
-                  PopupMenuItem(
-                    value: 'ar',
-                    child: Text('العربية'),
-                  ),
+                  PopupMenuItem(value: 'en', child: Text('English')),
+                  PopupMenuItem(value: 'ar', child: Text('العربية')),
                 ];
               },
             ),
@@ -93,6 +86,7 @@ class _College_distribution_pageState extends State<College_distribution_page> {
                   );
                 }
                 if (snapshot.hasError) {
+                  print(snapshot.error);
                   return Text("حدث خطأ في جلب البيانات ❌");
                 }
 
@@ -109,18 +103,17 @@ class _College_distribution_pageState extends State<College_distribution_page> {
                             : "College_distribution_choice_text_not_yet".tr,
                         textAlign: TextAlign.center,
                         style: TextStyle(
-                            fontSize: 20,
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold),
+                          fontSize: 20,
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                     ),
                     Visibility(
                       visible: value,
                       child: ElevatedButton(
                         onPressed: () {
-                          Get.to(PDFViewerPage(
-                            pdfType: "distributionPdf",
-                          ));
+                          Get.to(PDFViewerPage(pdfType: "distributionPdf"));
                         },
                         child: Text(
                           "Show_PDF".tr,
