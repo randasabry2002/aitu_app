@@ -236,7 +236,7 @@ class _SignInScreenState extends State<SignInScreen> {
                               print('Student not found');
                             }
 
-                            Get.offAll(Instructions());
+                            Get.offAll(HomeScreen(studentEmail: email),);
                           }
                         } catch (e) {
                           ScaffoldMessenger.of(context).showSnackBar(
@@ -266,6 +266,7 @@ class _SignInScreenState extends State<SignInScreen> {
                     ),
                   ),
                   SizedBox(height: 20),
+
                   // SizedBox(
                   //   width: MediaQuery.of(context).size.width * 0.9,
                   //   child: ElevatedButton(
@@ -344,6 +345,30 @@ class _SignInScreenState extends State<SignInScreen> {
                   // SizedBox(height: 40),
 
                   //sign up btn
+                  TextButton(
+                    onPressed: () async {
+                      final email = await FirebaseFirestore.instance
+                          .collection('StudentsTable')
+                          .where('code', isEqualTo: widget.studentCode)
+                          .limit(1)
+                          .get()
+                          .then(
+                            (snapshot) => snapshot.docs.first['email'] ?? '',
+                          );
+                      Get.to(HomeScreen(studentEmail: email));
+                    },
+                    child: Text(
+                      'الصفحة الرئيسية (اختبار)'.tr,
+                      // Translated "Don't have an account? Sign Up"
+                      style: TextStyle(
+                        color: const Color.fromARGB(255, 7, 30, 41),
+                        fontSize: 16.0,
+                        fontWeight: FontWeight.w500,
+                        fontFamily: 'Tajawal',
+                      ),
+                    ),
+                  ),
+
                   TextButton(
                     onPressed: () {
                       Get.to(

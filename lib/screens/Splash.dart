@@ -7,12 +7,11 @@ import 'package:aitu_app/shared/constant.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 // import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-
+import 'package:aitu_app/screens/Attendance_Part_Pages/ExitFactory.dart';
 // import 'package:google_fonts/google_fonts.dart';
 import 'package:get/get.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import 'Attendance_Part_Pages/exitFactory.dart';
 import 'Attendance_Part_Pages/HomeScreen.dart';
 import 'Distribution_Pages/College_distribution_page.dart';
 // import 'Distribution_Pages/watingRequestAnswer.dart';
@@ -20,77 +19,186 @@ import 'Distribution_Pages/College_distribution_page.dart';
 // import 'Distribution_Pages/Instructions.dart';
 
 class Splash extends StatefulWidget {
+  const Splash({super.key});
+
   @override
-  State<StatefulWidget> createState() {
-    return SplashState();
-  }
+  State<Splash> createState() => SplashState();
 }
 
-class SplashState extends State<StatefulWidget>
-    with SingleTickerProviderStateMixin {
+class SplashState extends State<Splash> with SingleTickerProviderStateMixin {
   late AnimationController _animationController;
   late Animation<double> _animation;
-
   int _backButtonPressedCount = 0;
+
+  // User state variables
   String? email;
   String? attendanceId;
   String? page;
+  QueryDocumentSnapshot? _student;
 
-  Future<void> printSharedPreferences() async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    Set<String> keys = prefs.getKeys(); // جلب جميع المفاتيح المخزنة
-    print('sharedpref $keys}'); // طباعة المفتاح والقيمة
-
-    for (String key in keys) {
-      print('sharedpref $key: ${prefs.get(key)}'); // طباعة المفتاح والقيمة
-    }
-  }
+  // Factory request variables
   String factID = '';
   String factName = '';
   String factAddress = '';
   String factIndustry = '';
   String factGovernorate = '';
 
-  Future<bool> checkThereIsRequest() async {
+  @override
+  void initState() {
+    super.initState();
+    _initializeAnimation();
+    _loadUserData();
+  }
+
+  void _initializeAnimation() {
+    _animationController = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 2),
+    );
+
+    _animation = Tween<double>(begin: 0.2, end: 0.8).animate(
+      CurvedAnimation(parent: _animationController, curve: Curves.easeInOut),
+    );
+
+    _animationController.forward();
+  }
+
+  Future<void> _loadUserData() async {
     try {
-      // Get student document first
-      QuerySnapshot studentQuery = await FirebaseFirestore.instance
-          .collection('StudentsTable')
-          .where('email', isEqualTo: email)
-          .limit(1)
-          .get();
+      final prefs = await SharedPreferences.getInstance();
+      email = prefs.getString("email");
+      attendanceId = prefs.getString("attendanceId");
+      page = prefs.getString("page");
 
-      if (studentQuery.docs.isEmpty) {
-        print('No student found with email: $email');
-        return false;
+      await _printSharedPreferences(prefs);
+      await _handleNavigation();
+    } catch (e) {
+      _showErrorDialog("Error loading user data: $e");
+    }
+  }
+
+  Future<void> _printSharedPreferences(SharedPreferences prefs) async {
+    try {
+      Set<String> keys = prefs.getKeys();
+      print('Shared Preferences Keys: $keys');
+
+      for (String key in keys) {
+        print('$key: ${prefs.get(key)}');
+      }
+    } catch (e) {
+      print('Error printing shared preferences: $e');
+    }
+  }
+
+  Future<void> _handleNavigation() async {
+    try {
+      await Future.delayed(const Duration(seconds: 2));
+
+      if (email == null || email == 'null') {
+        Get.offAll(() => EnterStudentCode());
+        return;
       }
 
-      DocumentSnapshot student = studentQuery.docs.first;
-      String studentCode = student['code'] ?? '';
-
-      // Query factories collection for matching request
-      QuerySnapshot factoryQuery = await FirebaseFirestore.instance
-          .collection('Factories')
-          .where('StudentsID', isEqualTo: student.id)
-          .where('isApproved', isEqualTo: false)
-          .limit(1)
-          .get();
-
-      if (factoryQuery.docs.isEmpty) {
-        return false;
+      final studentCode = await _getStudentCode();
+      if (studentCode.isEmpty) {
+        _showErrorDialog("Could not find student data");
+        return;
       }
 
-      DocumentSnapshot factory = factoryQuery.docs.first;
-      
-      // Update factory details
-      setState(() {
-        factID = factory.id;
-        factName = factory['name'] ?? '';
-        factAddress = factory['address'] ?? '';
-        factGovernorate = factory['Governorate'] ?? '';
-        factIndustry = factory['industry'] ?? '';
-      });
+      if (attendanceId != null && attendanceId != 'null') {
+        // Check if the attendance record exists and is still active
+        final attendanceDoc =
+            await FirebaseFirestore.instance
+                .collection("Attendances")
+                .doc(attendanceId)
+                .get();
 
+        if (attendanceDoc.exists) {
+          final data = attendanceDoc.data() as Map<String, dynamic>;
+          final enteringTime = (data['EnteringTime'] as Timestamp).toDate();
+          final exitingTime = data['ExitingTime'] as Timestamp?;
+
+          // If there's no exiting time, the timer is still running
+          if (exitingTime == null) {
+            Get.offAll(() => ExitFactory());
+            return;
+          }
+        }
+      }
+
+      await _handlePageNavigation(studentCode);
+    } catch (e) {
+      _showErrorDialog("Navigation error: $e");
+    }
+  }
+
+  Future<void> _handlePageNavigation(String studentCode) async {
+    if (page == 'College_distribution_page') {
+      Get.offAll(() => College_distribution_page());
+      return;
+    }
+
+    if (_student?['stage'] == null) {
+      Get.offAll(() => CompleteStudentData(studentCode: studentCode));
+      return;
+    }
+
+    if (await _checkThereIsRequest()) {
+      Get.offAll(
+        () => WaitnigReqestAnswer(
+          fatoryGovernorate: factGovernorate,
+          factoryName: factName,
+          factoryLocation: factAddress,
+          factoryIndustry: factIndustry,
+        ),
+      );
+      return;
+    }
+
+    if (_student?['factory'] != null && _student?['factory'] != '') {
+      Get.offAll(() => HomeScreen(studentEmail: _student?['email'] ?? ''));
+      return;
+    }
+
+    Get.offAll(() => SignInScreen());
+  }
+
+  Future<String> _getStudentCode() async {
+    try {
+      final querySnapshot =
+          await FirebaseFirestore.instance
+              .collection('StudentsTable')
+              .where('email', isEqualTo: email)
+              .limit(1)
+              .get();
+
+      if (querySnapshot.docs.isNotEmpty) {
+        _student = querySnapshot.docs.first;
+        return _student!['code'] ?? '';
+      }
+      return '';
+    } catch (e) {
+      print('Error getting student code: $e');
+      return '';
+    }
+  }
+
+  Future<bool> _checkThereIsRequest() async {
+    try {
+      if (_student == null) return false;
+
+      final factoryQuery =
+          await FirebaseFirestore.instance
+              .collection('Factories')
+              .where('StudentsID', isEqualTo: _student!.id)
+              .where('isApproved', isEqualTo: false)
+              .limit(1)
+              .get();
+
+      if (factoryQuery.docs.isEmpty) return false;
+
+      final factory = factoryQuery.docs.first;
+      _updateFactoryDetails(factory);
       return true;
     } catch (e) {
       print('Error checking factory request: $e');
@@ -98,93 +206,23 @@ class SplashState extends State<StatefulWidget>
     }
   }
 
-  @override
-  void initState() {
-    super.initState();
-    printSharedPreferences();
-    // Define animation controller
-    _animationController = AnimationController(
-      vsync: this,
-      duration: Duration(seconds: 2), // Adjust the duration as needed
-    );
-
-    // Define animation
-    _animation = Tween<double>(begin: 0.2, end: 0.8).animate(
-      CurvedAnimation(parent: _animationController, curve: Curves.easeInOut),
-    );
-
-    // Start the animation
-    _animationController.forward();
-
-    SharedPreferences.getInstance().then((value) {
-      email = value.getString("email").toString();
-      attendanceId = value.getString("attendanceId").toString();
-      page = value.getString("page").toString();
-      print("email: $email in splash");
-      QueryDocumentSnapshot? _student;
-      Future<String> getStudentCode() async {
-        try {
-          QuerySnapshot querySnapshot =
-              await FirebaseFirestore.instance
-                  .collection('StudentsTable')
-                  .where('email', isEqualTo: email)
-                  .limit(1)
-                  .get();
-
-          if (querySnapshot.docs.isNotEmpty) {
-            _student = querySnapshot.docs.first;
-            return _student!['code'] ?? '';
-          }
-          return '';
-        } catch (e) {
-          print('Error getting student code: $e');
-          return '';
-        }
-      }
-
-      // Simulate a delay for demonstration purposes
-      Future.delayed(Duration(seconds: 2), () async {
-        try {
-          // if (await checkThereIsRequest()) {
-          //   Get.offAll(WaitnigReqestAnswer(factoryID: factID));
-          // } else
-          if (email != 'null') {
-            String studentCode = await getStudentCode();
-            if (attendanceId != 'null') {
-              // User is logged in, and the user was in the training navigate to ExitFactory
-              Get.offAll(ExitFactory());
-            } else {
-              if (page == 'College_distribution_page') {
-                Get.offAll(College_distribution_page());
-              } else if (page == 'HomeScreen') {
-                Get.offAll(HomeScreen());
-              } else if (_student?['stage'] == null) {
-                Get.offAll(CompleteStudentData(studentCode: studentCode));
-              } else if (await checkThereIsRequest()) {
-                Get.offAll(WaitnigReqestAnswer(
-                  fatoryGovernorate: factGovernorate,
-                  factoryName: factName,
-                  factoryLocation: factAddress,
-                  factoryIndustry: factIndustry,
-                ));
-              } else {
-                Get.offAll(SignInScreen());
-              }
-            }
-          } else {
-            // User is not logged in, navigate to Signin screen
-            Get.offAll(EnterStudentCode());
-          }
-        } catch (e) {
-          Get.defaultDialog(
-            title: "Error",
-            middleText: "Error: $e",
-            textConfirm: "OK",
-            confirmTextColor: Colors.red,
-          );
-        }
-      });
+  void _updateFactoryDetails(DocumentSnapshot factory) {
+    setState(() {
+      factID = factory.id;
+      factName = factory['name'] ?? '';
+      factAddress = factory['address'] ?? '';
+      factGovernorate = factory['Governorate'] ?? '';
+      factIndustry = factory['industry'] ?? '';
     });
+  }
+
+  void _showErrorDialog(String message) {
+    Get.defaultDialog(
+      title: "Error",
+      middleText: message,
+      textConfirm: "OK",
+      confirmTextColor: Colors.red,
+    );
   }
 
   @override
@@ -199,61 +237,44 @@ class SplashState extends State<StatefulWidget>
       child: WillPopScope(
         onWillPop: () async {
           if (_backButtonPressedCount == 1) {
-            return true; // Allow the back button press to exit the app
-          } else {
-            _backButtonPressedCount++;
-            ScaffoldMessenger.of(
-              context,
-            ).showSnackBar(SnackBar(content: Text('Press back again to exit')));
-
-            // Reset the back button press count after 2 seconds
-            Timer(Duration(seconds: 2), () {
-              _backButtonPressedCount = 0;
-            });
-
-            return false; // Prevent the back button press from exiting the app
+            return true;
           }
+
+          _backButtonPressedCount++;
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Press back again to exit')),
+          );
+
+          Timer(const Duration(seconds: 2), () {
+            _backButtonPressedCount = 0;
+          });
+
+          return false;
         },
         child: Scaffold(
           backgroundColor: Colors.white,
-          body: Column(
-            // mainAxisSize: MainAxisSize.max,
-            mainAxisAlignment: MainAxisAlignment.center,
-            // crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Container(
-                child: Column(
-                  children: [
-                    Center(
-                      child: AnimatedBuilder(
-                        animation: _animationController,
-                        builder: (context, child) {
-                          return Transform.scale(
-                            scale: _animation.value,
-                            child: Column(
-                              children: [
-                                Image.asset('assets/images/logo.png'),
-                                if (_animation.value >= .8) ...[
-                                  LinearProgressIndicator(
-                                    backgroundColor: const Color.fromARGB(
-                                      255,
-                                      255,
-                                      255,
-                                      255,
-                                    ),
-                                    color: mainColor,
-                                  ),
-                                ],
-                              ],
-                            ),
-                          );
-                        },
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
+          body: Center(
+            child: AnimatedBuilder(
+              animation: _animationController,
+              builder: (context, child) {
+                return Transform.scale(
+                  scale: _animation.value,
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Image.asset('assets/images/logo.png'),
+                      if (_animation.value >= 0.8) ...[
+                        const SizedBox(height: 20),
+                        LinearProgressIndicator(
+                          backgroundColor: Colors.white,
+                          color: mainColor,
+                        ),
+                      ],
+                    ],
+                  ),
+                );
+              },
+            ),
           ),
         ),
       ),

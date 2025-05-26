@@ -139,7 +139,7 @@ class _College_distribution_pageState extends State<College_distribution_page> {
                           final SharedPreferences _prefs =
                               await SharedPreferences.getInstance();
                           await _prefs.setString("page", "HomeScreen");
-                          Get.to(HomeScreen());
+                          // Get.to(HomeScreen());
                         },
                         child: Text(
                           "Start_Attendance".tr,
