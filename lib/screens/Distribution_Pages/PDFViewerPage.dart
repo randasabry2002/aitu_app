@@ -29,14 +29,14 @@ class PDFViewerPageState extends State<PDFViewerPage> {
   /// Fetches the URL and name of the nomination card PDF from Firestore.
   Future<void> fetchNominationCardURL() async {
     try {
-      QuerySnapshot querySnapshot =
-          await FirebaseFirestore.instance.collection("NominationCard").get();
+      final doc =
+          await FirebaseFirestore.instance.collection("NominationCard").doc('1').get();
 
       // Find the document with Name == "MainNominationCard"
-      final doc = querySnapshot.docs.firstWhere(
-        (doc) => doc["id"] == "1",
-        orElse: () => throw Exception("Document not found"),
-      );
+      // final doc = querySnapshot.docs.firstWhere(
+      //   (doc) => doc["id"] == "1",
+      //   orElse: () => throw Exception("Document not found"),
+      // );
 
       setState(() {
         pdfUrl = doc["URL"] as String;
