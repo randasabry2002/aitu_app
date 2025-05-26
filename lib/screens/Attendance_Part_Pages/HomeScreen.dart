@@ -136,7 +136,7 @@ class _HomeScreenState extends State<HomeScreen> {
             await FirebaseFirestore.instance
                 .collection('Factories')
                 .doc(factoryId)
-                .get(); 
+                .get();
         factName = factoryDoc['name'];
 
         if (factoryDoc.exists) {
@@ -148,6 +148,57 @@ class _HomeScreenState extends State<HomeScreen> {
       print('Error getting factory: $e');
       return null;
     }
+  }
+
+  Future<bool> _checkExistingAttendance() async {
+    try {
+      final SharedPreferences prefs = await SharedPreferences.getInstance();
+      String email = prefs.getString("email") ?? '';
+
+      DateTime today = DateTime.now();
+      DateTime dateOnly = DateTime(today.year, today.month, today.day);
+
+      QuerySnapshot existingAttendance =
+          await FirebaseFirestore.instance
+              .collection('Attendances')
+              .where('Student_Email', isEqualTo: email)
+              .where('Date', isEqualTo: Timestamp.fromDate(dateOnly))
+              .get();
+
+      return existingAttendance.docs.isNotEmpty;
+    } catch (e) {
+      print('Error checking existing attendance: $e');
+      return false;
+    }
+  }
+
+  Future<void> _showAttendanceWarning() async {
+    return showDialog(
+      context: context,
+      builder:
+          (context) => AlertDialog(
+            title: Text(
+              'تنبيه',
+              style: TextStyle(
+                fontFamily: 'Tajawal',
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            content: Text(
+              'لا يصح تسجيل الدخول مرتين في اليوم',
+              style: TextStyle(fontFamily: 'Tajawal'),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: Text(
+                  'حسناً',
+                  style: TextStyle(fontFamily: 'Tajawal', color: mainColor),
+                ),
+              ),
+            ],
+          ),
+    );
   }
 
   @override
@@ -436,8 +487,14 @@ class _HomeScreenState extends State<HomeScreen> {
                                 onPressed:
                                     hasEnteredToday
                                         ? () {}
-                                        : () {
-                                          Get.to(() => EnterFactory());
+                                        : () async {
+                                          bool hasExistingAttendance =
+                                              await _checkExistingAttendance();
+                                          if (hasExistingAttendance) {
+                                            await _showAttendanceWarning();
+                                          } else {
+                                            Get.to(() => EnterFactory());
+                                          }
                                         },
                                 title: Center(
                                   child: Text(

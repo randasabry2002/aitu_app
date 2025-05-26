@@ -125,7 +125,17 @@ class SplashState extends State<Splash> with SingleTickerProviderStateMixin {
           }
         }
       }
+      final activeAttendanceQuery = await FirebaseFirestore.instance
+          .collection("Attendances")
+          .where('Student_ID', isEqualTo: studentCode)
+          .where('ExitingLocation', isEqualTo: 'Not yet')
+          .limit(1)
+          .get();
 
+      if (activeAttendanceQuery.docs.isNotEmpty) {
+        Get.offAll(() => ExitFactory());
+        return;
+      }
       await _handlePageNavigation(studentCode);
     } catch (e) {
       _showErrorDialog("Navigation error: $e");
