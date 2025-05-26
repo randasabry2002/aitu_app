@@ -119,42 +119,47 @@ class PDFViewerPageState extends State<PDFViewerPage> {
   /// Downloads the PDF to the device's Downloads folder.
   Future<void> downloadPDFToDownloads() async {
     try {
-      // Request storage permission
-      if (await Permission.manageExternalStorage.request().isGranted) {
-        // Get the Downloads directory
-        Directory? downloadsDir = Directory('/storage/emulated/0/Download');
-        if (!downloadsDir.existsSync()) {
-          downloadsDir = await getExternalStorageDirectory();
+      // طلب صلاحية التخزين
+      if (await Permission.manageExternalStorage.request().isGranted ||
+          await Permission.storage.request().isGranted) {
+
+        // تحديد مجلد التنزيلات
+        Directory downloadsDir = Directory('/storage/emulated/0/Download');
+
+        // إنشاء مجلد AITU داخل التنزيلات
+        Directory aituDir = Directory('${downloadsDir.path}/AITU');
+        if (!aituDir.existsSync()) {
+          aituDir.createSync(recursive: true);
         }
 
-        String savePath = "${downloadsDir!.path}/$pdfName.pdf";
+        // تحديد المسار النهائي لحفظ الملف
+        String savePath = '${aituDir.path}/$pdfName.pdf';
 
-        // Download the file
+        // تنزيل الملف
         await Dio().download(pdfUrl, savePath);
+
         if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text("✅ File downloaded successfully to Downloads"),
-          ),
+          SnackBar(content: Text("✅ File downloaded to AITU folder")),
         );
         debugPrint("✅ PDF downloaded to: $savePath");
+
       } else {
         if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text("❌ Permission denied, please allow in settings"),
-          ),
+          SnackBar(content: Text("❌ Permission denied, please allow in settings")),
         );
-        openAppSettings(); // Open app settings for manual permission grant
+        openAppSettings();
       }
     } catch (e) {
       debugPrint("❌ Error downloading PDF: $e");
       if (!mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text("❌ Failed to download file")));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("❌ Failed to download file")),
+      );
     }
   }
+
 
   @override
   Widget build(BuildContext context) {
