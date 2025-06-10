@@ -1,6 +1,8 @@
 // ignore_for_file: must_be_immutable, use_build_context_synchronously
 
 import 'dart:io';
+import 'package:aitu_app/screens/Distribution_Pages/Not_College_distribution_page.dart';
+import 'package:aitu_app/shared/constant.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_pdfview/flutter_pdfview.dart';
@@ -9,6 +11,8 @@ import 'package:dio/dio.dart';
 import 'package:get/get.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:aitu_app/screens/Distribution_Pages/uploadReport.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 /// A page to view and download PDFs, supporting both remote and local files.
 class PDFViewerPage extends StatefulWidget {
@@ -30,7 +34,10 @@ class PDFViewerPageState extends State<PDFViewerPage> {
   Future<void> fetchNominationCardURL() async {
     try {
       final doc =
-          await FirebaseFirestore.instance.collection("NominationCard").doc('1').get();
+          await FirebaseFirestore.instance
+              .collection("NominationCard")
+              .doc('1')
+              .get();
 
       // Find the document with Name == "MainNominationCard"
       // final doc = querySnapshot.docs.firstWhere(
@@ -122,7 +129,6 @@ class PDFViewerPageState extends State<PDFViewerPage> {
       // طلب صلاحية التخزين
       if (await Permission.manageExternalStorage.request().isGranted ||
           await Permission.storage.request().isGranted) {
-
         // تحديد مجلد التنزيلات
         Directory downloadsDir = Directory('/storage/emulated/0/Download');
 
@@ -139,27 +145,40 @@ class PDFViewerPageState extends State<PDFViewerPage> {
         await Dio().download(pdfUrl, savePath);
 
         if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("✅ File downloaded to AITU folder")),
+        Get.snackbar(
+          'نجاح',
+          "✅ تم تحميل الملف إلى مجلد AITU",
+          backgroundColor: Colors.green,
+          colorText: Colors.white,
+          snackPosition: SnackPosition.TOP,
+          duration: Duration(seconds: 3),
         );
         debugPrint("✅ PDF downloaded to: $savePath");
-
       } else {
         if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("❌ Permission denied, please allow in settings")),
+        Get.snackbar(
+          'خطأ',
+          'حدث خطأ أثناء تحميل الملف',
+          backgroundColor: Colors.red,
+          colorText: Colors.white,
+          snackPosition: SnackPosition.TOP,
+          duration: Duration(seconds: 3),
         );
         openAppSettings();
       }
     } catch (e) {
       debugPrint("❌ Error downloading PDF: $e");
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("❌ Failed to download file")),
+      Get.snackbar(
+        'خطأ',
+        "❌ فشل تحميل الملف",
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
+        snackPosition: SnackPosition.TOP,
+        duration: Duration(seconds: 3),
       );
     }
   }
-
 
   @override
   Widget build(BuildContext context) {
@@ -168,66 +187,263 @@ class PDFViewerPageState extends State<PDFViewerPage> {
           Get.locale?.languageCode == 'ar'
               ? TextDirection.rtl
               : TextDirection.ltr,
-      child: Scaffold(
-        
-        backgroundColor: Color(0xFF0187c4),
-        body: Stack(
-          children: [
-            // PDF Viewer or loading indicator
-            Positioned.fill(
-              child:
-                  localPath == null
-                      ? Center(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            CircularProgressIndicator(
-                              valueColor: AlwaysStoppedAnimation<Color>(
-                                Colors.white,
-                              ),
-                            ),
-                            SizedBox(height: 16),
-                            Text(
-                              'downloading'.tr,
-                              style: TextStyle(
-                                color: Colors.white,
-                              ),
-                            ),
-                          ],
-                        ),
-                      )
-                      : PDFView(
-                        filePath: localPath!,
-                        enableSwipe: true,
-                        swipeHorizontal: false,
-                        autoSpacing: true,
-                        pageFling: true,
-                      ),
-            ),
-            // Download button
-            Positioned(
-              bottom: 30,
-              right: 20,
-              child: Visibility(
-                visible: localPath != null,
-                child: FloatingActionButton.extended(
-                  onPressed: () {
-                    downloadPDFToDownloads();
-                    ScaffoldMessenger.of(
-                      context,
-                    ).showSnackBar(SnackBar(content: Text("Downloading...")));
-                  },
-                  label: Text(
-                    "Download",
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+      child: WillPopScope(
+        onWillPop: () async {
+          if (widget.pdfType == "nominationCard") {
+            bool? result = await showDialog<bool>(
+              context: context,
+              builder: (BuildContext context) {
+                return AlertDialog(
+                  title: Text(
+                    "تنبيه",
+                    style: TextStyle(
+                      fontFamily: 'Tajawal',
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
-                  icon: Icon(Icons.download),
-                  backgroundColor: Colors.blue,
-                  foregroundColor: Colors.white,
+                  content: Text(
+                    "إذا قمت بالرجوع الآن، لن يتم تسجيلك في هذا المصنع. هل أنت متأكد من رغبتك في الرجوع؟",
+                    style: TextStyle(fontFamily: 'Tajawal'),
+                  ),
+                  actions: [
+                    TextButton(
+                      onPressed: () => Navigator.of(context).pop(false),
+                      child: Text(
+                        "لا",
+                        style: TextStyle(
+                          color: Colors.red,
+                          fontFamily: 'Tajawal',
+                        ),
+                      ),
+                    ),
+                    TextButton(
+                      onPressed: () async {
+                        // Get current user email from SharedPreferences
+                        final prefs = await SharedPreferences.getInstance();
+                        String? email = prefs.getString("email");
+
+                        if (email != null) {
+                          // Find and update the student document
+                          final querySnapshot =
+                              await FirebaseFirestore.instance
+                                  .collection('StudentsTable')
+                                  .where('email', isEqualTo: email)
+                                  .limit(1)
+                                  .get();
+
+                          if (querySnapshot.docs.isNotEmpty) {
+                            await querySnapshot.docs.first.reference.update({
+                              'isReportUploaded': null,
+                            });
+                          }
+                        }
+                        Navigator.of(context).pop(true);
+                      },
+                      child: Text(
+                        "نعم",
+                        style: TextStyle(
+                          color: Colors.green,
+                          fontFamily: 'Tajawal',
+                        ),
+                      ),
+                    ),
+                  ],
+                );
+              },
+            );
+            return result ?? false;
+          }
+          return true;
+        },
+        child: Scaffold(
+          appBar: AppBar(
+            backgroundColor: Colors.white,
+            leading: IconButton(
+              icon: Icon(Icons.arrow_back_ios_new_rounded, color: Colors.black),
+              onPressed: () async {
+                if (widget.pdfType == "nominationCard") {
+                  bool? result = await showDialog<bool>(
+                    context: context,
+                    builder: (BuildContext context) {
+                      return AlertDialog(
+                        title: Text(
+                          "تنبيه",
+                          style: TextStyle(
+                            fontFamily: 'Tajawal',
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        content: Text(
+                          "إذا قمت بالرجوع الآن، لن يتم تسجيلك في هذا المصنع. هل أنت متأكد من رغبتك في الرجوع؟",
+                          style: TextStyle(fontFamily: 'Tajawal'),
+                        ),
+                        actions: [
+                          TextButton(
+                            onPressed: () => Navigator.of(context).pop(false),
+                            child: Text(
+                              "لا",
+                              style: TextStyle(
+                                color: const Color.fromARGB(255, 0, 0, 0),
+                                fontFamily: 'Tajawal',
+                              ),
+                            ),
+                          ),
+                          TextButton(
+                            onPressed: () async {
+                              // Get current user email from SharedPreferences
+                              final prefs =
+                                  await SharedPreferences.getInstance();
+                              String? email = prefs.getString("email");
+
+                              if (email != null) {
+                                // Find and update the student document
+                                final querySnapshot =
+                                    await FirebaseFirestore.instance
+                                        .collection('StudentsTable')
+                                        .where('email', isEqualTo: email)
+                                        .limit(1)
+                                        .get();
+
+                                if (querySnapshot.docs.isNotEmpty) {
+                                  await querySnapshot.docs.first.reference
+                                      .update({'isReportUploaded': null});
+                                }
+                              }
+                              // Navigator.of(context).pop(true);
+                              Get.offAll(() => Not_College_distribution_page());
+                            },
+                            child: Text(
+                              "نعم",
+                              style: TextStyle(
+                                color: const Color.fromARGB(255, 172, 23, 23),
+                                fontFamily: 'Tajawal',
+                              ),
+                            ),
+                          ),
+                        ],
+                      );
+                    },
+                  );
+                  if (result == true) {
+                    Navigator.pop(context);
+                  }
+                } else {
+                  Navigator.pop(context);
+                }
+              },
+            ),
+          ),
+          backgroundColor: Color.fromARGB(255, 255, 255, 255),
+          body: Stack(
+            children: [
+              // PDF Viewer or loading indicator
+              Positioned.fill(
+                child:
+                    localPath == null
+                        ? Center(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              CircularProgressIndicator(
+                                valueColor: AlwaysStoppedAnimation<Color>(
+                                  mainColor,
+                                ),
+                              ),
+                              SizedBox(height: 16),
+                              Text(
+                                'downloading'.tr,
+                                style: TextStyle(color: Colors.white),
+                              ),
+                            ],
+                          ),
+                        )
+                        : PDFView(
+                          filePath: localPath!,
+                          enableSwipe: true,
+                          swipeHorizontal: false,
+                          autoSpacing: true,
+                          pageFling: true,
+                        ),
+              ),
+              // Download button
+              Positioned(
+                bottom: 30,
+                right: 20,
+                child: Visibility(
+                  visible: localPath != null,
+                  child: FloatingActionButton.extended(
+                    onPressed: () {
+                      showModalBottomSheet(
+                        context: context,
+                        builder: (BuildContext context) {
+                          return Container(
+                            padding: EdgeInsets.symmetric(vertical: 20),
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                if (widget.pdfType == "nominationCard")
+                                  ListTile(
+                                    leading: Icon(
+                                      Icons.upload_file,
+                                      color: Colors.blue,
+                                    ),
+                                    title: Text(
+                                      "رفع التقرير",
+                                      style: TextStyle(
+                                        fontSize: 18,
+                                        fontWeight: FontWeight.bold,
+                                        fontFamily: 'Tajawal',
+                                      ),
+                                    ),
+                                    onTap: () {
+                                      Navigator.pop(context);
+                                      Get.to(() => const UplooadRerport());
+                                    },
+                                  ),
+                                ListTile(
+                                  leading: Icon(
+                                    Icons.download,
+                                    color: Colors.blue,
+                                  ),
+                                  title: Text(
+                                    "تحميل",
+                                    style: TextStyle(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.bold,
+                                      fontFamily: 'Tajawal',
+                                    ),
+                                  ),
+                                  onTap: () {
+                                    Navigator.pop(context);
+                                    downloadPDFToDownloads();
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(
+                                        content: Text("جاري التحميل..."),
+                                      ),
+                                    );
+                                  },
+                                ),
+                              ],
+                            ),
+                          );
+                        },
+                      );
+                    },
+                    label: Text(
+                      "خيارات",
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    icon: Icon(Icons.more_horiz),
+                    backgroundColor: Colors.blue,
+                    foregroundColor: Colors.white,
+                  ),
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

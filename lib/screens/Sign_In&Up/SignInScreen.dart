@@ -1,6 +1,6 @@
 // ignore_for_file: must_be_immutable
 
-import 'package:aitu_app/screens/Attendance_Part_Pages/AttendancePage.dart';
+// import 'package:aitu_app/screens/Attendance_Part_Pages/AttendancePage.dart';
 import 'package:aitu_app/screens/student%20data/enterCode.dart';
 import 'package:aitu_app/shared/constant.dart';
 import 'package:aitu_app/shared/reuableWidgets.dart';
@@ -164,8 +164,13 @@ class _SignInScreenState extends State<SignInScreen> {
                         password = value;
                       });
                       if (password.isEmpty) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text("enter_password".tr)),
+                        Get.snackbar(
+                          'تنبيه',
+                          "enter_password".tr,
+                          backgroundColor: Colors.red,
+                          colorText: Colors.white,
+                          snackPosition: SnackPosition.TOP,
+                          duration: Duration(seconds: 3),
                         );
                       }
                     },
@@ -245,7 +250,20 @@ class _SignInScreenState extends State<SignInScreen> {
                             print('Student ID: $studentId');
                             await _prefs.setString("studentId", studentId);
 
-                            Get.offAll(HomeScreen(studentEmail: email));
+                            // Check if student has a factory assigned
+                            DocumentSnapshot studentDoc =
+                                studentQuery.docs.first;
+                            if (studentDoc.get('factory') != null &&
+                                studentDoc
+                                    .get('factory')
+                                    .toString()
+                                    .isNotEmpty) {
+                              // If factory exists, go to HomeScreen
+                              Get.offAll(HomeScreen(studentEmail: email));
+                            } else {
+                              // If no factory, go to Instructions page
+                              Get.offAll(Instructions());
+                            }
                           }
                         } catch (e) {
                           String errorMessage =
@@ -253,136 +271,33 @@ class _SignInScreenState extends State<SignInScreen> {
                                   ? "invalid_credentials".tr
                                   : "حدث خطأ أثناء تسجيل الدخول";
 
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              backgroundColor: const Color.fromARGB(
-                                255,
-                                160,
-                                11,
-                                0,
-                              ),
-                              content: Text(errorMessage),
-                            ),
+                          Get.snackbar(
+                            'خطأ',
+                            'حدث خطأ أثناء تسجيل الدخول',
+                            backgroundColor: Colors.red,
+                            colorText: Colors.white,
+                            snackPosition: SnackPosition.TOP,
+                            duration: Duration(seconds: 3),
                           );
                         }
                       },
-                      title: Text(
-                        'sign_in'.tr,
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 26,
-                          fontWeight: FontWeight.bold,
-                          fontFamily: 'Tajawal',
+                      title: Center(
+                        child: Text(
+                          'sign_in'.tr,
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 26,
+                            fontWeight: FontWeight.bold,
+                            fontFamily: 'Tajawal',
+                          ),
                         ),
                       ), // Key for "Sign Up",
                     ),
                   ),
                   SizedBox(height: 20),
 
-                  // SizedBox(
-                  //   width: MediaQuery.of(context).size.width * 0.9,
-                  //   child: ElevatedButton(
-                  //     style: ElevatedButton.styleFrom(
-                  //       // padding: EdgeInsets.symmetric(horizontal: 16),
-                  //       backgroundColor: const Color.fromARGB(
-                  //         255,
-                  //         255,
-                  //         255,
-                  //         255,
-                  //       ),
-                  //       foregroundColor: mainColor,
-                  //       side: BorderSide(color: mainColor, width: 1.0),
-                  //       minimumSize: Size(double.infinity, 50),
-                  //       shape: RoundedRectangleBorder(
-                  //         borderRadius: BorderRadius.circular(30),
-                  //       ),
-                  //       elevation: 4,
-                  //     ),
-                  //     onPressed: () async {
-                  //       await GoogleSignIn().signOut();
-                  //       final GoogleSignInAccount? googleUser =
-                  //           await GoogleSignIn().signIn();
-
-                  //       if (googleUser == null) return; // User cancelled
-
-                  //       final GoogleSignInAuthentication googleAuth =
-                  //           await googleUser.authentication;
-
-                  //       final credential = GoogleAuthProvider.credential(
-                  //         accessToken: googleAuth.accessToken,
-                  //         idToken: googleAuth.idToken,
-                  //       );
-                  //       await _auth.signInWithCredential(credential);
-                  //       final SharedPreferences _prefs =
-                  //           await SharedPreferences.getInstance();
-
-                  //       if (_auth.currentUser != null) {
-                  //         await _prefs.setString(
-                  //           "email",
-                  //           _auth.currentUser!.email.toString(),
-                  //         );
-                  //         print("${_prefs.getString("email")}  in signin");
-                  //       }
-                  //       String? studentId = await getStudentIdByEmail(
-                  //         _auth.currentUser?.email ?? "",
-                  //       );
-
-                  //       if (studentId != null) {
-                  //         print('Student ID: $studentId');
-                  //         await _prefs.setString("studentId", studentId);
-                  //       } else {
-                  //         print('Student not found');
-                  //       }
-
-                  //       Get.offAll(HomeScreen());
-                  //     },
-                  //     child: Row(
-                  //       mainAxisAlignment: MainAxisAlignment.center,
-                  //       children: [
-                  //         Icon(Icons.g_mobiledata, size: 50),
-                  //         SizedBox(width: 16),
-                  //         // Translated text
-                  //         Text(
-                  //           'signIn_with_google'.tr,
-                  //           style: TextStyle(
-                  //             fontSize: 18,
-                  //             fontWeight: FontWeight.w500,
-                  //             fontFamily: 'Tajawal',
-                  //           ),
-                  //         ),
-                  //       ],
-                  //     ),
-                  //   ),
-                  // ),
-                  // SizedBox(height: 40),
-
                   // //sign up btn
-                  TextButton(
-                    onPressed: () async {
-                      final email = await FirebaseFirestore.instance
-                          .collection('StudentsTable')
-                          .where('code', isEqualTo: widget.studentCode)
-                          .limit(1)
-                          .get()
-                          .then(
-                            (snapshot) => snapshot.docs.first['email'] ?? '',
-                          );
-                      Get.to(AttendancePage());
-                    },
-                    child: Text(
-                      'test'.tr,
-                      // Translated "Don't have an account? Sign Up"
-                      style: TextStyle(
-                        color: const Color.fromARGB(255, 7, 30, 41),
-                        fontSize: 16.0,
-                        fontWeight: FontWeight.w500,
-                        fontFamily: 'Tajawal',
-                      ),
-                    ),
-                  ),
-                 
-                 
                   TextButton(
                     onPressed: () {
                       Get.to(

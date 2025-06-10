@@ -26,7 +26,7 @@ class _Distribution_choiceState extends State<Distribution_choice> {
         appBar: AppBar(
           leading: IconButton(
             icon: Icon(Icons.arrow_back_ios_new_rounded, color: const Color.fromARGB(255, 0, 0, 0)),
-            onPressed: () => Get.back()
+            onPressed: () => Get.to(() => Instructions())
           ),
           backgroundColor: const Color.fromARGB(0, 255, 255, 255),
           // actions: <Widget>[

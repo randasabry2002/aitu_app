@@ -7,7 +7,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'models/appTranslations.dart';
 
 Future<void> main() async {
-  // تأكد من تهيئة البنية الأساسية
+  // تأكد من تهيئة البنية الأساسي=  
   WidgetsFlutterBinding.ensureInitialized();
 
   // تهيئة Firebase بطريقة آمنة تمامًا

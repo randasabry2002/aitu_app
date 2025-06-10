@@ -101,7 +101,11 @@ class _SignUpScreenState extends State<SignUpScreen> {
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
                       // SizedBox(height: 40),
-                    Image.asset('assets/images/account.png',width: 100,height: 100,),
+                      Image.asset(
+                        'assets/images/account.png',
+                        width: 100,
+                        height: 100,
+                      ),
                       Text(
                         'انشاء حساب'.tr, // Translation key for "Sign Up"
                         style: TextStyle(
@@ -129,7 +133,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                         },
                         keyboardType: TextInputType.emailAddress,
                       ),
-                   
+
                       SizedBox(height: 36),
                       //   //major
                       //   DropdownButtonFormField<String>(
@@ -293,40 +297,40 @@ class _SignUpScreenState extends State<SignUpScreen> {
                         ), // Key for "Sign Up",
                         onPressed: () async {
                           if (email.isEmpty) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                backgroundColor: const Color.fromARGB(255, 160, 11, 0),
-                                content: Text(
-                                  "enter_email".tr,
-                                ), // Key for "Enter Email"
-                              ),
+                            Get.snackbar(
+                              'تنبيه',
+                              'يرجى إدخال كود الطالب',
+                              backgroundColor: Colors.red,
+                              colorText: Colors.white,
+                              snackPosition: SnackPosition.TOP,
+                              duration: Duration(seconds: 3),
                             );
                           } else if (phone.isEmpty) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                backgroundColor: const Color.fromARGB(255, 160, 11, 0),
-                                content: Text(
-                                  "enter_phone".tr,
-                                ), // Key for "Enter Phone"
-                              ),
+                            Get.snackbar(
+                              'تنبيه',
+                              'يرجى إدخال رقم الهاتف',
+                              backgroundColor: Colors.red,
+                              colorText: Colors.white,
+                              snackPosition: SnackPosition.TOP,
+                              duration: Duration(seconds: 3),
                             );
                           } else if (password.isEmpty) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                backgroundColor: const Color.fromARGB(255, 160, 11, 0),
-                                content: Text(
-                                  "enter_password".tr,
-                                ), // Key for "Enter Password"
-                              ),
+                            Get.snackbar(
+                              'تنبيه',
+                              'يجب أن تكون كلمة المرور 6 أحرف على الأقل',
+                              backgroundColor: Colors.red,
+                              colorText: Colors.white,
+                              snackPosition: SnackPosition.TOP,
+                              duration: Duration(seconds: 3),
                             );
                           } else if (confirmPassword != password) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                backgroundColor: const Color.fromARGB(255, 160, 11, 0),
-                                content: Text(
-                                  "password_mismatch".tr,
-                                ), // Key for "Check Your Password"
-                              ),
+                            Get.snackbar(
+                              'تنبيه',
+                              'كلمة المرور غير متطابقة',
+                              backgroundColor: Colors.red,
+                              colorText: Colors.white,
+                              snackPosition: SnackPosition.TOP,
+                              duration: Duration(seconds: 3),
                             );
                           } else {
                             try {
@@ -357,18 +361,21 @@ class _SignUpScreenState extends State<SignUpScreen> {
 
                               showDialog(
                                 context: context,
-                                builder: (context) => AlertDialog(
-                                  title: Text('تنبيه'.tr),
-                                  content: Text(
-                                    'هذا الحساب موجود بالفعل، يرجى تسجيل الدخول أو إنشاء حساب جديد'.tr,
-                                  ),
-                                  actions: [
-                                    TextButton(
-                                      onPressed: () => Navigator.of(context).pop(),
-                                      child: Text('حسنا'.tr),
+                                builder:
+                                    (context) => AlertDialog(
+                                      title: Text('تنبيه'.tr),
+                                      content: Text(
+                                        'هذا الحساب موجود بالفعل، يرجى تسجيل الدخول أو إنشاء حساب جديد'
+                                            .tr,
+                                      ),
+                                      actions: [
+                                        TextButton(
+                                          onPressed:
+                                              () => Navigator.of(context).pop(),
+                                          child: Text('حسنا'.tr),
+                                        ),
+                                      ],
                                     ),
-                                  ],
-                                ),
                               );
                             }
                           }

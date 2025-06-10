@@ -1,3 +1,4 @@
+import 'package:aitu_app/screens/Distribution_Pages/Not_College_distribution_page.dart';
 import 'package:aitu_app/shared/reuableWidgets.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -5,6 +6,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:aitu_app/screens/Distribution_Pages/Distribution_choice.dart';
 import 'package:aitu_app/screens/Distribution_Pages/PDFViewerPage.dart';
 import 'package:aitu_app/shared/constant.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class WaitnigReqestAnswer extends StatelessWidget {
   final String fatoryGovernorate;
@@ -57,9 +59,29 @@ class WaitnigReqestAnswer extends StatelessWidget {
                           ),
                         ),
                         TextButton(
-                          onPressed: () {
+                          onPressed: () async {
+                            // Get current user email from SharedPreferences
+                            final prefs = await SharedPreferences.getInstance();
+                            String? email = prefs.getString("email");
+
+                            if (email != null) {
+                              // Find and delete the factory request document
+                              final querySnapshot = await FirebaseFirestore.instance
+                                  .collection('Factories')
+                                  .where('name', isEqualTo: factoryName)
+                                  .where('address', isEqualTo: factoryLocation)
+                                  .where('industry', isEqualTo: factoryIndustry)
+                                  .where('Governorate', isEqualTo: fatoryGovernorate)
+                                  .where('type', isEqualTo: 'external')
+                                  .limit(1)
+                                  .get();
+
+                              if (querySnapshot.docs.isNotEmpty) {
+                                await querySnapshot.docs.first.reference.delete();
+                              }
+                            }
                             Navigator.of(context).pop();
-                            Get.offAll(() => const Distribution_choice());
+                            Get.offAll(() => Not_College_distribution_page());
                           },
                           child: const Text(
                             'إلغاء الطلب',
@@ -213,7 +235,7 @@ class WaitnigReqestAnswer extends StatelessWidget {
             ),
           ),
           onPressed: () {
-            Get.to(() => PDFViewerPage(pdfType: 'distributionPdf'));
+            Get.to(() => PDFViewerPage(pdfType: 'nominationCard'));
           },
         ),
       ],

@@ -132,7 +132,10 @@ class _EnterStudentCodeState extends State<EnterStudentCode> {
                           height: 68,
                           decoration: BoxDecoration(
                             gradient: LinearGradient(
-                              colors: [mainColor, Color.fromARGB(255, 0, 243, 223)],
+                              colors: [
+                                mainColor,
+                                Color.fromARGB(255, 0, 243, 223),
+                              ],
                               begin: Alignment.centerLeft,
                               end: Alignment.centerRight,
                             ),
@@ -151,11 +154,13 @@ class _EnterStudentCodeState extends State<EnterStudentCode> {
                               borderRadius: BorderRadius.circular(30),
                               onTap: () async {
                                 if (studentCode.isEmpty) {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(
-                                      backgroundColor: const Color.fromARGB(255, 160, 11, 0),
-                                      content: Text("يرجى ادخال الكود!".tr),
-                                    ),
+                                  Get.snackbar(
+                                    'تنبيه',
+                                    'يرجى إدخال كود الطالب',
+                                    backgroundColor: Colors.red,
+                                    colorText: Colors.white,
+                                    snackPosition: SnackPosition.TOP,
+                                    duration: Duration(seconds: 3),
                                   );
                                   return;
                                 }
@@ -166,7 +171,9 @@ class _EnterStudentCodeState extends State<EnterStudentCode> {
                                   if (student != null) {
                                     if (student.email == "") {
                                       Get.offAll(
-                                        () => SignUpScreen(studentCode: studentCode),
+                                        () => SignUpScreen(
+                                          studentCode: studentCode,
+                                        ),
                                       );
                                     } else if (student.birthAddress == "") {
                                       Get.offAll(
@@ -176,33 +183,46 @@ class _EnterStudentCodeState extends State<EnterStudentCode> {
                                       );
                                     } else {
                                       Get.offAll(
-                                        () => SignInScreen(studentCode: studentCode),
+                                        () => SignInScreen(
+                                          studentCode: studentCode,
+                                        ),
                                       );
                                     }
                                   } else {
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      
-                                      SnackBar(content: Text("الكود غير موجود!".tr)),
+                                    Get.snackbar(
+                                      'تنبيه',
+                                      "الكود غير موجود!".tr,
+                                      backgroundColor: Colors.red,
+                                      colorText: Colors.white,
+                                      snackPosition: SnackPosition.TOP,
+                                      duration: Duration(seconds: 3),
                                     );
                                   }
                                 } catch (error) {
                                   print("Error fetching student data: $error");
                                   showDialog(
                                     context: context,
-                                    builder: (context) => AlertDialog(
-                                      title: Text('لا يوجد طالب بهذا الكود'.tr),
-                                      content: Text(
-                                        'يرجى التحقق من الكود المدخل\n اذا كنت متأكد منه قم بالطلب من احد اعضاء الشئون الطلابية والتأكد من اضافتك للبرنامج. \n'.tr,
-                                      ),
-                                      actions: [
-                                        TextButton(
-                                          onPressed: () => Navigator.of(context).pop(),
-                                          child: Text('حسنا'.tr),
+                                    builder:
+                                        (context) => AlertDialog(
+                                          title: Text(
+                                            'لا يوجد طالب بهذا الكود'.tr,
+                                          ),
+                                          content: Text(
+                                            'يرجى التحقق من الكود المدخل\n اذا كنت متأكد منه قم بالطلب من احد اعضاء الشئون الطلابية والتأكد من اضافتك للبرنامج. \n'
+                                                .tr,
+                                          ),
+                                          actions: [
+                                            TextButton(
+                                              onPressed:
+                                                  () =>
+                                                      Navigator.of(
+                                                        context,
+                                                      ).pop(),
+                                              child: Text('حسنا'.tr),
+                                            ),
+                                          ],
                                         ),
-                                      ],
-                                    ),
                                   );
-                                 
                                 }
                               },
                               child: Icon(

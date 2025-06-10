@@ -2,7 +2,6 @@ import 'dart:async';
 import 'dart:math';
 
 import 'package:flutter/material.dart';
-import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:aitu_app/shared/constant.dart';
@@ -15,7 +14,9 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'HomeScreen.dart';
 
 class ExitFactory extends StatefulWidget {
-  const ExitFactory({super.key});
+  final String attendanceId;
+
+  const ExitFactory({super.key, required this.attendanceId});
 
   @override
   State<ExitFactory> createState() => _ExitFactoryState();
@@ -28,19 +29,15 @@ class _ExitFactoryState extends State<ExitFactory> {
   bool show_done_location = false;
   bool isLocationVerified = false;
   LatLng latLng = LatLng(45.521563, -122.677433);
-  var _firestor = FirebaseFirestore.instance;
+  final _firestor = FirebaseFirestore.instance;
   bool spinkitVisable_exit = false;
   late String attendanceId;
-  late final SharedPreferences _prefs;
-  String notes = "";
-  String tempNotes = ""; // Temporary notes storage
+  late SharedPreferences _prefs;
   Duration trainingDuration = Duration.zero;
-  Timer? _timer;
-  DateTime? startTime;
   String studentId = "";
   String studentEmail = "";
-  GeoPoint? enteringLocation;
   String currentQuote = "";
+  bool _isLoading = true;
 
   final List<String> motivationalQuotes = [
     "كل يوم جديد هو فرصة للتعلم والنمو",
@@ -55,33 +52,61 @@ class _ExitFactoryState extends State<ExitFactory> {
     "كل يوم هو فرصة جديدة للتميز",
   ];
 
-  double benefitRating = 0;
-  double supervisorRating = 0;
-  double environmentRating = 0;
-
   @override
   void initState() {
     super.initState();
-    getSharedPref();
-    _getStudentInfo();
+    attendanceId = widget.attendanceId;
+    _initializeData();
     _setRandomQuote();
   }
 
-  @override
-  void dispose() {
-    _timer?.cancel();
-    super.dispose();
+  Future<void> _initializeData() async {
+    try {
+      _prefs = await SharedPreferences.getInstance();
+      await _getStudentInfo();
+      await _loadExistingAttendanceData();
+    } catch (e) {
+      print("Error initializing data: $e");
+      Get.snackbar(
+        'خطأ في تحميل البيانات',
+        'حدث خطأ أثناء تحميل بيانات الحضور.',
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
+        snackPosition: SnackPosition.TOP,
+        duration: Duration(seconds: 5),
+      );
+    } finally {
+      setState(() {
+        _isLoading = false;
+      });
+    }
   }
 
-  void _startTimer() {
-    startTime = DateTime.now();
-    _timer = Timer.periodic(Duration(seconds: 1), (timer) {
-      if (startTime != null) {
-        setState(() {
-          trainingDuration = DateTime.now().difference(startTime!);
-        });
+  Future<void> _loadExistingAttendanceData() async {
+    try {
+      DocumentSnapshot attendanceDoc =
+          await _firestor.collection("Attendances").doc(attendanceId).get();
+      if (attendanceDoc.exists) {
+        Timestamp? enteringTime = attendanceDoc.get('EnteringTime');
+        if (enteringTime != null) {
+          setState(() {
+            trainingDuration = DateTime.now().difference(enteringTime.toDate());
+          });
+        }
+      } else {
+        print("Attendance document not found for loading existing data.");
       }
-    });
+    } catch (e) {
+      print("Error loading existing attendance data: $e");
+      Get.snackbar(
+        'خطأ في تحميل بيانات الحضور',
+        'تعذر تحميل بيانات الحضور الموجودة.',
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
+        snackPosition: SnackPosition.TOP,
+        duration: Duration(seconds: 5),
+      );
+    }
   }
 
   String _formatDuration(Duration duration) {
@@ -94,8 +119,7 @@ class _ExitFactoryState extends State<ExitFactory> {
 
   Future<void> _getStudentInfo() async {
     try {
-      final SharedPreferences prefs = await SharedPreferences.getInstance();
-      String email = prefs.getString("email") ?? '';
+      String email = _prefs.getString("email") ?? '';
       setState(() {
         studentEmail = email;
       });
@@ -114,116 +138,77 @@ class _ExitFactoryState extends State<ExitFactory> {
         print("Student ID retrieved: $studentId");
       } else {
         print("No student found with email: $email");
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text("Student information not found"),
-            duration: Duration(seconds: 3),
-          ),
+        Get.snackbar(
+          'خطأ في بيانات الطالب',
+          'تعذر العثور على بيانات الطالب.',
+          backgroundColor: Colors.red,
+          colorText: Colors.white,
+          snackPosition: SnackPosition.TOP,
+          duration: Duration(seconds: 5),
         );
       }
     } catch (e) {
       print("Error getting student info: $e");
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text("Error retrieving student information"),
-          duration: Duration(seconds: 3),
-        ),
+      Get.snackbar(
+        'خطأ في بيانات الطالب',
+        'حدث خطأ أثناء جلب بيانات الطالب.',
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
+        snackPosition: SnackPosition.TOP,
+        duration: Duration(seconds: 5),
       );
     }
   }
 
   Future<void> updateStudent() async {
     try {
-      if (studentId.isEmpty) {
-        throw Exception("Student ID not found");
+      if (!isLocationVerified) {
+        Get.snackbar(
+          'تنبيه',
+          'يرجى تحديد موقعك أولاً قبل إنهاء اليوم',
+          backgroundColor: Colors.red,
+          colorText: Colors.white,
+          snackPosition: SnackPosition.TOP,
+          duration: Duration(seconds: 3),
+        );
+        return;
       }
 
       await _firestor.collection("Attendances").doc(attendanceId).update({
-        "Student_ID": studentId,
-        "Student_Email": studentEmail,
         "ExitingTime": DateTime.now(),
         "ExitingLocation": GeoPoint(latitude, longitude),
-        "BenefitRating": benefitRating,
-        "SupervisorRating": supervisorRating,
-        "EnvironmentRating": environmentRating,
-        "Notes": notes,
         "TrainingDuration": trainingDuration.inSeconds,
+        "Status": "Completed",
       });
-      print("done updated********************************");
-    } catch (e) {
-      print("حدث خطأ أثناء التحديث: $e");
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text("An error happened, try again"),
-          duration: Duration(seconds: 3),
-        ),
+
+      await _prefs.setString("attendanceId", 'null');
+
+      Get.snackbar(
+        'نجاح',
+        'تم إنهاء اليوم التدريبي بنجاح',
+        backgroundColor: Colors.green,
+        colorText: Colors.white,
+        snackPosition: SnackPosition.TOP,
+        duration: Duration(seconds: 3),
       );
-    }
-  }
 
-  getSharedPref() async {
-    _prefs = await SharedPreferences.getInstance();
-    attendanceId = (await _prefs.getString("attendanceId"))!;
-    print("Received attendance ID: ${attendanceId}");
-  }
-
-  Future<void> _getEnteringLocation() async {
-    try {
-      DocumentSnapshot attendanceDoc =
-          await _firestor.collection("Attendances").doc(attendanceId).get();
-
-      if (attendanceDoc.exists) {
-        setState(() {
-          enteringLocation = attendanceDoc.get('EnteringLocation') as GeoPoint;
-        });
-      }
+      Future.delayed(const Duration(seconds: 2), () {
+        Get.offAll(() => HomeScreen());
+      });
     } catch (e) {
-      print("Error getting entering location: $e");
+      print("Error updating attendance: $e");
+      Get.snackbar(
+        'تنبيه',
+        'حدث خطأ أثناء إنهاء اليوم',
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
+        snackPosition: SnackPosition.TOP,
+        duration: Duration(seconds: 3),
+      );
+      setState(() {
+        spinkitVisable_exit = false;
+      });
     }
-  }
-
-  bool _isNearFactory(GeoPoint currentLocation) {
-    if (enteringLocation == null) return false;
-
-    // Calculate distance between current location and entering location
-    double distance = Geolocator.distanceBetween(
-      currentLocation.latitude,
-      currentLocation.longitude,
-      enteringLocation!.latitude,
-      enteringLocation!.longitude,
-    );
-
-    // Consider locations within 100 meters as "near"
-    return distance <= 100;
-  }
-
-  Future<void> _showLocationErrorDialog() {
-    return showDialog(
-      context: context,
-      builder:
-          (context) => AlertDialog(
-            title: Text(
-              'تحذير',
-              style: TextStyle(
-                fontFamily: 'Tajawal',
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            content: Text(
-              'يجب أن تكون في موقع المصنع لتسجيل الخروج. يرجى العودة إلى موقع المصنع والمحاولة مرة أخرى.',
-              style: TextStyle(fontFamily: 'Tajawal'),
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context),
-                child: Text(
-                  'حسناً',
-                  style: TextStyle(fontFamily: 'Tajawal', color: mainColor),
-                ),
-              ),
-            ],
-          ),
-    );
   }
 
   Future<void> getCurrentLocation() async {
@@ -232,7 +217,14 @@ class _ExitFactoryState extends State<ExitFactory> {
 
     serviceEnabled = await Geolocator.isLocationServiceEnabled();
     if (!serviceEnabled) {
-      print("Location services are disabled.");
+      Get.snackbar(
+        'تنبيه',
+        'يرجى تفعيل خدمة الموقع',
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
+        snackPosition: SnackPosition.TOP,
+        duration: Duration(seconds: 3),
+      );
       return;
     }
 
@@ -240,56 +232,72 @@ class _ExitFactoryState extends State<ExitFactory> {
     if (permission == LocationPermission.denied) {
       permission = await Geolocator.requestPermission();
       if (permission == LocationPermission.denied) {
-        print("Location permissions are denied.");
+        Get.snackbar(
+          'تنبيه',
+          'يرجى السماح بالوصول إلى الموقع',
+          backgroundColor: Colors.red,
+          colorText: Colors.white,
+          snackPosition: SnackPosition.TOP,
+          duration: Duration(seconds: 3),
+        );
         return;
       }
     }
 
     if (permission == LocationPermission.deniedForever) {
-      print("Location permissions are permanently denied.");
+      Get.snackbar(
+        'تنبيه',
+        'يرجى السماح بالوصول إلى الموقع من إعدادات التطبيق',
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
+        snackPosition: SnackPosition.TOP,
+        duration: Duration(seconds: 3),
+      );
       return;
     }
 
-    Position position = await Geolocator.getCurrentPosition(
-      desiredAccuracy: LocationAccuracy.high,
-    );
-    latitude = position.latitude;
-    longitude = position.longitude;
+    setState(() {
+      show_spinkit = true;
+      show_done_location = false;
+      isLocationVerified = false;
+    });
+
     try {
-      var connectivityResult = await Connectivity().checkConnectivity();
-      if (connectivityResult == ConnectivityResult.none) {
-        print("لابد من الاتصال بالإنترنت للحصول على الموقع.");
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text("لابد من الاتصال بالإنترنت للحصول على الموقع."),
-            duration: Duration(seconds: 6),
-          ),
-        );
-      } else {
+      Position position = await Geolocator.getCurrentPosition(
+        desiredAccuracy: LocationAccuracy.high,
+      );
+
+      setState(() {
+        latitude = position.latitude;
+        longitude = position.longitude;
         latLng = LatLng(latitude, longitude);
+        show_spinkit = false;
+        show_done_location = true;
+        isLocationVerified = true;
+      });
 
-        // Get entering location if not already retrieved
-        if (enteringLocation == null) {
-          await _getEnteringLocation();
-        }
-
-        // Check if current location is near factory
-        bool isNear = _isNearFactory(GeoPoint(latitude, longitude));
-
-        setState(() {
-          show_spinkit = false;
-          show_done_location = true;
-          isLocationVerified = isNear;
-        });
-
-        if (isNear) {
-          _startTimer(); // Start timer only when location is verified
-        } else {
-          await _showLocationErrorDialog();
-        }
-      }
+      Get.snackbar(
+        'نجاح',
+        'تم تحديد الموقع بنجاح',
+        backgroundColor: Colors.green,
+        colorText: Colors.white,
+        snackPosition: SnackPosition.TOP,
+        duration: Duration(seconds: 3),
+      );
     } catch (e) {
       print("Failed to get location: $e");
+      Get.snackbar(
+        'تنبيه',
+        'حدث خطأ أثناء تحديد الموقع',
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
+        snackPosition: SnackPosition.TOP,
+        duration: Duration(seconds: 3),
+      );
+      setState(() {
+        show_spinkit = false;
+        isLocationVerified = false;
+      });
     }
   }
 
@@ -307,126 +315,6 @@ class _ExitFactoryState extends State<ExitFactory> {
     });
   }
 
-  Future<void> _showResetLocationDialog() {
-    return showDialog(
-      context: context,
-      builder:
-          (context) => AlertDialog(
-            title: Text(
-              'تحديد الموقع مرة أخرى',
-              style: TextStyle(
-                fontFamily: 'Tajawal',
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            content: Text(
-              'هل أنت متأكد من إعادة تحديد الموقع؟ سيتم إعادة تشغيل المؤقت.',
-              style: TextStyle(fontFamily: 'Tajawal'),
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context),
-                child: Text(
-                  'إلغاء',
-                  style: TextStyle(fontFamily: 'Tajawal', color: Colors.grey),
-                ),
-              ),
-              TextButton(
-                onPressed: () {
-                  Navigator.pop(context);
-                  _resetLocation();
-                },
-                child: Text(
-                  'تأكيد',
-                  style: TextStyle(fontFamily: 'Tajawal', color: mainColor),
-                ),
-              ),
-            ],
-          ),
-    );
-  }
-
-  void _resetLocation() {
-    setState(() {
-      show_spinkit = true;
-      show_done_location = false;
-      isLocationVerified = false;
-      _timer?.cancel();
-      trainingDuration = Duration.zero;
-      startTime = null;
-    });
-    getCurrentLocation();
-  }
-
-  void _saveTempNotes() {
-    setState(() {
-      tempNotes = notes;
-    });
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          'تم حفظ الملاحظات مؤقتاً',
-          style: TextStyle(fontFamily: 'Tajawal'),
-        ),
-        duration: Duration(seconds: 2),
-      ),
-    );
-  }
-
-  Future<void> _showBackConfirmationDialog() async {
-    return showDialog(
-      context: context,
-      builder:
-          (context) => AlertDialog(
-            title: Text(
-              'تأكيد',
-              style: TextStyle(
-                fontFamily: 'Tajawal',
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            content: Text(
-              'هل أنت متأكد من الغاء حضورك اليوم؟',
-              style: TextStyle(fontFamily: 'Tajawal'),
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context),
-                child: Text(
-                  'لا',
-                  style: TextStyle(fontFamily: 'Tajawal', color: Colors.grey),
-                ),
-              ),
-              TextButton(
-                onPressed: () async {
-                  try {
-                    await _firestor
-                        .collection("Attendances")
-                        .doc(attendanceId)
-                        .delete();
-                    await _prefs.setString("attendanceId", 'null');
-                    Navigator.pop(context);
-                    Get.offAll(() => HomeScreen());
-                  } catch (e) {
-                    print("Error deleting attendance: $e");
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text("حدث خطأ أثناء حذف الحضور"),
-                        duration: Duration(seconds: 3),
-                      ),
-                    );
-                  }
-                },
-                child: Text(
-                  'نعم',
-                  style: TextStyle(fontFamily: 'Tajawal', color: mainColor),
-                ),
-              ),
-            ],
-          ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     return Directionality(
@@ -434,498 +322,307 @@ class _ExitFactoryState extends State<ExitFactory> {
           Get.locale?.languageCode == 'ar'
               ? TextDirection.rtl
               : TextDirection.ltr,
-      child: WillPopScope(
-        onWillPop: () async {
-          await _showBackConfirmationDialog();
-          return false;
-        },
-        child: Scaffold(
-          appBar: AppBar(
-            automaticallyImplyLeading: false,
-            centerTitle: true,
-            leading: IconButton(
-              icon: Icon(
-                Icons.arrow_back_ios_new_rounded,
-                color: const Color.fromARGB(255, 0, 0, 0),
-              ),
-              onPressed: () => _showBackConfirmationDialog(),
-            ),
-            backgroundColor: const Color.fromARGB(255, 255, 255, 255),
-            title: Text(
-              'exit_factory'.tr,
-              style: TextStyle(
-                color: const Color.fromARGB(255, 0, 0, 0),
-                fontWeight: FontWeight.bold,
-                fontSize: 18,
-                fontFamily: 'Tajawal',
-              ),
+      child: Scaffold(
+        appBar: AppBar(
+          automaticallyImplyLeading: false,
+          centerTitle: true,
+          backgroundColor: const Color.fromARGB(255, 255, 255, 255),
+          title: Text(
+            'تسجيل الخروج',
+            style: TextStyle(
+              color: const Color.fromARGB(255, 0, 0, 0),
+              fontWeight: FontWeight.bold,
+              fontSize: 18,
+              fontFamily: 'Tajawal',
             ),
           ),
-          backgroundColor: Colors.white,
-          body: SingleChildScrollView(
-            child: Padding(
-              padding: EdgeInsets.all(16.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  SizedBox(height: 20),
+        ),
+        backgroundColor: Colors.white,
+        body:
+            _isLoading
+                ? Center(child: SpinKitCircle(color: mainColor, size: 50.0))
+                : SingleChildScrollView(
+                  child: Padding(
+                    padding: EdgeInsets.all(16.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        SizedBox(height: 20),
 
-                  // Get Location Button (Always visible)
-                  SizedBox(
-                    width: double.infinity,
-                    child: CreateButton(
-                      onPressed: () {
-                        if (show_done_location) {
-                          _showResetLocationDialog();
-                        } else {
-                          getCurrentLocation();
-                          setState(() {
-                            show_spinkit = true;
-                            show_done_location = false;
-                            isLocationVerified = false;
-                          });
-                        }
-                      },
-                      title: Center(
-                        child: Text(
-                          "تحديد الموقع",
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 18.0,
-                            fontFamily: 'Tajawal',
-                            fontWeight: FontWeight.w700,
+                        SizedBox(
+                          width: double.infinity,
+                          child: CreateButton(
+                            onPressed: () {
+                              setState(() {
+                                show_spinkit = true;
+                                show_done_location = false;
+                                isLocationVerified = false;
+                              });
+                              getCurrentLocation();
+                            },
+                            title: Center(
+                              child: Text(
+                                show_done_location
+                                    ? "تحديد الموقع مرة أخرى"
+                                    : "تحديد الموقع",
+                                textAlign: TextAlign.center,
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 18.0,
+                                  fontFamily: 'Tajawal',
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                            ),
                           ),
                         ),
-                      ),
-                    ),
-                  ),
 
-                  if (show_spinkit)
-                    Center(child: SpinKitWave(color: mainColor, size: 35.0)),
+                        if (show_spinkit)
+                          Center(
+                            child: SpinKitWave(color: mainColor, size: 35.0),
+                          ),
 
-                  if (show_done_location && isLocationVerified) ...[
-                    SizedBox(height: 30),
+                        if (show_done_location && isLocationVerified) ...[
+                          SizedBox(height: 30),
 
-                    // Motivational Quote
-                    Center(
-                      child: Column(
-                        children: [
-                          Container(
-                            padding: EdgeInsets.all(16),
-                            decoration: BoxDecoration(
-                              color: mainColor.withOpacity(0.1),
-                              shape: BoxShape.circle,
-                            ),
-                            child: Icon(
-                              Icons.lightbulb_outline,
-                              color: mainColor,
-                              size: 32,
+                          Center(
+                            child: Column(
+                              children: [
+                                Container(
+                                  padding: EdgeInsets.all(16),
+                                  decoration: BoxDecoration(
+                                    color: mainColor.withOpacity(0.1),
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: Icon(
+                                    Icons.lightbulb_outline,
+                                    color: mainColor,
+                                    size: 32,
+                                  ),
+                                ),
+                                SizedBox(height: 16),
+                                Container(
+                                  padding: EdgeInsets.symmetric(
+                                    horizontal: 20,
+                                    vertical: 16,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: mainColor.withOpacity(0.05),
+                                    borderRadius: BorderRadius.circular(15),
+                                  ),
+                                  child: Text(
+                                    currentQuote,
+                                    textAlign: TextAlign.center,
+                                    style: TextStyle(
+                                      color: Colors.black87,
+                                      fontSize: 18.0,
+                                      fontFamily: 'Tajawal',
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
-                          SizedBox(height: 16),
-                          Container(
-                            padding: EdgeInsets.symmetric(
-                              horizontal: 20,
-                              vertical: 16,
-                            ),
-                            decoration: BoxDecoration(
-                              color: mainColor.withOpacity(0.05),
+
+                          SizedBox(height: 30),
+
+                          Card(
+                            elevation: 4,
+                            shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(15),
                             ),
-                            child: Text(
-                              currentQuote,
-                              textAlign: TextAlign.center,
-                              style: TextStyle(
-                                color: Colors.black87,
-                                fontSize: 18.0,
-                                fontFamily: 'Tajawal',
-                                fontWeight: FontWeight.w500,
+                            child: Padding(
+                              padding: EdgeInsets.all(16.0),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Row(
+                                    children: [
+                                      Container(
+                                        padding: EdgeInsets.all(12),
+                                        decoration: BoxDecoration(
+                                          color: mainColor.withOpacity(0.1),
+                                          borderRadius: BorderRadius.circular(
+                                            12,
+                                          ),
+                                        ),
+                                        child: Icon(
+                                          Icons.timer,
+                                          color: mainColor,
+                                          size: 24,
+                                        ),
+                                      ),
+                                      SizedBox(width: 16),
+                                      Expanded(
+                                        child: Column(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
+                                          children: [
+                                            Text(
+                                              'مدة التدريب',
+                                              style: TextStyle(
+                                                color: Colors.grey[600],
+                                                fontSize: 14.0,
+                                                fontFamily: 'Tajawal',
+                                              ),
+                                            ),
+                                            SizedBox(height: 4),
+                                            Text(
+                                              _formatDuration(trainingDuration),
+                                              style: TextStyle(
+                                                color: Colors.black87,
+                                                fontSize: 24.0,
+                                                fontWeight: FontWeight.w500,
+                                                fontFamily: 'Tajawal',
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ],
                               ),
                             ),
                           ),
+
+                          SizedBox(height: 20),
+
+                          Card(
+                            elevation: 4,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(15),
+                            ),
+                            child: Padding(
+                              padding: EdgeInsets.all(16.0),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Row(
+                                    children: [
+                                      Container(
+                                        padding: EdgeInsets.all(12),
+                                        decoration: BoxDecoration(
+                                          color: mainColor.withOpacity(0.1),
+                                          borderRadius: BorderRadius.circular(
+                                            12,
+                                          ),
+                                        ),
+                                        child: Icon(
+                                          Icons.location_on,
+                                          color: mainColor,
+                                          size: 24,
+                                        ),
+                                      ),
+                                      SizedBox(width: 16),
+                                      Expanded(
+                                        child: Column(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
+                                          children: [
+                                            Text(
+                                              'موقعك الحالي',
+                                              style: TextStyle(
+                                                color: Colors.grey[600],
+                                                fontSize: 14.0,
+                                                fontFamily: 'Tajawal',
+                                              ),
+                                            ),
+                                            SizedBox(height: 4),
+                                            Text(
+                                              'تم تحديد الموقع',
+                                              style: TextStyle(
+                                                color: Colors.black87,
+                                                fontSize: 16.0,
+                                                fontWeight: FontWeight.w500,
+                                                fontFamily: 'Tajawal',
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  SizedBox(height: 16),
+                                  Container(
+                                    height: 200,
+                                    decoration: BoxDecoration(
+                                      borderRadius: BorderRadius.circular(15),
+                                      border: Border.all(
+                                        color: mainColor.withOpacity(0.3),
+                                      ),
+                                    ),
+                                    child: ClipRRect(
+                                      borderRadius: BorderRadius.circular(15),
+                                      child: GoogleMap(
+                                        onMapCreated: _onMapCreated,
+                                        initialCameraPosition: CameraPosition(
+                                          target: latLng,
+                                          zoom: 18.0,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+
+                          SizedBox(height: 30),
+
+                          if (!spinkitVisable_exit)
+                            SizedBox(
+                              height: 60.0,
+                              width: double.infinity,
+                              child: CreateButton(
+                                onPressed: () async {
+                                  try {
+                                    setState(() {
+                                      spinkitVisable_exit = true;
+                                    });
+                                    await updateStudent();
+                                  } catch (e) {
+                                    Get.snackbar(
+                                      'تنبيه',
+                                      'حدث خطأ أثناء إنهاء اليوم',
+                                      backgroundColor: Colors.red,
+                                      colorText: Colors.white,
+                                      snackPosition: SnackPosition.TOP,
+                                      duration: Duration(seconds: 3),
+                                    );
+                                    setState(() {
+                                      spinkitVisable_exit = false;
+                                    });
+                                  }
+                                },
+                                title: Center(
+                                  child: Text(
+                                    'إنهاء اليوم',
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 22.0,
+                                      fontFamily: 'Tajawal',
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+
+                          if (spinkitVisable_exit)
+                            Center(
+                              child: SpinKitCircle(
+                                color: mainColor,
+                                size: 35.0,
+                              ),
+                            ),
                         ],
-                      ),
+                      ],
                     ),
-
-                    SizedBox(height: 30),
-
-                    // Duration Card
-                    Card(
-                      elevation: 4,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(15),
-                      ),
-                      child: Padding(
-                        padding: EdgeInsets.all(16.0),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Row(
-                              children: [
-                                Container(
-                                  padding: EdgeInsets.all(12),
-                                  decoration: BoxDecoration(
-                                    color: mainColor.withOpacity(0.1),
-                                    borderRadius: BorderRadius.circular(12),
-                                  ),
-                                  child: Icon(
-                                    Icons.timer,
-                                    color: mainColor,
-                                    size: 24,
-                                  ),
-                                ),
-                                SizedBox(width: 16),
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        'مدة التدريب',
-                                        style: TextStyle(
-                                          color: Colors.grey[600],
-                                          fontSize: 14.0,
-                                          fontFamily: 'Tajawal',
-                                        ),
-                                      ),
-                                      SizedBox(height: 4),
-                                      Text(
-                                        _formatDuration(trainingDuration),
-                                        style: TextStyle(
-                                          color: Colors.black87,
-                                          fontSize: 24.0,
-                                          fontWeight: FontWeight.w500,
-                                          fontFamily: 'Tajawal',
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-
-                    SizedBox(height: 20),
-
-                    // Location Card
-                    Card(
-                      elevation: 4,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(15),
-                      ),
-                      child: Padding(
-                        padding: EdgeInsets.all(16.0),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Row(
-                              children: [
-                                Container(
-                                  padding: EdgeInsets.all(12),
-                                  decoration: BoxDecoration(
-                                    color: mainColor.withOpacity(0.1),
-                                    borderRadius: BorderRadius.circular(12),
-                                  ),
-                                  child: Icon(
-                                    Icons.location_on,
-                                    color: mainColor,
-                                    size: 24,
-                                  ),
-                                ),
-                                SizedBox(width: 16),
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        'موقعك الحالي',
-                                        style: TextStyle(
-                                          color: Colors.grey[600],
-                                          fontSize: 14.0,
-                                          fontFamily: 'Tajawal',
-                                        ),
-                                      ),
-                                      SizedBox(height: 4),
-                                      Text(
-                                        'تم تحديد الموقع',
-                                        style: TextStyle(
-                                          color: Colors.black87,
-                                          fontSize: 16.0,
-                                          fontWeight: FontWeight.w500,
-                                          fontFamily: 'Tajawal',
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ],
-                            ),
-                            SizedBox(height: 16),
-                            Container(
-                              height: 200,
-                              decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(15),
-                                border: Border.all(
-                                  color: mainColor.withOpacity(0.3),
-                                ),
-                              ),
-                              child: ClipRRect(
-                                borderRadius: BorderRadius.circular(15),
-                                child: GoogleMap(
-                                  onMapCreated: _onMapCreated,
-                                  initialCameraPosition: CameraPosition(
-                                    target: latLng,
-                                    zoom: 18.0,
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-
-                    SizedBox(height: 20),
-
-                    // Ratings Card
-                    Card(
-                      elevation: 4,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(15),
-                      ),
-                      child: Padding(
-                        padding: EdgeInsets.all(16.0),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Row(
-                              children: [
-                                Container(
-                                  padding: EdgeInsets.all(12),
-                                  decoration: BoxDecoration(
-                                    color: mainColor.withOpacity(0.1),
-                                    borderRadius: BorderRadius.circular(12),
-                                  ),
-                                  child: Icon(
-                                    Icons.star,
-                                    color: mainColor,
-                                    size: 24,
-                                  ),
-                                ),
-                                SizedBox(width: 16),
-                                Text(
-                                  'التقييمات',
-                                  style: TextStyle(
-                                    color: Colors.grey[600],
-                                    fontSize: 14.0,
-                                    fontFamily: 'Tajawal',
-                                  ),
-                                ),
-                              ],
-                            ),
-                            SizedBox(height: 16),
-                            _buildRatingRow(
-                              "تقييم مدى الاستفادة",
-                              benefitRating,
-                              (rating) {
-                                setState(() {
-                                  benefitRating = rating;
-                                });
-                              },
-                            ),
-                            SizedBox(height: 12),
-                            _buildRatingRow(
-                              "تقييم تعامل المشرف",
-                              supervisorRating,
-                              (rating) {
-                                setState(() {
-                                  supervisorRating = rating;
-                                });
-                              },
-                            ),
-                            SizedBox(height: 12),
-                            _buildRatingRow(
-                              "تقييم بيئة العمل",
-                              environmentRating,
-                              (rating) {
-                                setState(() {
-                                  environmentRating = rating;
-                                });
-                              },
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-
-                    SizedBox(height: 20),
-
-                    // Notes Card with Save Button
-                    Card(
-                      elevation: 4,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(15),
-                      ),
-                      child: Padding(
-                        padding: EdgeInsets.all(16.0),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Row(
-                                  children: [
-                                    Container(
-                                      padding: EdgeInsets.all(12),
-                                      decoration: BoxDecoration(
-                                        color: mainColor.withOpacity(0.1),
-                                        borderRadius: BorderRadius.circular(12),
-                                      ),
-                                      child: Icon(
-                                        Icons.note_alt_outlined,
-                                        color: mainColor,
-                                        size: 24,
-                                      ),
-                                    ),
-                                    SizedBox(width: 16),
-                                    Text(
-                                      'ملاحظات اليوم',
-                                      style: TextStyle(
-                                        color: Colors.grey[600],
-                                        fontSize: 14.0,
-                                        fontFamily: 'Tajawal',
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                                IconButton(
-                                  onPressed: _saveTempNotes,
-                                  icon: Icon(
-                                    Icons.save_outlined,
-                                    color: mainColor,
-                                  ),
-                                  tooltip: 'حفظ الملاحظات مؤقتاً',
-                                ),
-                              ],
-                            ),
-                            SizedBox(height: 16),
-                            TextField(
-                              maxLines: 4,
-                              decoration: InputDecoration(
-                                hintText:
-                                    'اكتب ملاحظاتك عن اليوم التدريبي هنا...',
-                                hintStyle: TextStyle(
-                                  color: Colors.grey[400],
-                                  fontFamily: 'Tajawal',
-                                ),
-                                border: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                  borderSide: BorderSide(
-                                    color: mainColor.withOpacity(0.3),
-                                  ),
-                                ),
-                                focusedBorder: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                  borderSide: BorderSide(color: mainColor),
-                                ),
-                              ),
-                              onChanged: (value) {
-                                setState(() {
-                                  notes = value;
-                                });
-                              },
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-
-                    SizedBox(height: 30),
-
-                    // Exit Button
-                    if (!spinkitVisable_exit)
-                      SizedBox(
-                        height: 60.0,
-                        width: double.infinity,
-                        child: CreateButton(
-                          onPressed: () async {
-                            try {
-                              setState(() {
-                                spinkitVisable_exit = true;
-                              });
-                              await updateStudent();
-
-                              Future.delayed(Duration(seconds: 2), () async {
-                                await _prefs.setString("attendanceId", 'null');
-                                Get.offAll(() => HomeScreen());
-                              });
-                            } catch (e) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  content: Text("An error occurred: $e"),
-                                ),
-                              );
-                            }
-                          },
-                          title: Center(
-                            child: Text(
-                              'إنهاء اليوم'.tr,
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontSize: 22.0,
-                                fontFamily: 'Tajawal',
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-
-                    if (spinkitVisable_exit)
-                      Center(
-                        child: SpinKitCircle(color: mainColor, size: 35.0),
-                      ),
-                  ],
-                ],
-              ),
-            ),
-          ),
-        ),
+                  ),
+                ),
       ),
-    );
-  }
-
-  Widget _buildRatingRow(
-    String label,
-    double rating,
-    Function(double) onRatingUpdate,
-  ) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Text(
-          label,
-          style: TextStyle(
-            fontSize: 16.0,
-            color: Colors.black87,
-            fontFamily: 'Tajawal',
-          ),
-        ),
-        RatingBar.builder(
-          initialRating: rating,
-          minRating: 1,
-          itemCount: 5,
-          itemSize: 30.0,
-          itemBuilder: (context, _) => Icon(Icons.star, color: Colors.amber),
-          onRatingUpdate: onRatingUpdate,
-        ),
-      ],
     );
   }
 }

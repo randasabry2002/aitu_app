@@ -1,3 +1,4 @@
+import 'package:aitu_app/screens/Distribution_Pages/Distribution_choice.dart';
 import 'package:aitu_app/screens/Distribution_Pages/PDFViewerPage.dart';
 import 'package:aitu_app/screens/Distribution_Pages/uploadReport.dart';
 import 'package:aitu_app/shared/constant.dart';
@@ -5,6 +6,7 @@ import 'package:aitu_app/shared/reuableWidgets.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'Add_New_Factory_Request_Page.dart';
 
 import 'FactoryData.dart';
@@ -166,7 +168,7 @@ Future<void> fetchFactories(String gName) async {
               color: const Color.fromARGB(255, 10, 10, 10),
             ),
             onPressed: () {
-              Get.back();
+              Get.offAll(() => Distribution_choice());
             },
           ),
           // actions: <Widget>[
@@ -430,11 +432,26 @@ Future<void> fetchFactories(String gName) async {
                     height: 40.0,
                     child: CreateButton(
                       title: Text(
-                        "nominationCard".tr,
+                        "تأكيد المصنع".tr,
                         style: TextStyle(color: Colors.white, fontFamily: 'Tajawal', fontSize: 14.0, fontWeight: FontWeight.w800),
                         textAlign: TextAlign.center,
                       ),
                       onPressed: () async {
+                            final prefs = await SharedPreferences.getInstance();
+                              final String? studentEmail = prefs.getString("email");
+                              if (studentEmail != null) {
+                                await FirebaseFirestore.instance
+                                    .collection('StudentsTable')
+                                    .where('email', isEqualTo: studentEmail)
+                                    .get()
+                                    .then((querySnapshot) {
+                                  if (querySnapshot.docs.isNotEmpty) {
+                                    querySnapshot.docs.first.reference.update({
+                                      'isReportUploaded': false,
+                                    });
+                                  }
+                                });
+                              }
                         Get.to(PDFViewerPage(pdfType: "nominationCard"));
                       },
                     ),
