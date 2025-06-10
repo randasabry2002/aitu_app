@@ -4,48 +4,72 @@ import 'package:aitu_app/shared/reuableWidgets.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:cloud_firestore/cloud_firestore.dart' hide GeoPoint;
+import 'package:permission_handler/permission_handler.dart';
+import 'package:flutter_map/flutter_map.dart';
+import 'package:latlong2/latlong.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+
+import 'package:shared_preferences/shared_preferences.dart';
 
 class Add_New_Factory_Request_Page extends StatefulWidget {
+  Add_New_Factory_Request_Page({super.key});
+
   @override
   State<Add_New_Factory_Request_Page> createState() =>
       _Add_New_Factory_Request_PageState();
-
-  Add_New_Factory_Request_Page({super.key});
 }
 
 class _Add_New_Factory_Request_PageState
     extends State<Add_New_Factory_Request_Page> {
-  // دالة لجلب بيانات المحافظات من Firestore
+  double? latitude;
+  double? longitude;
+
+  final TextEditingController contactNameController = TextEditingController();
+  final TextEditingController contactNumberController = TextEditingController();
+  final TextEditingController factoryAddressController =
+      TextEditingController();
+
+  String? factoryID;
+  final TextEditingController factoryNameController = TextEditingController();
+  String? formattedAddress;
   List<String> governorateNames = [];
+  List<Map<String, dynamic>> governorates = [];
+  final TextEditingController industryController = TextEditingController();
+  bool isDataCompleted = false;
+  String? selectedGovernorate;
+  String? selectedGovernorateID;
+  String? selectedType;
+  final TextEditingController studentsNumberController =
+      TextEditingController();
+
+  List<String> types = ['internal', 'external'];
+
+  @override
+  void initState() {
+    super.initState();
+    getGovernorates();
+    fetchGovernorates();
+    requestLocationPermission();
+  }
+
+  Future<void> requestLocationPermission() async {
+    var status = await Permission.location.status;
+    if (!status.isGranted) {
+      await Permission.location.request();
+    }
+  }
 
   Future<void> fetchGovernorates() async {
     QuerySnapshot querySnapshot =
         await FirebaseFirestore.instance.collection("Governorates").get();
     selectedGovernorateID = querySnapshot.docs.first.id;
-    // تحويل البيانات إلى قائمة من النصوص
     setState(() {
       governorateNames =
           querySnapshot.docs.map((doc) => doc["GName"] as String).toList();
     });
   }
-
-  List<Map<String, dynamic>> governorates = [];
-  List<String> types = ['internal', 'external'];
-  String? selectedType;
-  String? selectedGovernorate;
-  String? selectedGovernorateID;
-  String? factoryID;
-  final TextEditingController factoryNameController = TextEditingController();
-  final TextEditingController factoryAddressController =
-      TextEditingController();
-  final TextEditingController contactNameController = TextEditingController();
-  final TextEditingController contactNumberController = TextEditingController();
-  final TextEditingController industryController = TextEditingController();
-  final TextEditingController studentsNumberController =
-      TextEditingController();
-
-  bool isDataCompleted = false;
 
   Future<void> getGovernorates() async {
     QuerySnapshot querySnapshot =
@@ -64,18 +88,13 @@ class _Add_New_Factory_Request_PageState
         factoryAddressController.text.isNotEmpty &&
         contactNameController.text.isNotEmpty &&
         contactNumberController.text.isNotEmpty &&
-        industryController.text.isNotEmpty) {
+        industryController.text.isNotEmpty &&
+        latitude != null &&
+        longitude != null) {
       isDataCompleted = true;
     } else {
       isDataCompleted = false;
     }
-  }
-
-  @override
-  void initState() {
-    super.initState();
-    getGovernorates();
-    fetchGovernorates();
   }
 
   @override
@@ -113,34 +132,10 @@ class _Add_New_Factory_Request_PageState
             },
           ),
           backgroundColor: const Color.fromARGB(255, 255, 255, 255),
-          // actions: <Widget>[
-          //   PopupMenuButton<String>(
-          //     icon: Icon(Icons.language, color: Colors.white),
-          //     onSelected: (value) {
-          //       if (value == 'en') {
-          //         Get.updateLocale(Locale('en'));
-          //       } else if (value == 'ar') {
-          //         Get.updateLocale(Locale('ar'));
-          //       }
-          //     },
-          //     itemBuilder: (BuildContext context) {
-          //       return [
-          //         PopupMenuItem(value: 'en', child: Text('English')),
-          //         PopupMenuItem(value: 'ar', child: Text('العربية')),
-          //       ];
-          //     },
-          //   ),
-          // ],
         ),
         backgroundColor: Color.fromARGB(255, 255, 255, 255),
         body: Stack(
           children: [
-            // Image(
-            //   image: backgroundImage,
-            //   fit: BoxFit.cover,
-            //   width: double.infinity,
-            //   height: double.infinity,
-            // ),
             Padding(
               padding: const EdgeInsets.fromLTRB(16.0, 0, 16.0, 25.0),
               child: Center(
@@ -169,100 +164,11 @@ class _Add_New_Factory_Request_PageState
                       SizedBox(height: 40),
                       // Factory Name
                       CreateInput(
-                        // controller: factoryNameController,
                         keyboardType: TextInputType.text,
                         labelText: 'اسم المصنع',
                         onChanged: (value) {
                           setState(() {
                             factoryNameController.text = value;
-                          });
-                        },
-                        textAlign: TextAlign.center,
-                        focusedBorderColor: const Color.fromARGB(
-                          255,
-                          0,
-                          255,
-                          234,
-                        ),
-                        color: const Color.fromARGB(70, 255, 255, 255),
-                        borderColor: secondaryColor,
-                        labelColor: mainColor,
-                      ),
-                      SizedBox(height: 30.0),
-                      // Factory Address
-                      CreateInput(
-                        // controller: factoryAddressController,
-                        keyboardType: TextInputType.text,
-                        labelText: 'عنوان المصنع',
-                        onChanged: (value) {
-                          setState(() {
-                            factoryAddressController.text = value;
-                          });
-                        },
-                        textAlign: TextAlign.center,
-                        focusedBorderColor: const Color.fromARGB(
-                          255,
-                          0,
-                          255,
-                          234,
-                        ),
-                        color: const Color.fromARGB(70, 255, 255, 255),
-                        borderColor: secondaryColor,
-                        labelColor: mainColor,
-                      ),
-                      SizedBox(height: 30.0),
-                      // Contact Name
-                      CreateInput(
-                        // controller: contactNameController,
-                        keyboardType: TextInputType.text,
-                        labelText: 'اسم المسؤول',
-                        onChanged: (value) {
-                          setState(() {
-                            contactNameController.text = value;
-                          });
-                        },
-                        textAlign: TextAlign.center,
-                        focusedBorderColor: const Color.fromARGB(
-                          255,
-                          0,
-                          255,
-                          234,
-                        ),
-                        color: const Color.fromARGB(70, 255, 255, 255),
-                        borderColor: secondaryColor,
-                        labelColor: mainColor,
-                      ),
-                      SizedBox(height: 30.0),
-                      // Contact Number
-                      CreateInput(
-                        // controller: contactNumberController,
-                        keyboardType: TextInputType.phone,
-                        labelText: 'رقم الهاتف',
-                        onChanged: (value) {
-                          setState(() {
-                            contactNumberController.text = value;
-                          });
-                        },
-                        textAlign: TextAlign.center,
-                        focusedBorderColor: const Color.fromARGB(
-                          255,
-                          0,
-                          255,
-                          234,
-                        ),
-                        color: const Color.fromARGB(70, 255, 255, 255),
-                        borderColor: secondaryColor,
-                        labelColor: mainColor,
-                      ),
-                      SizedBox(height: 30.0),
-                      // Industry
-                      CreateInput(
-                        // controller: industryController,
-                        keyboardType: TextInputType.text,
-                        labelText: 'الصناعة',
-                        onChanged: (value) {
-                          setState(() {
-                            industryController.text = value;
                           });
                         },
                         textAlign: TextAlign.center,
@@ -335,6 +241,178 @@ class _Add_New_Factory_Request_PageState
                         ),
                       ),
                       SizedBox(height: 30.0),
+                      // Location Picker Button
+                      Container(
+                        width: double.infinity,
+                        padding: EdgeInsets.symmetric(
+                          horizontal: 18,
+                          // vertical: 2.0,
+                        ),
+                        decoration: BoxDecoration(
+                          border: Border.all(
+                            color:
+                                latitude != null ? mainColor : secondaryColor,
+                          ),
+                          borderRadius: BorderRadius.circular(20),
+                          color:
+                              latitude != null
+                                  ? mainColor
+                                  : const Color.fromARGB(70, 255, 255, 255),
+                        ),
+                        child: TextButton(
+                          onPressed: () async {
+                            final result = await Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => _LocationPickerPage(),
+                              ),
+                            );
+
+                            if (result != null) {
+                              setState(() {
+                                latitude = result['lat'];
+                                longitude = result['lng'];
+                              });
+                            }
+                          },
+                          child: Text(
+                            'اختر الموقع',
+                            style: TextStyle(
+                              color:
+                                  latitude != null ? Colors.white : mainColor,
+                              fontSize: 16,
+                              fontFamily: 'Tajawal',
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ),
+                      ),
+                      // SizedBox(height: 20),
+                      if (latitude != null && longitude != null)
+                        Container(
+                          width: double.infinity,
+                          padding: EdgeInsets.all(16),
+                          decoration: BoxDecoration(
+                            color: mainColor.withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(20),
+                            border: Border.all(color: mainColor),
+                          ),
+                          child: Column(
+                            children: [
+                              Text(
+                                'الموقع المختار',
+                                style: TextStyle(
+                                  color: mainColor,
+                                  fontSize: 18,
+                                  fontFamily: 'Tajawal',
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              SizedBox(height: 8),
+                              Text(
+                                'خط العرض: ${latitude!.toStringAsFixed(6)}',
+                                style: TextStyle(
+                                  color: Colors.black87,
+                                  fontSize: 16,
+                                  fontFamily: 'Tajawal',
+                                ),
+                              ),
+                              Text(
+                                'خط الطول: ${longitude!.toStringAsFixed(6)}',
+                                style: TextStyle(
+                                  color: Colors.black87,
+                                  fontSize: 16,
+                                  fontFamily: 'Tajawal',
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      SizedBox(height: 30.0),
+                      // Factory Address
+                      CreateInput(
+                        keyboardType: TextInputType.text,
+                        labelText: 'عنوان المصنع',
+                        onChanged: (value) {
+                          setState(() {
+                            factoryAddressController.text = value;
+                          });
+                        },
+                        textAlign: TextAlign.center,
+                        focusedBorderColor: const Color.fromARGB(
+                          255,
+                          0,
+                          255,
+                          234,
+                        ),
+                        color: const Color.fromARGB(70, 255, 255, 255),
+                        borderColor: secondaryColor,
+                        labelColor: mainColor,
+                      ),
+                      SizedBox(height: 30.0),
+                      // Contact Name
+                      CreateInput(
+                        keyboardType: TextInputType.text,
+                        labelText: 'اسم المسؤول',
+                        onChanged: (value) {
+                          setState(() {
+                            contactNameController.text = value;
+                          });
+                        },
+                        textAlign: TextAlign.center,
+                        focusedBorderColor: const Color.fromARGB(
+                          255,
+                          0,
+                          255,
+                          234,
+                        ),
+                        color: const Color.fromARGB(70, 255, 255, 255),
+                        borderColor: secondaryColor,
+                        labelColor: mainColor,
+                      ),
+                      SizedBox(height: 30.0),
+                      // Contact Number
+                      CreateInput(
+                        keyboardType: TextInputType.phone,
+                        labelText: 'رقم الهاتف',
+                        onChanged: (value) {
+                          setState(() {
+                            contactNumberController.text = value;
+                          });
+                        },
+                        textAlign: TextAlign.center,
+                        focusedBorderColor: const Color.fromARGB(
+                          255,
+                          0,
+                          255,
+                          234,
+                        ),
+                        color: const Color.fromARGB(70, 255, 255, 255),
+                        borderColor: secondaryColor,
+                        labelColor: mainColor,
+                      ),
+                      SizedBox(height: 30.0),
+                      // Industry
+                      CreateInput(
+                        keyboardType: TextInputType.text,
+                        labelText: 'الصناعة',
+                        onChanged: (value) {
+                          setState(() {
+                            industryController.text = value;
+                          });
+                        },
+                        textAlign: TextAlign.center,
+                        focusedBorderColor: const Color.fromARGB(
+                          255,
+                          0,
+                          255,
+                          234,
+                        ),
+                        color: const Color.fromARGB(70, 255, 255, 255),
+                        borderColor: secondaryColor,
+                        labelColor: mainColor,
+                      ),
+                      SizedBox(height: 30.0),
                       SizedBox(height: 60),
                       // request Button
                       CreateButton(
@@ -366,6 +444,9 @@ class _Add_New_Factory_Request_PageState
                                     'assignedStudents': 0,
                                     'capacity': 0,
                                     'id': factoryID,
+                                    'latitude': latitude,
+                                    'longitude': longitude,
+                                    'formattedAddress': formattedAddress,
                                     'studentName': (await FirebaseFirestore
                                             .instance
                                             .collection('StudentsTable')
@@ -390,21 +471,31 @@ class _Add_New_Factory_Request_PageState
                                   duration: Duration(seconds: 2),
                                 ),
                               );
+                              final prefs = await SharedPreferences.getInstance();
+                              final String? studentEmail = prefs.getString("email");
+                              if (studentEmail != null) {
+                                await FirebaseFirestore.instance
+                                    .collection('StudentsTable')
+                                    .where('email', isEqualTo: studentEmail)
+                                    .get()
+                                    .then((querySnapshot) {
+                                  if (querySnapshot.docs.isNotEmpty) {
+                                    querySnapshot.docs.first.reference.update({
+                                      'isReportUploaded': false,
+                                    });
+                                  }
+                                });
+                              }
 
                               QuerySnapshot querySnapshot =
                                   await FirebaseFirestore.instance
                                       .collection('Factories')
                                       .get();
                               setState(() {
-                                factoryID =
-                                    querySnapshot
-                                        .docs
-                                        .last
-                                        .id; // Get the last factory ID
+                                factoryID = querySnapshot.docs.last.id;
                               });
                               Get.offAll(
                                 WaitnigReqestAnswer(
-                                  // factoryID: factoryID.toString(),
                                   factoryIndustry: industryController.text,
                                   fatoryGovernorate:
                                       selectedGovernorate.toString(),
@@ -423,6 +514,9 @@ class _Add_New_Factory_Request_PageState
                               setState(() {
                                 selectedGovernorate = null;
                                 selectedGovernorateID = null;
+                                latitude = null;
+                                longitude = null;
+                                formattedAddress = null;
                               });
                             } else if (selectedGovernorate == null) {
                               ScaffoldMessenger.of(context).showSnackBar(
@@ -496,5 +590,228 @@ class _Add_New_Factory_Request_PageState
         ),
       ),
     );
+  }
+}
+
+class _LocationPickerPage extends StatefulWidget {
+  @override
+  __LocationPickerPageState createState() => __LocationPickerPageState();
+}
+
+class __LocationPickerPageState extends State<_LocationPickerPage> {
+  LatLng? selectedLocation;
+  final TextEditingController searchController = TextEditingController();
+  final MapController mapController = MapController();
+  bool isLoading = false;
+
+  Future<void> searchLocation(String query) async {
+    if (query.isEmpty) return;
+
+    setState(() {
+      isLoading = true;
+    });
+
+    try {
+      final response = await http.get(
+        Uri.parse(
+          'https://nominatim.openstreetmap.org/search?format=json&q=$query&countrycodes=eg&limit=1',
+        ),
+        headers: {'User-Agent': 'AITU_App'},
+      );
+
+      if (response.statusCode == 200) {
+        final List<dynamic> data = json.decode(response.body);
+        if (data.isNotEmpty) {
+          final lat = double.parse(data[0]['lat']);
+          final lon = double.parse(data[0]['lon']);
+
+          setState(() {
+            selectedLocation = LatLng(lat, lon);
+            mapController.move(LatLng(lat, lon), 15.0);
+          });
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                'لم يتم العثور على الموقع',
+                style: TextStyle(fontFamily: 'Tajawal'),
+              ),
+              backgroundColor: mainColor,
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'حدث خطأ أثناء البحث',
+            style: TextStyle(fontFamily: 'Tajawal'),
+          ),
+          backgroundColor: mainColor,
+        ),
+      );
+    } finally {
+      setState(() {
+        isLoading = false;
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        centerTitle: true,
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back_ios, color: Colors.white),
+          onPressed: () => Navigator.pop(context),
+        ),
+        title: Text(
+          'اختر موقع المصنع',
+          style: TextStyle(
+            color: Colors.white,
+            fontSize: 20,
+            fontFamily: 'Tajawal',
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        backgroundColor: mainColor,
+        elevation: 0,
+      ),
+      body: Column(
+        children: [
+          Container(
+            padding: EdgeInsets.all(16),
+            color: mainColor,
+            child: Container(
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: TextField(
+                controller: searchController,
+                textAlign: TextAlign.right,
+                decoration: InputDecoration(
+                  hintText: 'ابحث عن موقع...',
+                  hintStyle: TextStyle(
+                    color: Colors.grey,
+                    fontFamily: 'Tajawal',
+                  ),
+                  prefixIcon:
+                      isLoading
+                          ? SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              valueColor: AlwaysStoppedAnimation<Color>(
+                                mainColor,
+                              ),
+                            ),
+                          )
+                          : Icon(Icons.search, color: mainColor),
+                  border: InputBorder.none,
+                  contentPadding: EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 14,
+                  ),
+                ),
+                onSubmitted: searchLocation,
+              ),
+            ),
+          ),
+          Expanded(
+            child: Stack(
+              children: [
+                FlutterMap(
+                  mapController: mapController,
+                  options: MapOptions(
+                    initialCenter: LatLng(30.0444, 31.2357), // init (cairo)
+                    initialZoom: 13.0,
+                    onTap: (tapPosition, point) {
+                      setState(() {
+                        selectedLocation = point;
+                      });
+                    },
+                  ),
+                  children: [
+                    TileLayer(
+                      urlTemplate:
+                          "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+                      subdomains: ['a', 'b', 'c'],
+                    ),
+                    if (selectedLocation != null)
+                      MarkerLayer(
+                        markers: [
+                          Marker(
+                            point: selectedLocation!,
+                            width: 80,
+                            height: 80,
+                            child: Icon(
+                              Icons.location_pin,
+                              color: Colors.red,
+                              size: 40,
+                            ),
+                          ),
+                        ],
+                      ),
+                  ],
+                ),
+                if (isLoading)
+                  Container(
+                    color: Colors.black.withOpacity(0.3),
+                    child: Center(
+                      child: CircularProgressIndicator(
+                        valueColor: AlwaysStoppedAnimation<Color>(mainColor),
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+        ],
+      ),
+      floatingActionButton: Container(
+        width: 200,
+        child: FloatingActionButton.extended(
+          onPressed: () {
+            if (selectedLocation != null) {
+              Navigator.pop(context, {
+                'lat': selectedLocation!.latitude,
+                'lng': selectedLocation!.longitude,
+              });
+            } else {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(
+                    'من فضلك اختر موقعًا أولاً',
+                    style: TextStyle(fontFamily: 'Tajawal'),
+                  ),
+                  backgroundColor: const Color.fromARGB(255, 168, 1, 1),
+                ),
+              );
+            }
+          },
+          backgroundColor: mainColor,
+          icon: Icon(Icons.check, color: Colors.white),
+          label: Text(
+            'تأكيد الموقع',
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 16,
+              fontFamily: 'Tajawal',
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  @override
+  void dispose() {
+    searchController.dispose();
+    super.dispose();
   }
 }

@@ -8,12 +8,14 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 // import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:aitu_app/screens/Attendance_Part_Pages/ExitFactory.dart';
+import 'package:aitu_app/screens/Attendance_Part_Pages/duringTraining.dart';
 // import 'package:google_fonts/google_fonts.dart';
 import 'package:get/get.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'Attendance_Part_Pages/HomeScreen.dart';
 import 'Distribution_Pages/College_distribution_page.dart';
+import 'Distribution_Pages/PDFViewerPage.dart';
 // import 'Distribution_Pages/watingRequestAnswer.dart';
 
 // import 'Distribution_Pages/Instructions.dart';
@@ -43,11 +45,18 @@ class SplashState extends State<Splash> with SingleTickerProviderStateMixin {
   String factIndustry = '';
   String factGovernorate = '';
 
+  late SharedPreferences prefs;
+
   @override
   void initState() {
     super.initState();
     _initializeAnimation();
     _loadUserData();
+    SharedPreferences.getInstance().then((prefs) {
+      setState(() {
+        this.prefs = prefs;
+      });
+    });
   }
 
   void _initializeAnimation() {
@@ -65,7 +74,7 @@ class SplashState extends State<Splash> with SingleTickerProviderStateMixin {
 
   Future<void> _loadUserData() async {
     try {
-      final prefs = await SharedPreferences.getInstance();
+      prefs = await SharedPreferences.getInstance();
       email = prefs.getString("email");
       attendanceId = prefs.getString("attendanceId");
       page = prefs.getString("page");
@@ -80,13 +89,13 @@ class SplashState extends State<Splash> with SingleTickerProviderStateMixin {
   Future<void> _printSharedPreferences(SharedPreferences prefs) async {
     try {
       Set<String> keys = prefs.getKeys();
-      print('Shared Preferences Keys: $keys');
+      debugPrint('Shared Preferences Keys: $keys');
 
       for (String key in keys) {
-        print('$key: ${prefs.get(key)}');
+        debugPrint('$key: ${prefs.get(key)}');
       }
     } catch (e) {
-      print('Error printing shared preferences: $e');
+      debugPrint('Error printing shared preferences: $e');
     }
   }
 
@@ -101,41 +110,30 @@ class SplashState extends State<Splash> with SingleTickerProviderStateMixin {
 
       final studentCode = await _getStudentCode();
       if (studentCode.isEmpty) {
-        _showErrorDialog("Could not find student data");
+        Get.offAll(EnterStudentCode());
         return;
       }
 
-      if (attendanceId != null && attendanceId != 'null') {
-        // Check if the attendance record exists and is still active
-        final attendanceDoc =
-            await FirebaseFirestore.instance
-                .collection("Attendances")
-                .doc(attendanceId)
-                .get();
-
-        if (attendanceDoc.exists) {
-          final data = attendanceDoc.data() as Map<String, dynamic>;
-          final enteringTime = (data['EnteringTime'] as Timestamp).toDate();
-          final exitingTime = data['ExitingTime'] as Timestamp?;
-
-          // If there's no exiting time, the timer is still running
-          if (exitingTime == null) {
-            Get.offAll(() => ExitFactory());
-            return;
-          }
-        }
-      }
-      final activeAttendanceQuery = await FirebaseFirestore.instance
-          .collection("Attendances")
-          .where('Student_ID', isEqualTo: studentCode)
-          .where('ExitingLocation', isEqualTo: 'Not yet')
-          .limit(1)
-          .get();
+      // Check for any active attendance records
+      final activeAttendanceQuery =
+          await FirebaseFirestore.instance
+              .collection("Attendances")
+              .where('Student_ID', isEqualTo: studentCode)
+              .where('ExitingLocation', isEqualTo: null)
+              .limit(1)
+              .get();
 
       if (activeAttendanceQuery.docs.isNotEmpty) {
-        Get.offAll(() => ExitFactory());
+        // Get the attendance ID and navigate to duringTraining
+        final attendanceId = activeAttendanceQuery.docs.first.id;
+        await prefs.setString("attendanceId", attendanceId);
+        Get.offAll(
+          () => DuringTraining(),
+        );
         return;
       }
+
+      // If no active attendance, proceed with normal navigation
       await _handlePageNavigation(studentCode);
     } catch (e) {
       _showErrorDialog("Navigation error: $e");
@@ -150,6 +148,12 @@ class SplashState extends State<Splash> with SingleTickerProviderStateMixin {
 
     if (_student?['stage'] == null) {
       Get.offAll(() => CompleteStudentData(studentCode: studentCode));
+      return;
+    }
+
+    // Check if report needs to be uploaded
+    if (await _checkReportUploadStatus()) {
+      Get.offAll(() => PDFViewerPage(pdfType: "nominationCard"));
       return;
     }
 
@@ -188,7 +192,7 @@ class SplashState extends State<Splash> with SingleTickerProviderStateMixin {
       }
       return '';
     } catch (e) {
-      print('Error getting student code: $e');
+      debugPrint('Error getting student code: $e');
       return '';
     }
   }
@@ -211,7 +215,7 @@ class SplashState extends State<Splash> with SingleTickerProviderStateMixin {
       _updateFactoryDetails(factory);
       return true;
     } catch (e) {
-      print('Error checking factory request: $e');
+      debugPrint('Error checking factory request: $e');
       return false;
     }
   }
@@ -224,6 +228,22 @@ class SplashState extends State<Splash> with SingleTickerProviderStateMixin {
       factGovernorate = factory['Governorate'] ?? '';
       factIndustry = factory['industry'] ?? '';
     });
+  }
+
+  Future<bool> _checkReportUploadStatus() async {
+    try {
+      if (_student == null) return false;
+
+      // Check if isReportUploaded field exists and is false
+      final data = _student!.data() as Map<String, dynamic>;
+      if (data.containsKey('isReportUploaded')) {
+        return data['isReportUploaded'] == false;
+      }
+      return false;
+    } catch (e) {
+      debugPrint('Error checking report upload status: $e');
+      return false;
+    }
   }
 
   void _showErrorDialog(String message) {
@@ -244,22 +264,28 @@ class SplashState extends State<Splash> with SingleTickerProviderStateMixin {
   @override
   Widget build(BuildContext context) {
     return SafeArea(
-      child: WillPopScope(
-        onWillPop: () async {
+      child: PopScope(
+        canPop: false,
+        onPopInvoked: (didPop) {
+          if (didPop) return;
+          
           if (_backButtonPressedCount == 1) {
-            return true;
+            return;
           }
 
           _backButtonPressedCount++;
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Press back again to exit')),
+          Get.snackbar(
+            'تنبيه',
+            'اضغط مرة أخرى للخروج',
+            backgroundColor: Colors.red,
+            colorText: Colors.white,
+            snackPosition: SnackPosition.TOP,
+            duration: Duration(seconds: 3),
           );
 
           Timer(const Duration(seconds: 2), () {
             _backButtonPressedCount = 0;
           });
-
-          return false;
         },
         child: Scaffold(
           backgroundColor: Colors.white,

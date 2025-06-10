@@ -1,4 +1,3 @@
-// import 'dart:ffi';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:geolocator/geolocator.dart';
@@ -11,6 +10,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:aitu_app/shared/constant.dart';
 import 'package:aitu_app/shared/reuableWidgets.dart';
+import 'duringTraining.dart';
 
 class EnterFactory extends StatefulWidget {
   const EnterFactory({super.key});
@@ -20,57 +20,60 @@ class EnterFactory extends StatefulWidget {
 }
 
 class _EnterFactoryState extends State<EnterFactory> {
+  // المتغيرات العامة
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final Completer<GoogleMapController> _controller = Completer();
+
   String studentId = "";
-  DateTime date = DateTime.now();
-  late var latitude;
-  late var longitude;
-  bool show_spinkit = false;
-  bool show_done_location = false;
-  LatLng latLng = LatLng(45.521563, -122.677433);
-  var _firestor = FirebaseFirestore.instance;
   String attendanceId = "";
-  bool spinkitVisable_submit = false;
   int attendsDays = 0;
+  DateTime date = DateTime.now();
+
+  late double latitude;
+  late double longitude;
+
+  late double factoryLatitude;
+  late double factoryLongitude;
+
+  bool showSpinkit = false;
+  bool showDoneLocation = false;
+  bool spinkitVisibleSubmit = false;
+  bool _hasExistingAttendance = false;
+
+  LatLng latLng = LatLng(45.521563, -122.677433);
   Map<String, dynamic>? factoryData;
 
   @override
   void initState() {
     super.initState();
-    _loadFactoryData();
     _checkExistingAttendance();
   }
 
-  Future<void> _loadFactoryData() async {
+  // التحقق من وجود حضور مفتوح للطالب
+  Future<void> _checkExistingAttendance() async {
     try {
-      final SharedPreferences prefs = await SharedPreferences.getInstance();
-      String email = prefs.getString("email") ?? '';
+      final prefs = await SharedPreferences.getInstance();
+      String studentId = prefs.getString("studentId") ?? '';
+      String factoryId = prefs.getString("factoryId") ?? '';
 
-      QuerySnapshot studentSnapshot =
-          await _firestor
-              .collection('StudentsTable')
-              .where('email', isEqualTo: email)
+      final query =
+          await _firestore
+              .collection("Attendances")
+              .where("Student_ID", isEqualTo: studentId)
+              .where("factory", isEqualTo: factoryId)
+              .where("EnteringLocation", isNull: true)
               .limit(1)
               .get();
 
-      if (studentSnapshot.docs.isNotEmpty) {
-        String factoryId = studentSnapshot.docs.first['factory'] ?? '';
-
-        DocumentSnapshot factorySnapshot =
-            await _firestor.collection('Factories').doc(factoryId).get();
-
-        if (factorySnapshot.exists) {
-          setState(() {
-            factoryData = factorySnapshot.data() as Map<String, dynamic>;
-          });
-        }
-      }
+      setState(() {
+        _hasExistingAttendance = query.docs.isNotEmpty;
+      });
     } catch (e) {
-      print('Error loading factory data: $e');
+      print('Error checking existing attendance: $e');
     }
   }
 
-  bool _hasExistingAttendance = false;
-
+  // رسالة تأكيد تغيير الموقع
   Future<bool> _showLocationChangeWarning() async {
     return await showDialog(
           context: context,
@@ -93,154 +96,168 @@ class _EnterFactoryState extends State<EnterFactory> {
         false;
   }
 
-  Future<void> _checkExistingAttendance() async {
-    try {
-      final SharedPreferences prefs = await SharedPreferences.getInstance();
-      String studentId = prefs.getString("studentId") ?? '';
-      String factoryId = prefs.getString("factoryId") ?? '';
-
-      QuerySnapshot query =
-          await _firestor
-              .collection("Attendances")
-              .where("Student_ID", isEqualTo: studentId)
-              .where("factory", isEqualTo: factoryId)
-              .where("EnteringLocation", isNull: true)
-              .limit(1)
-              .get();
-
-      setState(() {
-        _hasExistingAttendance = query.docs.isNotEmpty;
-      });
-    } catch (e) {
-      print('Error checking existing attendance: $e');
-    }
-  }
-
+  // الحصول على الموقع الحالي
   Future<void> getCurrentLocation() async {
     if (_hasExistingAttendance) {
       final shouldUpdate = await _showLocationChangeWarning();
       if (!shouldUpdate) return;
     }
 
-    bool serviceEnabled;
-    LocationPermission permission;
-
-    // Chick location service
-    serviceEnabled = await Geolocator.isLocationServiceEnabled();
+    final serviceEnabled = await Geolocator.isLocationServiceEnabled();
     if (!serviceEnabled) {
-      // خدمات الموقع معطلة، لا يمكن الاستمرار
-      print("Location services are disabled.");
+      _showSnackbar('يرجى تفعيل خدمة الموقع');
       return;
     }
 
-    // تحقق من حالة الإذن
-    permission = await Geolocator.checkPermission();
+    var permission = await Geolocator.checkPermission();
     if (permission == LocationPermission.denied) {
       permission = await Geolocator.requestPermission();
       if (permission == LocationPermission.denied) {
-        // المستخدم رفض الإذن
-        print("Location permissions are denied.");
+        _showSnackbar('يرجى السماح بالوصول إلى الموقع');
         return;
       }
     }
 
     if (permission == LocationPermission.deniedForever) {
-      // المستخدم رفض الإذن بشكل دائم
-      print("Location permissions are permanently denied.");
+      _showSnackbar('يرجى السماح بالوصول إلى الموقع من إعدادات التطبيق');
       return;
     }
 
-    // الحصول على الموقع
-    Position position = await Geolocator.getCurrentPosition(
-      desiredAccuracy: LocationAccuracy.high,
-    );
-    // print("Latitude: ${position.latitude}, Longitude: ${position.longitude}");
-    latitude = position.latitude;
-    longitude = position.longitude;
+    setState(() {
+      showSpinkit = true;
+      showDoneLocation = false;
+    });
+
     try {
-      // تحقق من حالة الاتصال بالإنترنت
-      var connectivityResult = await Connectivity().checkConnectivity();
-      if (connectivityResult == ConnectivityResult.none) {
-        print("لابد من الاتصال بالإنترنت للحصول على الموقع.");
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('internet_disconnect'.tr),
-            duration: Duration(seconds: 6),
-          ),
-        );
-      } else {
+      final position = await Geolocator.getCurrentPosition(
+        desiredAccuracy: LocationAccuracy.high,
+      );
+
+      setState(() {
+        latitude = position.latitude;
+        longitude = position.longitude;
         latLng = LatLng(latitude, longitude);
-        setState(() {
-          show_spinkit = false;
-          show_done_location = true;
-        });
-      }
+        showSpinkit = false;
+        showDoneLocation = true;
+      });
     } catch (e) {
       print("Failed to get location: $e");
+      _showSnackbar('حدث خطأ أثناء تحديد الموقع');
+      setState(() {
+        showSpinkit = false;
+        showDoneLocation = false;
+      });
     }
   }
 
-  // Show the map
-  Completer<GoogleMapController> _controller = Completer();
-
-  void _onMapCreated(GoogleMapController controller) {
-    _controller.complete(controller);
-  }
-
-  addAttendanceEnterTraining() async {
+  // بدء تسجيل الحضور
+  Future<void> addAttendanceEnterTraining() async {
     try {
-      DateTime dateOnly = DateTime(date.year, date.month, date.day);
+      if (!showDoneLocation) {
+        _showSnackbar('يرجى تحديد موقعك أولاً');
+        return;
+      }
 
-      final SharedPreferences prefs = await SharedPreferences.getInstance();
+      final prefs = await SharedPreferences.getInstance();
       String email = prefs.getString("email") ?? '';
 
-      // Get student ID from StudentsTable using email
-      QuerySnapshot studentSnapshot =
-          await _firestor
+      final studentSnapshot =
+          await _firestore
               .collection('StudentsTable')
               .where('email', isEqualTo: email)
               .limit(1)
               .get();
 
       if (studentSnapshot.docs.isEmpty) {
-        throw Exception("Student not found");
+        _showSnackbar('لم يتم العثور على بيانات الطالب');
+        return;
       }
 
-      String studentId = studentSnapshot.docs.first.id;
-      print("Found student ID: $studentId");
+      String factoryId = studentSnapshot.docs.first['factory'] ?? '';
+      final factoryDoc =
+          await _firestore
+              .collection('Factories')
+              .where('name', isEqualTo: factoryId)
+              .limit(1)
+              .get();
 
-      // Add attendance record
-      DocumentReference docRef = await _firestor.collection("Attendances").add({
+      if (factoryDoc.docs.isEmpty) {
+        _showSnackbar('لم يتم العثور على بيانات المصنع');
+        return;
+      }
+      factoryLongitude = factoryDoc.docs.first['longitude'];
+      factoryLatitude = factoryDoc.docs.first['latitude'];
+      // حساب المسافة بين موقع الطالب والمصنع
+      final distance = Geolocator.distanceBetween(
+        latitude,
+        longitude,
+        factoryLatitude,
+        factoryLongitude,
+      );
+
+      // التحقق من المسافة
+      if (distance > 150) {
+        _showSnackbar(
+          'يجب أن تكون داخل المصنع أو على مسافة لا تزيد عن 150 متر لتسجيل الحضور',
+        );
+        return;
+      }
+
+      // إذا كانت المسافة أقل من 150 متر، قم بتسجيل الحضور
+      DateTime dateOnly = DateTime(date.year, date.month, date.day);
+      String studentId = studentSnapshot.docs.first.id;
+
+      final docRef = await _firestore.collection("Attendances").add({
         "Student_ID": studentId,
         "Student_Email": email,
         "Date": Timestamp.fromDate(dateOnly),
         "EnteringTime": DateTime.now(),
         "EnteringLocation": GeoPoint(latitude, longitude),
-        "ExitingTime": "Not yet",
-        "ExitingLocation": "Not yet",
+        "FactoryLocation": GeoPoint(factoryLatitude, factoryLongitude),
+        "ExitingTime": null,
+        "ExitingLocation": null,
         "BenefitRating": 0,
         "SupervisorRating": 0,
         "EnvironmentRating": 0,
-        "attendsDays": ++attendsDays,
-        "factory": factoryData?['id'] ?? '',
+        "Notes": "",
+        "TrainingDuration": 0,
+        "Status": "In Progress",
+        "Factory_ID": factoryId,
       });
 
-      // Get the attendance ID
-      attendanceId = docRef.id;
-      print("تمت إضافة حضور الطالب بنجاح، ID الخاص به هو: $attendanceId");
+      await prefs.setString("attendanceId", docRef.id);
 
-      // Store attendance ID in SharedPreferences
-      await prefs.setString("attendanceId", attendanceId);
+      Get.snackbar(
+        'نجاح',
+        'تم بدء اليوم التدريبي',
+        backgroundColor: Colors.green,
+        colorText: Colors.white,
+        snackPosition: SnackPosition.TOP,
+        duration: Duration(seconds: 3),
+      );
+
+      Get.offAll(() => DuringTraining());
     } catch (e) {
       print("Error adding attendance: $e");
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text("حدث خطأ أثناء تسجيل الحضور: $e"),
-          duration: Duration(seconds: 3),
-        ),
-      );
-      throw e;
+      _showSnackbar('حدث خطأ أثناء تسجيل الحضور');
     }
+  }
+
+  // عرض رسالة تنبيه للمستخدم
+  void _showSnackbar(String message) {
+    Get.snackbar(
+      'تنبيه',
+      message,
+      backgroundColor: Colors.red,
+      colorText: Colors.white,
+      snackPosition: SnackPosition.TOP,
+      duration: Duration(seconds: 3),
+    );
+  }
+
+  // عند إنشاء الخريطة
+  void _onMapCreated(GoogleMapController controller) {
+    _controller.complete(controller);
   }
 
   @override
@@ -408,7 +425,7 @@ class _EnterFactoryState extends State<EnterFactory> {
                                   ),
                                   SizedBox(height: 4),
                                   Text(
-                                    show_done_location
+                                    showDoneLocation
                                         ? 'تم تحديد الموقع'
                                         : 'لم يتم تحديد الموقع بعد',
                                     style: TextStyle(
@@ -423,7 +440,7 @@ class _EnterFactoryState extends State<EnterFactory> {
                             ),
                           ],
                         ),
-                        if (show_done_location) ...[
+                        if (showDoneLocation) ...[
                           SizedBox(height: 16),
                           Container(
                             height: 200,
@@ -457,8 +474,8 @@ class _EnterFactoryState extends State<EnterFactory> {
                   onPressed: () {
                     getCurrentLocation();
                     setState(() {
-                      show_spinkit = true;
-                      show_done_location = false;
+                      showSpinkit = true;
+                      showDoneLocation = false;
                     });
                   },
                   title: Text(
@@ -513,13 +530,13 @@ class _EnterFactoryState extends State<EnterFactory> {
                 SizedBox(height: 16),
 
                 // Loading Indicator
-                if (show_spinkit)
+                if (showSpinkit)
                   Center(child: SpinKitWave(color: mainColor, size: 35.0)),
 
                 SizedBox(height: 24),
 
                 // Submit Button
-                if (!spinkitVisable_submit && show_done_location)
+                if (!spinkitVisibleSubmit && showDoneLocation)
                   SizedBox(
                     height: 60.0,
                     width: double.infinity,
@@ -527,23 +544,15 @@ class _EnterFactoryState extends State<EnterFactory> {
                       onPressed: () async {
                         try {
                           setState(() {
-                            spinkitVisable_submit = true;
+                            spinkitVisibleSubmit = true;
                           });
 
                           await addAttendanceEnterTraining();
-
-                          // Navigate to ExitFactory after successful attendance registration
-                          Get.offAll(() => ExitFactory());
                         } catch (e) {
                           setState(() {
-                            spinkitVisable_submit = false;
+                            spinkitVisibleSubmit = false;
                           });
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text("حدث خطأ أثناء تسجيل الحضور: $e"),
-                              duration: Duration(seconds: 3),
-                            ),
-                          );
+                          _showSnackbar('حدثت مشكلة غير متوقعة');
                         }
                       },
                       title: Center(
@@ -561,7 +570,7 @@ class _EnterFactoryState extends State<EnterFactory> {
                   ),
 
                 // Submit Loading Indicator
-                if (spinkitVisable_submit)
+                if (spinkitVisibleSubmit)
                   Center(child: SpinKitCircle(color: mainColor, size: 35.0)),
               ],
             ),

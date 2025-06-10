@@ -130,16 +130,16 @@ class _HomeScreenState extends State<HomeScreen> {
     try {
       QueryDocumentSnapshot? student = await getStudent();
       if (student != null) {
-        String factoryId = student['factory'] ?? '';
+        String factoryId = student['factory'] ?? '..';
 
         DocumentSnapshot factoryDoc =
             await FirebaseFirestore.instance
                 .collection('Factories')
                 .doc(factoryId)
                 .get();
-        factName = factoryDoc['name'];
 
         if (factoryDoc.exists) {
+          factName = factoryDoc['name'];
           return factoryDoc;
         }
       }
@@ -214,9 +214,14 @@ class _HomeScreenState extends State<HomeScreen> {
             return true;
           } else {
             _backButtonPressedCount++;
-            ScaffoldMessenger.of(
-              context,
-            ).showSnackBar(SnackBar(content: Text('press_back'.tr)));
+            Get.snackbar(
+              'تنبيه',
+              'press_back'.tr,
+              backgroundColor: Colors.red,
+              colorText: Colors.white,
+              snackPosition: SnackPosition.TOP,
+              duration: Duration(seconds: 3),
+            );
             Timer(Duration(seconds: 2), () {
               _backButtonPressedCount = 0;
             });
@@ -307,9 +312,10 @@ class _HomeScreenState extends State<HomeScreen> {
                         fontFamily: 'Tajawal',
                       ),
                     ),
-                    onTap: () {
-                      Navigator.pop(context);
-                      Get.to(() => FactoryData(selectedFactory: factName));
+                    onTap: () async {
+                      Get.to(
+                        () => FactoryData(selectedFactory: student?['factory']),
+                      );
                     },
                   ),
                   SizedBox(height: 16.0),
@@ -341,198 +347,210 @@ class _HomeScreenState extends State<HomeScreen> {
           body:
               isLoading
                   ? Center(child: CircularProgressIndicator(color: mainColor))
-                  : SingleChildScrollView(
-                    child: Padding(
-                      padding: EdgeInsets.all(16.0),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          SizedBox(height: 40),
+                  : RefreshIndicator(
+                    onRefresh: () async {
+                      setState(() {
+                        isLoading = true;
+                      });
+                      await fetchData();
+                    },
+                    color: mainColor,
+                    child: SingleChildScrollView(
+                      physics: AlwaysScrollableScrollPhysics(),
+                      child: Padding(
+                        padding: EdgeInsets.all(16.0),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            SizedBox(height: 40),
 
-                          // Student Info Cards
-                          _buildDataCard(
-                            icon: Icons.person,
-                            title: 'الاسم',
-                            value: student?['name'] ?? '',
-                          ),
-                          SizedBox(height: 12),
-
-                          _buildDataCard(
-                            icon: Icons.school,
-                            title: 'السنة الدراسية',
-                            value:
-                                '${student?['batch']} ، ${student?['stage']}',
-                          ),
-                          SizedBox(height: 12),
-
-                          _buildDataCard(
-                            icon: Icons.business,
-                            title: 'القسم',
-                            value: student?['department'] ?? '',
-                          ),
-                          SizedBox(height: 12),
-
-                          _buildDataCard(
-                            icon: Icons.factory,
-                            title: 'المصنع',
-                            value: factName ?? '',
-                          ),
-                          SizedBox(height: 12),
-
-                          _buildDataCard(
-                            icon: Icons.supervised_user_circle,
-                            title: 'المشرف',
-                            value:
-                                student?['supervisor'].toString() ??
-                                'بدون مشرف',
-                          ),
-                          SizedBox(height: 24),
-
-                          // Attendance Card
-                          Card(
-                            elevation: 4,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(15),
+                            // Student Info Cards
+                            _buildDataCard(
+                              icon: Icons.person,
+                              title: 'الاسم',
+                              value: student?['name'] ?? '',
                             ),
-                            child: Padding(
-                              padding: EdgeInsets.all(16.0),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Row(
-                                    mainAxisAlignment:
-                                        MainAxisAlignment.spaceBetween,
-                                    children: [
-                                      Text(
-                                        'الحضور',
-                                        style: TextStyle(
-                                          color: mainColor,
-                                          fontSize: 20.0,
-                                          fontWeight: FontWeight.bold,
-                                          fontFamily: 'Tajawal',
-                                        ),
-                                      ),
-                                      Text(
-                                        '${DateTime.now().month}/${DateTime.now().day}/${DateTime.now().year}',
-                                        style: TextStyle(
-                                          color: Colors.grey[600],
-                                          fontSize: 16.0,
-                                          fontFamily: 'Tajawal',
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                  SizedBox(height: 16),
-                                  FutureBuilder<QuerySnapshot>(
-                                    future:
-                                        FirebaseFirestore.instance
-                                            .collection('Attendances')
-                                            .where(
-                                              'Student_ID',
-                                              isEqualTo: student?['code'],
-                                            )
-                                            .get(),
-                                    builder: (context, snapshot) {
-                                      if (snapshot.connectionState ==
-                                          ConnectionState.waiting) {
-                                        return Center(
-                                          child: CircularProgressIndicator(
+                            SizedBox(height: 12),
+
+                            _buildDataCard(
+                              icon: Icons.school,
+                              title: 'السنة الدراسية',
+                              value:
+                                  '${student?['batch']} ، ${student?['stage']}',
+                            ),
+                            SizedBox(height: 12),
+
+                            _buildDataCard(
+                              icon: Icons.business,
+                              title: 'القسم',
+                              value: student?['department'] ?? '',
+                            ),
+                            SizedBox(height: 12),
+
+                            _buildDataCard(
+                              icon: Icons.factory,
+                              title: 'المصنع',
+                              value: student?['factory'] ?? 'يتم التحميل..',
+                            ),
+                            SizedBox(height: 12),
+
+                            _buildDataCard(
+                              icon: Icons.supervised_user_circle,
+                              title: 'المشرف',
+                              value:
+                                  student?['supervisor'].toString() ??
+                                  'بدون مشرف',
+                            ),
+                            SizedBox(height: 24),
+
+                            // Attendance Card
+                            Card(
+                              elevation: 4,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(15),
+                              ),
+                              child: Padding(
+                                padding: EdgeInsets.all(16.0),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.spaceBetween,
+                                      children: [
+                                        Text(
+                                          'الحضور',
+                                          style: TextStyle(
                                             color: mainColor,
+                                            fontSize: 20.0,
+                                            fontWeight: FontWeight.bold,
+                                            fontFamily: 'Tajawal',
+                                          ),
+                                        ),
+                                        Text(
+                                          '${DateTime.now().month}/${DateTime.now().day}/${DateTime.now().year}',
+                                          style: TextStyle(
+                                            color: Colors.grey[600],
+                                            fontSize: 16.0,
+                                            fontFamily: 'Tajawal',
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                    SizedBox(height: 16),
+                                    FutureBuilder<QuerySnapshot>(
+                                      future:
+                                          FirebaseFirestore.instance
+                                              .collection('Attendances')
+                                              .where(
+                                                'Student_ID',
+                                                isEqualTo: student?['code'],
+                                              )
+                                              .get(),
+                                      builder: (context, snapshot) {
+                                        if (snapshot.connectionState ==
+                                            ConnectionState.waiting) {
+                                          return Center(
+                                            child: CircularProgressIndicator(
+                                              color: mainColor,
+                                            ),
+                                          );
+                                        }
+                                        if (snapshot.hasError) {
+                                          return Text(
+                                            'Error: ${snapshot.error}',
+                                          );
+                                        }
+                                        int attendsDays =
+                                            snapshot.data?.docs.length ?? 0;
+                                        return Center(
+                                          child: Column(
+                                            children: [
+                                              Text(
+                                                'أيام الحضور',
+                                                style: TextStyle(
+                                                  color: Colors.grey[600],
+                                                  fontSize: 16.0,
+                                                  fontFamily: 'Tajawal',
+                                                ),
+                                              ),
+                                              SizedBox(height: 8),
+                                              Text(
+                                                '$attendsDays',
+                                                style: TextStyle(
+                                                  color: mainColor,
+                                                  fontSize: 48.0,
+                                                  fontWeight: FontWeight.bold,
+                                                  fontFamily: 'Tajawal',
+                                                ),
+                                              ),
+                                            ],
                                           ),
                                         );
-                                      }
-                                      if (snapshot.hasError) {
-                                        return Text('Error: ${snapshot.error}');
-                                      }
-                                      int attendsDays =
-                                          snapshot.data?.docs.length ?? 0;
-                                      return Center(
-                                        child: Column(
-                                          children: [
-                                            Text(
-                                              'أيام الحضور',
-                                              style: TextStyle(
-                                                color: Colors.grey[600],
-                                                fontSize: 16.0,
-                                                fontFamily: 'Tajawal',
-                                              ),
-                                            ),
-                                            SizedBox(height: 8),
-                                            Text(
-                                              '$attendsDays',
-                                              style: TextStyle(
-                                                color: mainColor,
-                                                fontSize: 48.0,
-                                                fontWeight: FontWeight.bold,
-                                                fontFamily: 'Tajawal',
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                      );
-                                    },
-                                  ),
-                                ],
+                                      },
+                                    ),
+                                  ],
+                                ),
                               ),
                             ),
-                          ),
-                          SizedBox(height: 24),
+                            SizedBox(height: 24),
 
-                          // Action Buttons
-                          if (currentAttendanceId == null)
-                            SizedBox(
-                              height: 60.0,
-                              width: double.infinity,
-                              child: CreateButton(
-                                onPressed:
-                                    hasEnteredToday
-                                        ? () {}
-                                        : () async {
-                                          bool hasExistingAttendance =
-                                              await _checkExistingAttendance();
-                                          if (hasExistingAttendance) {
-                                            await _showAttendanceWarning();
-                                          } else {
-                                            Get.to(() => EnterFactory());
-                                          }
-                                        },
-                                title: Center(
-                                  child: Text(
-                                    hasEnteredToday
-                                        ? 'already_entered'.tr
-                                        : 'enter_factory'.tr,
-                                    style: TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 18.0,
-                                      fontFamily: 'Tajawal',
-                                      fontWeight: FontWeight.bold,
+                            // Action Buttons
+                            if (currentAttendanceId == null)
+                              SizedBox(
+                                height: 60.0,
+                                width: double.infinity,
+                                child: CreateButton(
+                                  onPressed:
+                                      hasEnteredToday
+                                          ? () {}
+                                          : () async {
+                                            bool hasExistingAttendance =
+                                                await _checkExistingAttendance();
+                                            if (hasExistingAttendance) {
+                                              await _showAttendanceWarning();
+                                            } else {
+                                              Get.to(() => EnterFactory());
+                                            }
+                                          },
+                                  title: Center(
+                                    child: Text(
+                                      hasEnteredToday
+                                          ? 'already_entered'.tr
+                                          : 'enter_factory'.tr,
+                                      style: TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 18.0,
+                                        fontFamily: 'Tajawal',
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              )
+                            else
+                              SizedBox(
+                                height: 60.0,
+                                width: double.infinity,
+                                child: CreateButton(
+                                  onPressed: () {
+                                    Get.to(() => ExitFactory(attendanceId: currentAttendanceId.toString(),));
+                                  },
+                                  title: Center(
+                                    child: Text(
+                                      'exit_factory'.tr,
+                                      style: TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 18.0,
+                                        fontFamily: 'Tajawal',
+                                        fontWeight: FontWeight.bold,
+                                      ),
                                     ),
                                   ),
                                 ),
                               ),
-                            )
-                          else
-                            SizedBox(
-                              height: 60.0,
-                              width: double.infinity,
-                              child: CreateButton(
-                                onPressed: () {
-                                  Get.to(() => ExitFactory());
-                                },
-                                title: Center(
-                                  child: Text(
-                                    'exit_factory'.tr,
-                                    style: TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 18.0,
-                                      fontFamily: 'Tajawal',
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ),
-                        ],
+                          ],
+                        ),
                       ),
                     ),
                   ),

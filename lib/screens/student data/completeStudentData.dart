@@ -530,25 +530,13 @@ class _CompleteStudentDataState extends State<CompleteStudentData> {
                                 });
                             Get.offAll(Instructions());
                           } else {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text(
-                                  'يرجى إكمال جميع الحقول المطلوبة',
-                                  style: TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 16,
-                                    fontFamily: 'Tajawal',
-                                    fontWeight: FontWeight.w500,
-                                  ),
-                                ),
-                                backgroundColor: const Color.fromARGB(
-                                  255,
-                                  160,
-                                  11,
-                                  0,
-                                ),
-                                duration: Duration(seconds: 2),
-                              ),
+                            Get.snackbar(
+                              'تنبيه',
+                              'يرجى إدخال جميع البيانات المطلوبة',
+                              backgroundColor: Colors.red,
+                              colorText: Colors.white,
+                              snackPosition: SnackPosition.TOP,
+                              duration: Duration(seconds: 3),
                             );
                           }
                         },

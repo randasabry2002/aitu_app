@@ -1,4 +1,5 @@
 // import 'package:aitu_app/screens/student%20data/enterCode.dart';
+import 'package:aitu_app/screens/Sign_In&Up/SignInScreen.dart';
 import 'package:aitu_app/shared/constant.dart';
 import 'package:aitu_app/shared/reuableWidgets.dart';
 import 'package:flutter/material.dart';
@@ -31,7 +32,7 @@ class _InstructionsState extends State<Instructions> {
               color: const Color.fromARGB(255, 0, 0, 0),
             ),
             onPressed: () {
-              Get.back();
+              Get.offAll(() => SignInScreen());
             },
           ),
           backgroundColor: const Color.fromARGB(0, 1, 134, 196),
