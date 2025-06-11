@@ -9,10 +9,8 @@ import 'package:get/get.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:google_sign_in/google_sign_in.dart';
 import '../Attendance_Part_Pages/homeScreen.dart';
 import '../Distribution_Pages/Instructions.dart';
-import 'SignUpScreen.dart';
 
 class SignInScreen extends StatefulWidget {
   @override
@@ -273,7 +271,7 @@ class _SignInScreenState extends State<SignInScreen> {
 
                           Get.snackbar(
                             'خطأ',
-                            'حدث خطأ أثناء تسجيل الدخول',
+                            errorMessage,
                             backgroundColor: Colors.red,
                             colorText: Colors.white,
                             snackPosition: SnackPosition.TOP,
@@ -293,21 +291,6 @@ class _SignInScreenState extends State<SignInScreen> {
                           ),
                         ),
                       ), // Key for "Sign Up",
-                    ),
-                  ),
-                  SizedBox(height: 20),
-
-                  // //sign up btn
-                  TextButton(
-                    onPressed: () {
-                      Get.to(
-                        SignUpScreen(studentCode: widget.studentCode ?? ''),
-                      );
-                    },
-                    child: Text(
-                      'sign_up_prompt'.tr,
-                      // Translated "Don't have an account? Sign Up"
-                      style: TextStyle(color: mainColor, fontSize: 12),
                     ),
                   ),
                 ],

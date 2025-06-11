@@ -68,7 +68,7 @@
   "instructions": "Instructions",
   "I_agree_to_the_instructions": "I agree to the instructions",
   "next": "Next",
-  "distribution_choice_text": "If you want the college to distribute you to the list of factories it has, choose \"By College\". If you want to search for another factory and agree with it yourself, choose \"Other\"",
+  "distribution_choice_text": "If you want the college to distribute you to the list of factories it has, choose \"By College\". If you want to search for another factory and agree with it yourself, choose \"Other\" (You cannot choose it if you are a school student)",
   "college": "By College",
   "Other": "Other",
   "College_distribution_choice_text_not_yet": "The distribution of factories from the college has not been announced yet",
@@ -107,7 +107,7 @@
   "upload_report": "Upload Report",
   "tap_to_upload_report": "Tap to upload report",
   "send": "Send",
-  "code" : "code",
-  "Request_approved" : "Request_approved",
-  "Request_rejected" : "Request_rejected"
+  "code": "code",
+  "Request_approved": "Request_approved",
+  "Request_rejected": "Request_rejected"
 }

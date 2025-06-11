@@ -1,5 +1,3 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
-
 class Student {
   final String stage;
   final String address;
@@ -53,7 +51,7 @@ class Student {
       state: json['state'] ?? '',
       gender: json['gender'] ?? '',
       nationalID: json['nationalID'] ?? '',
-      grade : json['grade'] ?? 0,
+      grade: json['grade'] ?? 0,
     );
   }
 }

@@ -1,13 +1,10 @@
 import 'package:aitu_app/screens/Distribution_Pages/Instructions.dart';
-import 'package:aitu_app/shared/reuableWidgets.dart';
 import 'package:flutter/material.dart';
 
 import 'package:get/get.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import '../Attendance_Part_Pages/homeScreen.dart';
 import 'PDFViewerPage.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:aitu_app/shared/constant.dart';
 
 class College_distribution_page extends StatefulWidget {
   const College_distribution_page({super.key});
@@ -19,7 +16,6 @@ class College_distribution_page extends StatefulWidget {
 
 class _College_distribution_pageState extends State<College_distribution_page> {
   bool loading = false;
-  bool hasViewedPDF = false;
 
   Future<bool> getBooleanValue() async {
     DocumentSnapshot doc =
@@ -49,25 +45,34 @@ class _College_distribution_pageState extends State<College_distribution_page> {
       child: Scaffold(
         appBar: AppBar(
           leading: IconButton(
-            icon: Icon(Icons.arrow_back_ios_new_rounded, color: Colors.black),
+            icon: Icon(Icons.arrow_back_ios_new_rounded, color: Colors.white),
             onPressed: () {
               Get.to(() => const Instructions());
             },
           ),
-          backgroundColor: Colors.white,
-          elevation: 0,
-          title: Text(
-            'توزيع الكلية',
-            style: TextStyle(
-              color: Colors.black,
-              fontSize: 20,
-              fontFamily: 'Tajawal',
-              fontWeight: FontWeight.bold,
+          backgroundColor: Color(0xFF0187c4),
+          actions: <Widget>[
+            // Language Selector Icon
+            PopupMenuButton<String>(
+              icon: Icon(Icons.language, color: Colors.white),
+              onSelected: (value) {
+                // Update the app's locale based on the selection
+                if (value == 'en') {
+                  Get.updateLocale(Locale('en'));
+                } else if (value == 'ar') {
+                  Get.updateLocale(Locale('ar'));
+                }
+              },
+              itemBuilder: (BuildContext context) {
+                return [
+                  PopupMenuItem(value: 'en', child: Text('English')),
+                  PopupMenuItem(value: 'ar', child: Text('العربية')),
+                ];
+              },
             ),
-          ),
-          centerTitle: true,
+          ],
         ),
-        backgroundColor: Colors.white,
+        backgroundColor: Color(0xFF0187c4),
         body: Padding(
           padding: const EdgeInsets.all(16.0),
           child: Center(
@@ -76,19 +81,12 @@ class _College_distribution_pageState extends State<College_distribution_page> {
               builder: (context, snapshot) {
                 if (snapshot.connectionState == ConnectionState.waiting) {
                   return CircularProgressIndicator(
-                    valueColor: AlwaysStoppedAnimation<Color>(mainColor),
+                    valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
                   );
                 }
                 if (snapshot.hasError) {
                   print(snapshot.error);
-                  return Text(
-                    "حدث خطأ في جلب البيانات ❌",
-                    style: TextStyle(
-                      color: Colors.black,
-                      fontSize: 18,
-                      fontFamily: 'Tajawal',
-                    ),
-                  );
+                  return Text("حدث خطأ في جلب البيانات ❌");
                 }
 
                 bool value = snapshot.data ?? false;
@@ -105,63 +103,44 @@ class _College_distribution_pageState extends State<College_distribution_page> {
                         textAlign: TextAlign.center,
                         style: TextStyle(
                           fontSize: 20,
-                          color: Colors.black,
-                          fontFamily: 'Tajawal',
+                          color: Colors.white,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
                     ),
                     Visibility(
                       visible: value,
-                      child: Container(
-                        width: double.infinity,
-                        padding: EdgeInsets.symmetric(horizontal: 16),
-                        child: TextButton.icon(
-                          onPressed: () async {
-                            await Get.to(
-                              PDFViewerPage(pdfType: "distributionPdf"),
-                            );
-                            setState(() {
-                              hasViewedPDF = true;
-                            });
-                          },
-                          icon: Icon(
-                            Icons.picture_as_pdf,
-                            color: mainColor,
-                            size: 28,
-                          ),
-                          label: Text(
-                            "Show_PDF".tr,
-                            style: TextStyle(
-                              color: mainColor,
-                              fontSize: 20,
-                              fontFamily: 'Tajawal',
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          style: TextButton.styleFrom(
-                            padding: EdgeInsets.symmetric(vertical: 15),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(10),
-                            ),
+                      child: ElevatedButton(
+                        onPressed: () {
+                          Get.to(PDFViewerPage(pdfType: "distributionPdf"));
+                        },
+                        child: Text(
+                          "Show_PDF".tr,
+                          style: TextStyle(
+                            color: Color(0xFF0187c4),
+                            fontWeight: FontWeight.bold,
+                            fontSize: 20,
                           ),
                         ),
                       ),
                     ),
                     Visibility(
                       visible: value,
-                      child: CreateButton(
-                        title: Text(
+                      child: ElevatedButton(
+                        onPressed: () async {
+                          final SharedPreferences _prefs =
+                              await SharedPreferences.getInstance();
+                          await _prefs.setString("page", "HomeScreen");
+                          // Get.to(HomeScreen());
+                        },
+                        child: Text(
                           "Start_Attendance".tr,
                           style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 20,
-                            fontFamily: 'Tajawal',
+                            color: Color(0xFF0187c4),
                             fontWeight: FontWeight.bold,
+                            fontSize: 20,
                           ),
                         ),
-                        onPressed:
-                            hasViewedPDF ? _handleStartAttendance : () {},
                       ),
                     ),
                   ],
@@ -172,24 +151,5 @@ class _College_distribution_pageState extends State<College_distribution_page> {
         ),
       ),
     );
-  }
-
-  Future<void> _handleStartAttendance() async {
-    final SharedPreferences _prefs = await SharedPreferences.getInstance();
-    String? studentId = _prefs.getString("studentId");
-
-    if (studentId != null) {
-      var studentDoc =
-          await FirebaseFirestore.instance
-              .collection("StudentsTable")
-              .doc(studentId)
-              .get();
-
-      if (studentDoc.exists) {
-        String studentEmail = studentDoc.data()?['email'] ?? '';
-        await _prefs.setString("page", "HomeScreen");
-        Get.to(HomeScreen(studentEmail: studentEmail));
-      }
-    }
   }
 }

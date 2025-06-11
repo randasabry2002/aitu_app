@@ -1,6 +1,5 @@
 // import 'package:aitu_app/screens/student%20data/enterCode.dart';
 import 'package:aitu_app/shared/constant.dart';
-import 'package:aitu_app/shared/reuableWidgets.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -48,7 +47,9 @@ class _InfoPageState extends State<InfoPage> {
           padding: const EdgeInsets.all(16.0),
           child: StreamBuilder<QuerySnapshot>(
             stream:
-                FirebaseFirestore.instance.collection('Instructions').snapshots(),
+                FirebaseFirestore.instance
+                    .collection('Instructions')
+                    .snapshots(),
             builder: (context, snapshot) {
               // Debug information
               print('Connection State: ${snapshot.connectionState}');

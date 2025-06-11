@@ -80,8 +80,7 @@ class _InstructionsState extends State<Instructions> {
                           .collection('Instructions')
                           .snapshots(),
                   builder: (context, snapshot) {
-                    if (snapshot.connectionState ==
-                        ConnectionState.waiting) {
+                    if (snapshot.connectionState == ConnectionState.waiting) {
                       return Center(
                         child: CircularProgressIndicator(
                           valueColor: AlwaysStoppedAnimation<Color>(
@@ -100,13 +99,13 @@ class _InstructionsState extends State<Instructions> {
                         ),
                       );
                     }
-        
+
                     // استخراج البيانات من Firestore
                     List<String> instructions =
                         snapshot.data!.docs
                             .map((doc) => doc['Content'].toString())
                             .toList();
-        
+
                     return ListView.builder(
                       itemCount: instructions.length,
                       itemBuilder: (context, index) {
@@ -123,18 +122,13 @@ class _InstructionsState extends State<Instructions> {
                                     color: mainColor,
                                   ),
                                 ),
-        
+
                                 // نص التعليمات
                                 TextSpan(
                                   text: instructions[index],
                                   style: TextStyle(
                                     fontSize: 14,
-                                    color: const Color.fromARGB(
-                                      255,
-                                      0,
-                                      0,
-                                      0,
-                                    ),
+                                    color: const Color.fromARGB(255, 0, 0, 0),
                                   ),
                                 ),
                               ],
@@ -146,7 +140,7 @@ class _InstructionsState extends State<Instructions> {
                   },
                 ),
               ),
-        
+
               // ✅ Checkbox للموافقة على التعليمات
               Row(
                 children: [
@@ -155,9 +149,7 @@ class _InstructionsState extends State<Instructions> {
                     child: Checkbox(
                       value: _isChecked,
                       checkColor: Colors.white,
-                      fillColor: MaterialStateProperty.resolveWith((
-                        states,
-                      ) {
+                      fillColor: MaterialStateProperty.resolveWith((states) {
                         if (states.contains(MaterialState.selected)) {
                           return mainColor;
                         }
@@ -188,7 +180,7 @@ class _InstructionsState extends State<Instructions> {
                 ],
               ),
               SizedBox(height: 10),
-        
+
               // زر الانتقال
               SizedBox(
                 width: MediaQuery.of(context).size.width * 0.9,

@@ -81,12 +81,13 @@ class _UplooadRerportState extends State<UplooadRerport> {
         throw Exception('Student ID not found');
       }
 
-      final file = File(_selectedImage!.path);
       final fileName =
           '${DateTime.now().millisecondsSinceEpoch}_${_selectedImage!.name}';
       final filePath = 'reports/$fileName';
 
-      await supabase.storage.from('reports').upload(filePath, File(_selectedImage!.path));
+      await supabase.storage
+          .from('reports')
+          .upload(filePath, File(_selectedImage!.path));
       final imageUrl = supabase.storage.from('reports').getPublicUrl(filePath);
 
       await _firestore.collection('Reports').add({

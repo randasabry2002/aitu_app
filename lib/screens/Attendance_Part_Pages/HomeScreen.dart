@@ -534,7 +534,12 @@ class _HomeScreenState extends State<HomeScreen> {
                                 width: double.infinity,
                                 child: CreateButton(
                                   onPressed: () {
-                                    Get.to(() => ExitFactory(attendanceId: currentAttendanceId.toString(),));
+                                    Get.to(
+                                      () => ExitFactory(
+                                        attendanceId:
+                                            currentAttendanceId.toString(),
+                                      ),
+                                    );
                                   },
                                   title: Center(
                                     child: Text(

@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'Not_College_distribution_page.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class Distribution_choice extends StatefulWidget {
   const Distribution_choice({super.key});
@@ -15,6 +16,39 @@ class Distribution_choice extends StatefulWidget {
 }
 
 class _Distribution_choiceState extends State<Distribution_choice> {
+  bool isSchoolStudent = false;
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+    isStudent().then((value) {
+      setState(() {
+        isSchoolStudent = value;
+      });
+    });
+  }
+
+  Future<bool> isStudent() async {
+    final SharedPreferences _prefs = await SharedPreferences.getInstance();
+    String email = _prefs.getString('email') ?? '';
+    try {
+      final querySnapshot =
+          await FirebaseFirestore.instance
+              .collection('StudentsTable')
+              .where('email', isEqualTo: email)
+              .limit(1)
+              .get();
+      if (querySnapshot.docs.isNotEmpty) {
+        final student = querySnapshot.docs.first;
+        return (student['stage'] == 'مدرسة');
+      }
+      return false;
+    } catch (e) {
+      debugPrint('Error getting student code: $e');
+      return false;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Directionality(
@@ -25,8 +59,11 @@ class _Distribution_choiceState extends State<Distribution_choice> {
       child: Scaffold(
         appBar: AppBar(
           leading: IconButton(
-            icon: Icon(Icons.arrow_back_ios_new_rounded, color: const Color.fromARGB(255, 0, 0, 0)),
-            onPressed: () => Get.to(() => Instructions())
+            icon: Icon(
+              Icons.arrow_back_ios_new_rounded,
+              color: const Color.fromARGB(255, 0, 0, 0),
+            ),
+            onPressed: () => Get.to(() => Instructions()),
           ),
           backgroundColor: const Color.fromARGB(0, 255, 255, 255),
           // actions: <Widget>[
@@ -77,9 +114,9 @@ class _Distribution_choiceState extends State<Distribution_choice> {
                       width: double.infinity,
                       child: GestureDetector(
                         onTap: () async {
-        
                           final SharedPreferences _prefs =
                               await SharedPreferences.getInstance();
+
                           await _prefs.setString(
                             "page",
                             "College_distribution_page",
@@ -92,7 +129,7 @@ class _Distribution_choiceState extends State<Distribution_choice> {
                           decoration: BoxDecoration(
                             color: mainColor,
                             borderRadius: BorderRadius.circular(20),
-        
+
                             boxShadow: [
                               BoxShadow(
                                 color: const Color.fromARGB(
@@ -121,41 +158,42 @@ class _Distribution_choiceState extends State<Distribution_choice> {
                       ),
                     ),
                     SizedBox(height: 20),
-                    SizedBox(
-                      width: double.infinity,
-                      child: GestureDetector(
-                        onTap: () {
-                          // Navigate to next screen
-                          Get.to(Not_College_distribution_page());
-                        },
-                        child: Container(
-                          width: double.infinity,
-                          padding: EdgeInsets.symmetric(vertical: 16),
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(20),
-                            boxShadow: [
-                              BoxShadow(
-                                color: mainColor.withOpacity(0.3),
-                                blurRadius: 6,
-                                offset: Offset(0, 3),
-                              ),
-                            ],
-                          ),
-                          child: Center(
-                            child: Text(
-                              'سأقوم بالاختيار بنفسي'.tr,
-                              style: TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.w500,
-                                fontFamily: 'Tajawal',
-                                color: mainColor, // Foreground color
+                    if (!isSchoolStudent)
+                      SizedBox(
+                        width: double.infinity,
+                        child: GestureDetector(
+                          onTap: () {
+                            // Navigate to next screen
+                            Get.to(Not_College_distribution_page());
+                          },
+                          child: Container(
+                            width: double.infinity,
+                            padding: EdgeInsets.symmetric(vertical: 16),
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(20),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: mainColor.withOpacity(0.3),
+                                  blurRadius: 6,
+                                  offset: Offset(0, 3),
+                                ),
+                              ],
+                            ),
+                            child: Center(
+                              child: Text(
+                                'سأقوم بالاختيار بنفسي'.tr,
+                                style: TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.w500,
+                                  fontFamily: 'Tajawal',
+                                  color: mainColor, // Foreground color
+                                ),
                               ),
                             ),
                           ),
                         ),
                       ),
-                    ),
                   ],
                 ),
               ],

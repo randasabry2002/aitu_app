@@ -1,10 +1,8 @@
 // ignore_for_file: must_be_immutable
 
 import 'package:aitu_app/screens/student%20data/enterCode.dart';
-import 'package:aitu_app/shared/constant.dart';
 import 'package:aitu_app/shared/reuableWidgets.dart';
 import 'package:flutter/material.dart';
-import 'package:aitu_app/screens/Sign_In&Up/SignInScreen.dart';
 import 'package:get/get.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:shared_preferences/shared_preferences.dart';

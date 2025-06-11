@@ -1,6 +1,5 @@
 import 'package:aitu_app/screens/Distribution_Pages/Distribution_choice.dart';
 import 'package:aitu_app/screens/Distribution_Pages/PDFViewerPage.dart';
-import 'package:aitu_app/screens/Distribution_Pages/uploadReport.dart';
 import 'package:aitu_app/shared/constant.dart';
 import 'package:aitu_app/shared/reuableWidgets.dart';
 import 'package:flutter/material.dart';
@@ -114,36 +113,35 @@ class _Not_College_distribution_pageState
     });
   }
 
-Future<void> fetchFactories(String gName) async {
-  selectedFactory = null;
-  factoryNames = [];
+  Future<void> fetchFactories(String gName) async {
+    selectedFactory = null;
+    factoryNames = [];
 
-  try {
-    QuerySnapshot querySnapshot =
-        await FirebaseFirestore.instance.collection("Factories").get();
+    try {
+      QuerySnapshot querySnapshot =
+          await FirebaseFirestore.instance.collection("Factories").get();
 
-    List<QueryDocumentSnapshot> filteredDocs = querySnapshot.docs.where((doc) {
-      final data = doc.data() as Map<String, dynamic>;
+      List<QueryDocumentSnapshot> filteredDocs =
+          querySnapshot.docs.where((doc) {
+            final data = doc.data() as Map<String, dynamic>;
 
-      return data.containsKey("Governorate") &&
-          data.containsKey("isApproved") &&
-          data.containsKey("type") &&
-          data.containsKey("name") &&
-          data["Governorate"] == gName &&
-          data["isApproved"] == true &&
-          data["type"] == "external";
-    }).toList();
+            return data.containsKey("Governorate") &&
+                data.containsKey("isApproved") &&
+                data.containsKey("type") &&
+                data.containsKey("name") &&
+                data["Governorate"] == gName &&
+                data["isApproved"] == true &&
+                data["type"] == "external";
+          }).toList();
 
-    setState(() {
-      
-
-      factoryNames =
-          filteredDocs.map((doc) => doc["name"] as String).toList();
-    });
-  } catch (e) {
-    print("🔥 Error fetching factories: $e");
+      setState(() {
+        factoryNames =
+            filteredDocs.map((doc) => doc["name"] as String).toList();
+      });
+    } catch (e) {
+      print("🔥 Error fetching factories: $e");
+    }
   }
-}
 
   @override
   void initState() {
@@ -210,6 +208,7 @@ Future<void> fetchFactories(String gName) async {
                   ),
                 ),
                 SizedBox(height: 20.0),
+
                 /// choosing the government
                 governorateNames.isEmpty
                     ? CircularProgressIndicator() // تحميل البيانات
@@ -433,25 +432,30 @@ Future<void> fetchFactories(String gName) async {
                     child: CreateButton(
                       title: Text(
                         "تأكيد المصنع".tr,
-                        style: TextStyle(color: Colors.white, fontFamily: 'Tajawal', fontSize: 14.0, fontWeight: FontWeight.w800),
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontFamily: 'Tajawal',
+                          fontSize: 14.0,
+                          fontWeight: FontWeight.w800,
+                        ),
                         textAlign: TextAlign.center,
                       ),
                       onPressed: () async {
-                            final prefs = await SharedPreferences.getInstance();
-                              final String? studentEmail = prefs.getString("email");
-                              if (studentEmail != null) {
-                                await FirebaseFirestore.instance
-                                    .collection('StudentsTable')
-                                    .where('email', isEqualTo: studentEmail)
-                                    .get()
-                                    .then((querySnapshot) {
-                                  if (querySnapshot.docs.isNotEmpty) {
-                                    querySnapshot.docs.first.reference.update({
-                                      'isReportUploaded': false,
-                                    });
-                                  }
-                                });
-                              }
+                        final prefs = await SharedPreferences.getInstance();
+                        final String? studentEmail = prefs.getString("email");
+                        if (studentEmail != null) {
+                          await FirebaseFirestore.instance
+                              .collection('StudentsTable')
+                              .where('email', isEqualTo: studentEmail)
+                              .get()
+                              .then((querySnapshot) {
+                                if (querySnapshot.docs.isNotEmpty) {
+                                  querySnapshot.docs.first.reference.update({
+                                    'isReportUploaded': false,
+                                  });
+                                }
+                              });
+                        }
                         Get.to(PDFViewerPage(pdfType: "nominationCard"));
                       },
                     ),
@@ -483,8 +487,8 @@ Future<void> fetchFactories(String gName) async {
                   title: Text(
                     "add_new_factory_request".tr,
                     style: TextStyle(
-                      color:Colors.white,
-                      fontFamily: 'Tajawal'
+                      color: Colors.white,
+                      fontFamily: 'Tajawal',
                     ),
                     textAlign: TextAlign.center,
                   ),

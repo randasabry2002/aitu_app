@@ -3,7 +3,6 @@ import 'package:aitu_app/shared/reuableWidgets.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:aitu_app/screens/Distribution_Pages/Distribution_choice.dart';
 import 'package:aitu_app/screens/Distribution_Pages/PDFViewerPage.dart';
 import 'package:aitu_app/shared/constant.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -66,18 +65,29 @@ class WaitnigReqestAnswer extends StatelessWidget {
 
                             if (email != null) {
                               // Find and delete the factory request document
-                              final querySnapshot = await FirebaseFirestore.instance
-                                  .collection('Factories')
-                                  .where('name', isEqualTo: factoryName)
-                                  .where('address', isEqualTo: factoryLocation)
-                                  .where('industry', isEqualTo: factoryIndustry)
-                                  .where('Governorate', isEqualTo: fatoryGovernorate)
-                                  .where('type', isEqualTo: 'external')
-                                  .limit(1)
-                                  .get();
+                              final querySnapshot =
+                                  await FirebaseFirestore.instance
+                                      .collection('Factories')
+                                      .where('name', isEqualTo: factoryName)
+                                      .where(
+                                        'address',
+                                        isEqualTo: factoryLocation,
+                                      )
+                                      .where(
+                                        'industry',
+                                        isEqualTo: factoryIndustry,
+                                      )
+                                      .where(
+                                        'Governorate',
+                                        isEqualTo: fatoryGovernorate,
+                                      )
+                                      .where('type', isEqualTo: 'external')
+                                      .limit(1)
+                                      .get();
 
                               if (querySnapshot.docs.isNotEmpty) {
-                                await querySnapshot.docs.first.reference.delete();
+                                await querySnapshot.docs.first.reference
+                                    .delete();
                               }
                             }
                             Navigator.of(context).pop();
@@ -148,7 +158,7 @@ class WaitnigReqestAnswer extends StatelessWidget {
                       padding: const EdgeInsets.all(20),
                       height: MediaQuery.of(context).size.height * 0.4,
                       decoration: BoxDecoration(
-                      color: const Color.fromARGB(52, 0, 0, 0),
+                        color: const Color.fromARGB(52, 0, 0, 0),
                         borderRadius: BorderRadius.circular(20),
                       ),
                       child:

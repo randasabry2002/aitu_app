@@ -7,7 +7,6 @@ import 'package:aitu_app/shared/constant.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 // import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import 'package:aitu_app/screens/Attendance_Part_Pages/ExitFactory.dart';
 import 'package:aitu_app/screens/Attendance_Part_Pages/duringTraining.dart';
 // import 'package:google_fonts/google_fonts.dart';
 import 'package:get/get.dart';
@@ -127,9 +126,7 @@ class SplashState extends State<Splash> with SingleTickerProviderStateMixin {
         // Get the attendance ID and navigate to duringTraining
         final attendanceId = activeAttendanceQuery.docs.first.id;
         await prefs.setString("attendanceId", attendanceId);
-        Get.offAll(
-          () => DuringTraining(),
-        );
+        Get.offAll(() => DuringTraining());
         return;
       }
 
@@ -268,7 +265,7 @@ class SplashState extends State<Splash> with SingleTickerProviderStateMixin {
         canPop: false,
         onPopInvoked: (didPop) {
           if (didPop) return;
-          
+
           if (_backButtonPressedCount == 1) {
             return;
           }
