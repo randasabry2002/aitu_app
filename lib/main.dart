@@ -31,7 +31,7 @@ Future<void> main() async {
     }
   }
 
-  await Supabase.initialize(
+  await Supabase.initialize( 
     url: 'https://cjzaqgnhcpjtlswhnbda.supabase.co',
     anonKey:
         'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNqemFxZ25oY3BqdGxzd2huYmRhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDYyOTc2MDMsImV4cCI6MjA2MTg3MzYwM30.8oFur4LN2JzRXBauTr7b8eZOAK56Ie2fy9kw3o__Ju8',
