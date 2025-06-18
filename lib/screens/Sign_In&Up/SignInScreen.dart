@@ -9,8 +9,9 @@ import 'package:get/get.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import '../Attendance_Part_Pages/homeScreen.dart';
-import '../Distribution_Pages/Instructions.dart';
+import 'package:aitu_app/screens/Attendance_Part_Pages/homeScreen.dart';
+import 'package:aitu_app/screens/Distribution_Pages/Instructions.dart';
+import 'package:aitu_app/screens/Sign_In&Up/ForgotPasswordScreen.dart';
 
 class SignInScreen extends StatefulWidget {
   @override
@@ -198,11 +199,10 @@ class _SignInScreenState extends State<SignInScreen> {
                     children: [
                       TextButton(
                         onPressed: () {
-                          // Add your navigation logic here
-                          // Get.to(() => ForgetPasswordScreen());
+                          Get.to(() => ForgotPasswordScreen());
                         },
                         child: Text(
-                          'نسيت كلمة المرور'.tr, // Translated text
+                          'نسيت كلمة المرور'.tr,
                           style: TextStyle(color: mainColor, fontSize: 15),
                         ),
                       ),
