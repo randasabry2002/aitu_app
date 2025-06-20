@@ -159,6 +159,7 @@ class _EnterFactoryState extends State<EnterFactory> {
       final prefs = await SharedPreferences.getInstance();
       String email = prefs.getString("email") ?? '';
 
+      // جلب مستند الطالب
       final studentSnapshot =
           await _firestore
               .collection('StudentsTable')
@@ -171,7 +172,33 @@ class _EnterFactoryState extends State<EnterFactory> {
         return;
       }
 
-      String factoryId = studentSnapshot.docs.first['factory'] ?? '';
+      final studentDoc = studentSnapshot.docs.first;
+      final factoryLat = studentDoc['factory_latitude'];
+      final factoryLon = studentDoc['factory_longitude'];
+      if (factoryLat == null || factoryLon == null) {
+        _showSnackbar(
+          'لم يتم تحديد موقع المصنع للطالب. يرجى التواصل مع الإدارة.',
+        );
+        return;
+      }
+
+      // حساب المسافة بين الموقع الحالي وموقع المصنع المخزن للطالب
+      final distance = Geolocator.distanceBetween(
+        latitude,
+        longitude,
+        factoryLat,
+        factoryLon,
+      );
+
+      if (distance > 150) {
+        _showSnackbar(
+          'يجب أن تكون بالقرب من موقع المصنع (أقل من 150 متر) لتسجيل الحضور',
+        );
+        return;
+      }
+
+      // إذا كانت المسافة أقل من 150 متر، أكمل تسجيل الحضور
+      String factoryId = studentDoc['factory'] ?? '';
       final factoryDoc =
           await _firestore
               .collection('Factories')
@@ -185,25 +212,9 @@ class _EnterFactoryState extends State<EnterFactory> {
       }
       factoryLongitude = factoryDoc.docs.first['longitude'];
       factoryLatitude = factoryDoc.docs.first['latitude'];
-      // حساب المسافة بين موقع الطالب والمصنع
-      final distance = Geolocator.distanceBetween(
-        latitude,
-        longitude,
-        factoryLatitude,
-        factoryLongitude,
-      );
 
-      // التحقق من المسافة
-      if (distance > 150) {
-        _showSnackbar(
-          'يجب أن تكون داخل المصنع أو على مسافة لا تزيد عن 150 متر لتسجيل الحضور',
-        );
-        return;
-      }
-
-      // إذا كانت المسافة أقل من 150 متر، قم بتسجيل الحضور
       DateTime dateOnly = DateTime(date.year, date.month, date.day);
-      String studentId = studentSnapshot.docs.first.id;
+      String studentId = studentDoc.id;
 
       final docRef = await _firestore.collection("Attendances").add({
         "Student_ID": studentId,
@@ -255,7 +266,9 @@ class _EnterFactoryState extends State<EnterFactory> {
 
   // عند إنشاء الخريطة
   void _onMapCreated(GoogleMapController controller) {
-    _controller.complete(controller);
+    if (!_controller.isCompleted) {
+      _controller.complete(controller);
+    }
   }
 
   @override

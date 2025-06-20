@@ -119,7 +119,7 @@ class _College_distribution_pageState extends State<College_distribution_page> {
                         child: TextButton.icon(
                           onPressed: () async {
                             await Get.to(
-                              PDFViewerPage(pdfType: "distributionPdf"),
+                              PDFViewerPage(),
                             );
                             setState(() {
                               hasViewedPDF = true;

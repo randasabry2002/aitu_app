@@ -10,7 +10,12 @@ import 'package:aitu_app/screens/Attendance_Part_Pages/EnterFactory.dart';
 import 'package:aitu_app/screens/Attendance_Part_Pages/ExitFactory.dart';
 import 'package:aitu_app/screens/Attendance_Part_Pages/InfoPage.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:geolocator/geolocator.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:flutter_spinkit/flutter_spinkit.dart';
 
+/// HomeScreen - الشاشة الرئيسية للتطبيق
+/// تعرض معلومات الطالب وحالة الحضور وتتيح تسجيل الدخول والخروج من المصنع
 class HomeScreen extends StatefulWidget {
   final String studentEmail;
   const HomeScreen({super.key, this.studentEmail = ''});
@@ -20,36 +25,421 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  int _backButtonPressedCount = 0;
+  // ==================== متغيرات التحكم في التطبيق ====================
+  int _backButtonPressedCount = 0; // عداد الضغط على زر العودة
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
 
-  QueryDocumentSnapshot? student;
-  QueryDocumentSnapshot? factory;
-  String? currentAttendanceId;
-  bool isLoading = true;
-  bool hasEnteredToday = false;
+  // ==================== متغيرات البيانات ====================
+  QueryDocumentSnapshot? student; // بيانات الطالب
+  QueryDocumentSnapshot? factory; // بيانات المصنع
+  String? currentAttendanceId; // معرف الحضور الحالي
+  String? factName = ''; // اسم المصنع
 
+  // ==================== متغيرات حالة التطبيق ====================
+  bool isLoading = true; // حالة التحميل
+  bool hasEnteredToday = false; // هل دخل اليوم أم لا
+  int attendanceDays = 0; // عدد أيام الحضور
+  bool showLocationPage = false; // عرض صفحة تحديد الموقع
+
+  // ==================== متغيرات التصحيح ====================
+  List<String> debugLogs = []; // سجل التصحيح
+  bool showDebugDialog = false; // عرض نافذة التصحيح
+
+  // ==================== دوال التصحيح ====================
+
+  /// إضافة رسالة إلى سجل التصحيح
+  void addDebugLog(String message) {
+    final timestamp = DateTime.now().toString().substring(11, 19);
+    final logMessage = '[$timestamp] $message';
+    debugLogs.add(logMessage);
+    print(logMessage);
+  }
+
+  /// عرض نافذة التصحيح
+  void showDebugInfo() {
+    showDialog(
+      context: context,
+      builder:
+          (context) => AlertDialog(
+            title: Row(
+              children: [
+                Icon(Icons.bug_report, color: mainColor),
+                SizedBox(width: 8),
+                Text(
+                  'معلومات التصحيح',
+                  style: TextStyle(
+                    fontFamily: 'Tajawal',
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
+            ),
+            content: Container(
+              width: double.maxFinite,
+              height: 400,
+              child: Column(
+                children: [
+                  // معلومات الحالة
+                  Container(
+                    padding: EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: mainColor.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'حالة التطبيق:',
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            color: mainColor,
+                            fontFamily: 'Tajawal',
+                          ),
+                        ),
+                        SizedBox(height: 8),
+                        _buildDebugInfoRow('isLoading', isLoading.toString()),
+                        _buildDebugInfoRow(
+                          'attendanceDays',
+                          attendanceDays.toString(),
+                        ),
+                        _buildDebugInfoRow(
+                          'showLocationPage',
+                          showLocationPage.toString(),
+                        ),
+                        _buildDebugInfoRow(
+                          'hasEnteredToday',
+                          hasEnteredToday.toString(),
+                        ),
+                        _buildDebugInfoRow(
+                          'currentAttendanceId',
+                          currentAttendanceId ?? 'null',
+                        ),
+                        _buildDebugInfoRow('factName', factName ?? 'null'),
+                      ],
+                    ),
+                  ),
+                  SizedBox(height: 16),
+
+                  // معلومات الطالب
+                  if (student != null) ...[
+                    Container(
+                      padding: EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: Colors.green.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'معلومات الطالب:',
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              color: Colors.green,
+                              fontFamily: 'Tajawal',
+                            ),
+                          ),
+                          SizedBox(height: 8),
+                          _buildDebugInfoRow(
+                            'الاسم',
+                            student!['name'] ?? 'null',
+                          ),
+                          _buildDebugInfoRow(
+                            'الكود',
+                            student!['code'] ?? 'null',
+                          ),
+                          _buildDebugInfoRow(
+                            'البريد الإلكتروني',
+                            student!['email'] ?? 'null',
+                          ),
+                          _buildDebugInfoRow(
+                            'القسم',
+                            student!['department'] ?? 'null',
+                          ),
+                          _buildDebugInfoRow(
+                            'المرحلة',
+                            student!['stage'] ?? 'null',
+                          ),
+                          _buildDebugInfoRow(
+                            'الدفعة',
+                            (student!['batch'] ?? 'null').toString(),
+                          ),
+                        ],
+                      ),
+                    ),
+                    SizedBox(height: 16),
+                  ],
+
+                  // سجل التصحيح
+                  Expanded(
+                    child: Container(
+                      padding: EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: Colors.grey.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: Colors.grey.withOpacity(0.3)),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                'سجل التصحيح:',
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.grey[700],
+                                  fontFamily: 'Tajawal',
+                                ),
+                              ),
+                              TextButton(
+                                onPressed: () {
+                                  setState(() {
+                                    debugLogs.clear();
+                                  });
+                                  Navigator.pop(context);
+                                },
+                                child: Text(
+                                  'مسح السجل',
+                                  style: TextStyle(
+                                    color: Colors.red,
+                                    fontFamily: 'Tajawal',
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                          SizedBox(height: 8),
+                          Expanded(
+                            child: ListView.builder(
+                              itemCount: debugLogs.length,
+                              itemBuilder: (context, index) {
+                                return Padding(
+                                  padding: EdgeInsets.symmetric(vertical: 2),
+                                  child: Text(
+                                    debugLogs[debugLogs.length - 1 - index],
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      fontFamily: 'monospace',
+                                      color: Colors.grey[600],
+                                    ),
+                                  ),
+                                );
+                              },
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: Text(
+                  'إغلاق',
+                  style: TextStyle(fontFamily: 'Tajawal', color: mainColor),
+                ),
+              ),
+            ],
+          ),
+    );
+  }
+
+  /// بناء صف معلومات التصحيح
+  Widget _buildDebugInfoRow(String label, String value) {
+    return Padding(
+      padding: EdgeInsets.symmetric(vertical: 2),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SizedBox(
+            width: 120,
+            child: Text(
+              '$label:',
+              style: TextStyle(
+                fontWeight: FontWeight.w500,
+                fontFamily: 'Tajawal',
+                fontSize: 12,
+              ),
+            ),
+          ),
+          Expanded(
+            child: Text(
+              value,
+              style: TextStyle(
+                fontFamily: 'monospace',
+                fontSize: 12,
+                color: Colors.grey[700],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ==================== دوال جلب البيانات ====================
+
+  /// جلب بيانات الطالب
+  Future<QueryDocumentSnapshot?> getStudent() async {
+    try {
+      final SharedPreferences prefs = await SharedPreferences.getInstance();
+      String email = prefs.getString("email") ?? '';
+      addDebugLog('Fetching student with email: $email');
+
+      QuerySnapshot querySnapshot =
+          await FirebaseFirestore.instance
+              .collection('StudentsTable')
+              .where('email', isEqualTo: email)
+              .limit(1)
+              .get();
+
+      if (querySnapshot.docs.isNotEmpty) {
+        addDebugLog('Student found: ${querySnapshot.docs.first.data()}');
+        return querySnapshot.docs.first;
+      }
+      addDebugLog('No student found for email: $email');
+      return null;
+    } catch (e) {
+      addDebugLog('Error getting student: $e');
+      return null;
+    }
+  }
+
+  /// جلب بيانات المصنع
+  Future<QueryDocumentSnapshot?> getFactory() async {
+    try {
+      QueryDocumentSnapshot? student = await getStudent();
+      if (student != null) {
+        String factoryId = student['factory'] ?? '';
+        addDebugLog('Fetching factory with ID: $factoryId');
+
+        DocumentSnapshot factoryDoc = 
+            await FirebaseFirestore.instance
+                .collection('Factories')
+                .doc(factoryId)
+                .get();
+
+        if (factoryDoc.exists) {
+          setState(() {
+            factName = factoryDoc['name'];
+          });
+          addDebugLog('Factory found: ${factoryDoc.data()}');
+          return factoryDoc as QueryDocumentSnapshot;
+        } else {
+          setState(() {
+            factName = 'مصنع غير محدد';
+          });
+          addDebugLog('No factory found for ID: $factoryId');
+        }
+      } else {
+        setState(() {
+          factName = 'مصنع غير محدد';
+        });
+        addDebugLog('No student data, cannot fetch factory');
+      }
+      return null;
+    } catch (e) {
+      addDebugLog('Error getting factory: $e');
+      setState(() {
+        factName = 'خطأ في تحميل بيانات المصنع';
+      });
+      return null;
+    }
+  }
+
+  /// جلب بيانات الحضور
   Future<void> fetchData() async {
     try {
+      addDebugLog('Fetching data started');
       student = await getStudent();
-      factory = (await getFactory()) as QueryDocumentSnapshot<Object?>?;
+      factory = await getFactory();
       await checkCurrentAttendance();
       await checkTodayAttendance();
+      await calculateAttendanceDays();
+
       setState(() {
+        showLocationPage = attendanceDays == 0;
         isLoading = false;
       });
+
+      // Navigate to location confirmation page if first day
+      if (showLocationPage) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          Get.to(
+            () => LocationConfirmationPage(
+              factName: factName ?? '',
+              onLocationConfirmed: () {
+                setState(() {
+                  showLocationPage = false;
+                });
+                Get.off(() => EnterFactory());
+              },
+            ),
+          );
+        });
+      }
+
+      addDebugLog('Data fetching completed');
     } catch (e) {
-      print('Error fetching data: $e');
+      addDebugLog('Error fetching data: $e');
       setState(() {
         isLoading = false;
       });
     }
   }
 
+  /// حساب أيام الحضور
+  Future<int> calculateAttendanceDays() async {
+    try {
+      final SharedPreferences prefs = await SharedPreferences.getInstance();
+      String currentEmail = prefs.getString("email") ?? '';
+      addDebugLog('Calculating attendance days for email: $currentEmail');
+
+      if (student?['code'] == null ||
+          (student?['code']?.toString() ?? '').isEmpty) {
+        addDebugLog('Student code is null or empty');
+        setState(() {
+          attendanceDays = 0;
+        });
+        return 0;
+      }
+
+      QuerySnapshot attendanceSnapshot =
+          await FirebaseFirestore.instance
+              .collection('Attendances')
+              .where('Student_ID', isEqualTo: student?['code'])
+              .where('Student_Email', isEqualTo: currentEmail)
+              .get();
+
+      addDebugLog('Found ${attendanceSnapshot.docs.length} attendance records');
+      int calculatedDays = attendanceSnapshot.docs.length;
+      setState(() {
+        attendanceDays = calculatedDays;
+      });
+      addDebugLog('Attendance days set to: $attendanceDays');
+      return calculatedDays;
+    } catch (e) {
+      addDebugLog('Error calculating attendance days: $e');
+      setState(() {
+        attendanceDays = 0;
+      });
+      return 0;
+    }
+  }
+
+  /// التحقق من الحضور الحالي
   Future<void> checkCurrentAttendance() async {
     try {
       final SharedPreferences prefs = await SharedPreferences.getInstance();
       String attendanceId = prefs.getString("attendanceId") ?? 'null';
+      addDebugLog('Checking current attendance ID: $attendanceId');
+
       if (attendanceId != 'null') {
         DocumentSnapshot attendanceDoc =
             await FirebaseFirestore.instance
@@ -61,20 +451,26 @@ class _HomeScreenState extends State<HomeScreen> {
           setState(() {
             currentAttendanceId = attendanceId;
           });
+          addDebugLog('Current attendance found: $attendanceId');
         } else {
           await prefs.setString("attendanceId", 'null');
+          addDebugLog('No current attendance found, resetting ID');
         }
       }
     } catch (e) {
-      print('Error checking attendance: $e');
+      addDebugLog('Error checking attendance: $e');
     }
   }
 
+  /// التحقق من حضور اليوم
   Future<void> checkTodayAttendance() async {
     try {
       DateTime today = DateTime.now();
       DateTime startOfDay = DateTime(today.year, today.month, today.day);
       DateTime endOfDay = startOfDay.add(Duration(days: 1));
+      addDebugLog(
+        'Checking today attendance for student code: ${student?['code']}',
+      );
 
       QuerySnapshot existingAttendance =
           await FirebaseFirestore.instance
@@ -90,73 +486,22 @@ class _HomeScreenState extends State<HomeScreen> {
       setState(() {
         hasEnteredToday = existingAttendance.docs.isNotEmpty;
       });
+      addDebugLog('Has entered today: $hasEnteredToday');
     } catch (e) {
-      // ignore: avoid_print
-      print('Error checking today attendance: $e');
+      addDebugLog('Error checking today attendance: $e');
     }
   }
 
-  @override
-  void initState() {
-    super.initState();
-    fetchData();
-  }
-
-  Future<QueryDocumentSnapshot?> getStudent() async {
-    try {
-      final SharedPreferences prefs = await SharedPreferences.getInstance();
-      String email = prefs.getString("email") ?? '';
-
-      QuerySnapshot querySnapshot =
-          await FirebaseFirestore.instance
-              .collection('StudentsTable')
-              .where('email', isEqualTo: email)
-              .limit(1)
-              .get();
-
-      if (querySnapshot.docs.isNotEmpty) {
-        return querySnapshot.docs.first;
-      }
-      return null;
-    } catch (e) {
-      print('Error getting student: $e');
-      return null;
-    }
-  }
-
-  String? factName = '';
-
-  Future<DocumentSnapshot?> getFactory() async {
-    try {
-      QueryDocumentSnapshot? student = await getStudent();
-      if (student != null) {
-        String factoryId = student['factory'] ?? '..';
-
-        DocumentSnapshot factoryDoc =
-            await FirebaseFirestore.instance
-                .collection('Factories')
-                .doc(factoryId)
-                .get();
-
-        if (factoryDoc.exists) {
-          factName = factoryDoc['name'];
-          return factoryDoc;
-        }
-      }
-      return null;
-    } catch (e) {
-      print('Error getting factory: $e');
-      return null;
-    }
-  }
-
+  /// التحقق من وجود حضور سابق اليوم
   Future<bool> _checkExistingAttendance() async {
     try {
       final SharedPreferences prefs = await SharedPreferences.getInstance();
       String email = prefs.getString("email") ?? '';
-
       DateTime today = DateTime.now();
       DateTime dateOnly = DateTime(today.year, today.month, today.day);
+      addDebugLog(
+        'Checking existing attendance for email: $email on $dateOnly',
+      );
 
       QuerySnapshot existingAttendance =
           await FirebaseFirestore.instance
@@ -165,14 +510,18 @@ class _HomeScreenState extends State<HomeScreen> {
               .where('Date', isEqualTo: Timestamp.fromDate(dateOnly))
               .get();
 
-      return existingAttendance.docs.isNotEmpty;
+      bool exists = existingAttendance.docs.isNotEmpty;
+      addDebugLog('Existing attendance found: $exists');
+      return exists;
     } catch (e) {
-      print('Error checking existing attendance: $e');
+      addDebugLog('Error checking existing attendance: $e');
       return false;
     }
   }
 
+  /// عرض تحذير الحضور
   Future<void> _showAttendanceWarning() async {
+    addDebugLog('Showing attendance warning');
     return showDialog(
       context: context,
       builder:
@@ -190,7 +539,10 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
             actions: [
               TextButton(
-                onPressed: () => Navigator.pop(context),
+                onPressed: () {
+                  Navigator.pop(context);
+                  addDebugLog('Attendance warning dismissed');
+                },
                 child: Text(
                   'حسناً',
                   style: TextStyle(fontFamily: 'Tajawal', color: mainColor),
@@ -202,7 +554,17 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   @override
+  void initState() {
+    super.initState();
+    fetchData();
+  }
+
+  @override
   Widget build(BuildContext context) {
+    addDebugLog(
+      'Building HomeScreen: isLoading=$isLoading, attendanceDays=$attendanceDays, showLocationPage=$showLocationPage',
+    );
+
     return Directionality(
       textDirection:
           Get.locale?.languageCode == 'ar'
@@ -211,6 +573,7 @@ class _HomeScreenState extends State<HomeScreen> {
       child: WillPopScope(
         onWillPop: () async {
           if (_backButtonPressedCount == 1) {
+            addDebugLog('Back button pressed twice, exiting');
             return true;
           } else {
             _backButtonPressedCount++;
@@ -222,6 +585,7 @@ class _HomeScreenState extends State<HomeScreen> {
               snackPosition: SnackPosition.TOP,
               duration: Duration(seconds: 3),
             );
+            addDebugLog('Back button pressed once');
             Timer(Duration(seconds: 2), () {
               _backButtonPressedCount = 0;
             });
@@ -237,11 +601,13 @@ class _HomeScreenState extends State<HomeScreen> {
                 child: Image.asset('assets/images/logo.png'),
               ),
             ],
-            backgroundColor: Color.fromARGB(0, 1, 134, 196),
+            backgroundColor: Colors.transparent,
+            elevation: 0,
             leading: IconButton(
-              icon: Icon(Icons.menu, color: const Color.fromARGB(255, 0, 0, 0)),
+              icon: Icon(Icons.menu, color: Colors.black),
               onPressed: () {
                 _scaffoldKey.currentState?.openDrawer();
+                addDebugLog('Drawer opened');
               },
             ),
           ),
@@ -259,10 +625,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 children: [
                   SizedBox(height: 40.0),
                   ListTile(
-                    leading: Icon(
-                      Icons.person,
-                      color: Color.fromARGB(255, 255, 255, 255),
-                    ),
+                    leading: Icon(Icons.person, color: Colors.white),
                     title: Text(
                       'الحساب',
                       textAlign: TextAlign.center,
@@ -275,14 +638,12 @@ class _HomeScreenState extends State<HomeScreen> {
                     onTap: () {
                       Navigator.pop(context);
                       Get.to(() => Profile());
+                      addDebugLog('Navigated to Profile');
                     },
                   ),
                   SizedBox(height: 8.0),
                   ListTile(
-                    leading: Icon(
-                      Icons.info_outline,
-                      color: Color.fromARGB(255, 255, 255, 255),
-                    ),
+                    leading: Icon(Icons.info_outline, color: Colors.white),
                     title: Text(
                       'التعليمات',
                       textAlign: TextAlign.center,
@@ -295,14 +656,12 @@ class _HomeScreenState extends State<HomeScreen> {
                     onTap: () {
                       Navigator.pop(context);
                       Get.to(() => InfoPage());
+                      addDebugLog('Navigated to InfoPage');
                     },
                   ),
                   SizedBox(height: 8.0),
                   ListTile(
-                    leading: Icon(
-                      Icons.factory,
-                      color: Color.fromARGB(255, 255, 255, 255),
-                    ),
+                    leading: Icon(Icons.factory, color: Colors.white),
                     title: Text(
                       'بيانات مصنعك',
                       textAlign: TextAlign.center,
@@ -312,19 +671,16 @@ class _HomeScreenState extends State<HomeScreen> {
                         fontFamily: 'Tajawal',
                       ),
                     ),
-                    onTap: () async {
-                      Get.to(
-                        () => FactoryData(selectedFactory: student?['factory']),
-                      );
+                    onTap: () {
+                      Navigator.pop(context);
+                      Get.to(() => FactoryData(selectedFactory: factName));
+                      addDebugLog('Navigated to FactoryData');
                     },
                   ),
                   SizedBox(height: 16.0),
                   Divider(color: Colors.white.withOpacity(0.5)),
                   ListTile(
-                    leading: Icon(
-                      Icons.logout,
-                      color: const Color.fromARGB(255, 255, 255, 255),
-                    ),
+                    leading: Icon(Icons.logout, color: Colors.white),
                     title: Text(
                       'تسجيل الخروج',
                       textAlign: TextAlign.center,
@@ -336,7 +692,26 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
                     onTap: () {
                       Navigator.pop(context);
-                      // Add your logout logic here
+                      // Add logout logic here
+                      addDebugLog('Logout tapped');
+                    },
+                  ),
+                  SizedBox(height: 8.0),
+                  ListTile(
+                    leading: Icon(Icons.bug_report, color: Colors.white),
+                    title: Text(
+                      'عرض سجل التصحيح',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 18.0,
+                        fontFamily: 'Tajawal',
+                      ),
+                    ),
+                    onTap: () {
+                      Navigator.pop(context);
+                      showDebugInfo();
+                      addDebugLog('Debug info dialog opened');
                     },
                   ),
                 ],
@@ -353,6 +728,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         isLoading = true;
                       });
                       await fetchData();
+                      addDebugLog('Refreshed data');
                     },
                     color: mainColor,
                     child: SingleChildScrollView(
@@ -362,8 +738,6 @@ class _HomeScreenState extends State<HomeScreen> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            SizedBox(height: 40),
-
                             // Student Info Cards
                             _buildDataCard(
                               icon: Icons.person,
@@ -371,7 +745,6 @@ class _HomeScreenState extends State<HomeScreen> {
                               value: student?['name'] ?? '',
                             ),
                             SizedBox(height: 12),
-
                             _buildDataCard(
                               icon: Icons.school,
                               title: 'السنة الدراسية',
@@ -379,30 +752,18 @@ class _HomeScreenState extends State<HomeScreen> {
                                   '${student?['batch']} ، ${student?['stage']}',
                             ),
                             SizedBox(height: 12),
-
                             _buildDataCard(
                               icon: Icons.business,
                               title: 'القسم',
                               value: student?['department'] ?? '',
                             ),
                             SizedBox(height: 12),
-
                             _buildDataCard(
                               icon: Icons.factory,
                               title: 'المصنع',
-                              value: student?['factory'] ?? 'يتم التحميل..',
+                              value: factName ?? 'يتم التحميل..',
                             ),
                             SizedBox(height: 12),
-
-                            _buildDataCard(
-                              icon: Icons.supervised_user_circle,
-                              title: 'المشرف',
-                              value:
-                                  student?['supervisor'].toString() ??
-                                  'بدون مشرف',
-                            ),
-                            SizedBox(height: 24),
-
                             // Attendance Card
                             Card(
                               elevation: 4,
@@ -438,86 +799,120 @@ class _HomeScreenState extends State<HomeScreen> {
                                       ],
                                     ),
                                     SizedBox(height: 16),
-                                    FutureBuilder<QuerySnapshot>(
-                                      future:
-                                          FirebaseFirestore.instance
-                                              .collection('Attendances')
-                                              .where(
-                                                'Student_ID',
-                                                isEqualTo: student?['code'],
-                                              )
-                                              .get(),
-                                      builder: (context, snapshot) {
-                                        if (snapshot.connectionState ==
-                                            ConnectionState.waiting) {
-                                          return Center(
-                                            child: CircularProgressIndicator(
-                                              color: mainColor,
+                                    Center(
+                                      child: Column(
+                                        children: [
+                                          Text(
+                                            'أيام الحضور',
+                                            style: TextStyle(
+                                              color: Colors.grey[600],
+                                              fontSize: 16.0,
+                                              fontFamily: 'Tajawal',
                                             ),
-                                          );
-                                        }
-                                        if (snapshot.hasError) {
-                                          return Text(
-                                            'Error: ${snapshot.error}',
-                                          );
-                                        }
-                                        int attendsDays =
-                                            snapshot.data?.docs.length ?? 0;
-                                        return Center(
-                                          child: Column(
-                                            children: [
-                                              Text(
-                                                'أيام الحضور',
-                                                style: TextStyle(
-                                                  color: Colors.grey[600],
-                                                  fontSize: 16.0,
-                                                  fontFamily: 'Tajawal',
-                                                ),
-                                              ),
-                                              SizedBox(height: 8),
-                                              Text(
-                                                '$attendsDays',
-                                                style: TextStyle(
-                                                  color: mainColor,
-                                                  fontSize: 48.0,
-                                                  fontWeight: FontWeight.bold,
-                                                  fontFamily: 'Tajawal',
-                                                ),
-                                              ),
-                                            ],
                                           ),
-                                        );
-                                      },
+                                          SizedBox(height: 8),
+                                          Text(
+                                            '$attendanceDays',
+                                            style: TextStyle(
+                                              color: mainColor,
+                                              fontSize: 48.0,
+                                              fontWeight: FontWeight.bold,
+                                              fontFamily: 'Tajawal',
+                                            ),
+                                          ),
+                                        ],
+                                      ),
                                     ),
                                   ],
                                 ),
                               ),
                             ),
                             SizedBox(height: 24),
-
                             // Action Buttons
                             if (currentAttendanceId == null)
                               SizedBox(
                                 height: 60.0,
                                 width: double.infinity,
                                 child: CreateButton(
-                                  onPressed:
-                                      hasEnteredToday
-                                          ? () {}
-                                          : () async {
-                                            bool hasExistingAttendance =
-                                                await _checkExistingAttendance();
-                                            if (hasExistingAttendance) {
-                                              await _showAttendanceWarning();
-                                            } else {
-                                              Get.to(() => EnterFactory());
-                                            }
+                                  onPressed: () async {
+                                    // نافذة تأكيد قبل أي إجراء
+                                    bool? confirmed = await showDialog<bool>(
+                                      context: context,
+                                      builder:
+                                          (context) => AlertDialog(
+                                            title: Text(
+                                              'تأكيد',
+                                              style: TextStyle(
+                                                fontFamily: 'Tajawal',
+                                              ),
+                                            ),
+                                            content: Text(
+                                              'هل أنت متأكد أنك تريد بدء اليوم؟',
+                                              style: TextStyle(
+                                                fontFamily: 'Tajawal',
+                                              ),
+                                            ),
+                                            actions: [
+                                              TextButton(
+                                                onPressed:
+                                                    () => Navigator.pop(
+                                                      context,
+                                                      false,
+                                                    ),
+                                                child: Text(
+                                                  'إلغاء',
+                                                  style: TextStyle(
+                                                    fontFamily: 'Tajawal',
+                                                  ),
+                                                ),
+                                              ),
+                                              TextButton(
+                                                onPressed:
+                                                    () => Navigator.pop(
+                                                      context,
+                                                      true,
+                                                    ),
+                                                child: Text(
+                                                  'تأكيد',
+                                                  style: TextStyle(
+                                                    fontFamily: 'Tajawal',
+                                                    color: mainColor,
+                                                  ),
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                    );
+
+                                    if (confirmed != true) return;
+
+                                    if (attendanceDays == 0) {
+                                      // أول يوم: انتقل إلى تحديد الموقع
+                                      Get.to(
+                                        () => LocationConfirmationPage(
+                                          factName: factName ?? '',
+                                          onLocationConfirmed: () {
+                                            Get.to(() => EnterFactory());
                                           },
+                                        ),
+                                      );
+                                    } else if (hasEnteredToday) {
+                                      await _showAttendanceWarning();
+                                    } else {
+                                      bool hasExistingAttendance =
+                                          await _checkExistingAttendance();
+                                      if (hasExistingAttendance) {
+                                        await _showAttendanceWarning();
+                                      } else {
+                                        Get.to(() => EnterFactory());
+                                      }
+                                    }
+                                  },
                                   title: Center(
                                     child: Text(
                                       hasEnteredToday
-                                          ? 'already_entered'.tr
-                                          : 'enter_factory'.tr,
+                                          ? 'لقد قمت بتسجيل الدخول اليوم بالفعل'
+                                          : 'بدء اليوم',
                                       style: TextStyle(
                                         color: Colors.white,
                                         fontSize: 18.0,
@@ -540,6 +935,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                             currentAttendanceId.toString(),
                                       ),
                                     );
+                                    addDebugLog('Navigated to ExitFactory');
                                   },
                                   title: Center(
                                     child: Text(
@@ -611,6 +1007,301 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
             ),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+/// LocationConfirmationPage - صفحة مخصصة لتحديد موقع المصنع في اليوم الأول
+class LocationConfirmationPage extends StatefulWidget {
+  final String factName;
+  final VoidCallback onLocationConfirmed;
+
+  const LocationConfirmationPage({
+    Key? key,
+    required this.factName,
+    required this.onLocationConfirmed,
+  }) : super(key: key);
+
+  @override
+  _LocationConfirmationPageState createState() =>
+      _LocationConfirmationPageState();
+}
+
+class _LocationConfirmationPageState extends State<LocationConfirmationPage> {
+  bool isLocationLoading = false;
+  bool isLocationConfirmed = false;
+  double? currentLatitude;
+  double? currentLongitude;
+  LatLng currentLatLng = LatLng(30.0444, 31.2357); // الموقع الافتراضي (القاهرة)
+  final Completer<GoogleMapController> _mapController = Completer();
+
+  /// جلب الموقع الحالي
+  Future<void> getCurrentLocation() async {
+    bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
+    if (!serviceEnabled) {
+      _showError('يرجى تفعيل خدمة الموقع');
+      return;
+    }
+    LocationPermission permission = await Geolocator.checkPermission();
+    if (permission == LocationPermission.denied) {
+      permission = await Geolocator.requestPermission();
+      if (permission == LocationPermission.denied) {
+        _showError('يرجى السماح بالوصول إلى الموقع');
+        return;
+      }
+    }
+    if (permission == LocationPermission.deniedForever) {
+      _showError('يرجى السماح بالوصول إلى الموقع من إعدادات التطبيق');
+      return;
+    }
+    setState(() => isLocationLoading = true);
+    try {
+      Position position = await Geolocator.getCurrentPosition(
+        desiredAccuracy: LocationAccuracy.high,
+      );
+      setState(() {
+        currentLatitude = position.latitude;
+        currentLongitude = position.longitude;
+        currentLatLng = LatLng(position.latitude, position.longitude);
+        isLocationConfirmed = true;
+        isLocationLoading = false;
+      });
+      final GoogleMapController controller = await _mapController.future;
+      controller.animateCamera(CameraUpdate.newLatLng(currentLatLng));
+      _showSuccess('تم تحديد الموقع بنجاح');
+    } catch (e) {
+      _showError('حدث خطأ أثناء تحديد الموقع: $e');
+      setState(() => isLocationLoading = false);
+    }
+  }
+
+  /// عند الضغط على زر تأكيد وحفظ الموقع
+  Future<void> onSaveLocation() async {
+    if (currentLatitude == null || currentLongitude == null) {
+      _showError('يرجى تحديد الموقع أولاً');
+      return;
+    }
+    setState(() => isLocationLoading = true);
+    try {
+      await _updateStudentFactoryLocation();
+      _showSuccess('تم حفظ موقع المصنع بنجاح');
+      widget.onLocationConfirmed();
+    } catch (e) {
+      _showError('حدث خطأ أثناء حفظ موقع المصنع: $e');
+    } finally {
+      setState(() => isLocationLoading = false);
+    }
+  }
+
+  /// تحديث الطالب فقط
+  Future<void> _updateStudentFactoryLocation() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    String email = prefs.getString("email") ?? '';
+    if (email.isEmpty) {
+      throw Exception('لم يتم العثور على بريد إلكتروني للطالب');
+    }
+    QuerySnapshot studentQuery =
+        await FirebaseFirestore.instance
+            .collection('StudentsTable')
+            .where('email', isEqualTo: email)
+            .limit(1)
+            .get();
+    if (studentQuery.docs.isEmpty) {
+      throw Exception('لم يتم العثور على مستند الطالب');
+    }
+    String studentId = studentQuery.docs.first.id;
+    await FirebaseFirestore.instance
+        .collection('StudentsTable')
+        .doc(studentId)
+        .update({
+          'factory_latitude': currentLatitude,
+          'factory_longitude': currentLongitude,
+        });
+  }
+
+  void _showError(String msg) {
+    Get.snackbar(
+      'تنبيه',
+      msg,
+      backgroundColor: Colors.red,
+      colorText: Colors.white,
+      snackPosition: SnackPosition.TOP,
+      duration: Duration(seconds: 3),
+    );
+  }
+
+  void _showSuccess(String msg) {
+    Get.snackbar(
+      'نجاح',
+      msg,
+      backgroundColor: Colors.green,
+      colorText: Colors.white,
+      snackPosition: SnackPosition.TOP,
+      duration: Duration(seconds: 3),
+    );
+  }
+
+  void _onMapCreated(GoogleMapController controller) {
+    _mapController.complete(controller);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.grey[50],
+      appBar: AppBar(
+        backgroundColor: mainColor,
+        title: Text(
+          'تأكيد موقع المصنع',
+          style: TextStyle(
+            color: Colors.white,
+            fontFamily: 'Tajawal',
+            fontWeight: FontWeight.w700,
+            fontSize: 22,
+          ),
+        ),
+        centerTitle: true,
+        elevation: 0,
+        surfaceTintColor: Colors.transparent,
+      ),
+      body: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16.0),
+        child: Center(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              AnimatedContainer(
+                duration: Duration(milliseconds: 300),
+                child: Icon(Icons.location_on, color: mainColor, size: 64),
+              ),
+              SizedBox(height: 16),
+              Text(
+                'يرجى تحديد موقع المصنع بدقة، سيتم اعتماده كموقع رسمي لتسجيل الحضور والغياب يوميًا. تأكد أن يكون هذا الموقع ثابتًا وهو ذاته يوميًا.',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontFamily: 'Tajawal',
+                  fontSize: 16,
+                  color: Colors.grey[700],
+                  fontWeight: FontWeight.w500,
+                  height: 1.5,
+                ),
+              ),
+              SizedBox(height: 32),
+              AnimatedOpacity(
+                opacity: isLocationLoading ? 0.7 : 1.0,
+                duration: Duration(milliseconds: 200),
+                child: ElevatedButton.icon(
+                  onPressed: isLocationLoading ? null : getCurrentLocation,
+                  icon:
+                      isLocationLoading
+                          ? SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2.5,
+                              valueColor: AlwaysStoppedAnimation<Color>(
+                                Colors.white,
+                              ),
+                            ),
+                          )
+                          : Icon(
+                            Icons.my_location,
+                            color: Colors.white,
+                            size: 22,
+                          ),
+                  label: Text(
+                    isLocationLoading
+                        ? 'جاري تحديد الموقع...'
+                        : 'تحديد موقعي الحالي',
+                    style: TextStyle(
+                      fontFamily: 'Tajawal',
+                      fontWeight: FontWeight.w600,
+                      fontSize: 16,
+                      color: Colors.white,
+                    ),
+                  ),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: mainColor,
+                    foregroundColor: Colors.white,
+                    minimumSize: Size(double.infinity, 52),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    elevation: 2,
+                    padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  ),
+                ),
+              ),
+              if (isLocationConfirmed) ...[
+                SizedBox(height: 28),
+                Container(
+                  height: 200,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(
+                      color: mainColor.withOpacity(0.2),
+                      width: 1.5,
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.grey.withOpacity(0.1),
+                        blurRadius: 8,
+                        offset: Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(16),
+                    child: GoogleMap(
+                      onMapCreated: _onMapCreated,
+                      initialCameraPosition: CameraPosition(
+                        target: currentLatLng,
+                        zoom: 16.0,
+                      ),
+                      markers: {
+                        Marker(
+                          markerId: MarkerId('factory_location'),
+                          position: currentLatLng,
+                          infoWindow: InfoWindow(title: 'موقع المصنع'),
+                        ),
+                      },
+                      myLocationButtonEnabled: true,
+                      zoomControlsEnabled: false,
+                    ),
+                  ),
+                ),
+                SizedBox(height: 32),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed: isLocationLoading ? null : onSaveLocation,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: mainColor,
+                      foregroundColor: Colors.white,
+                      minimumSize: Size(double.infinity, 52),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      elevation: 2,
+                      padding: EdgeInsets.symmetric(vertical: 12),
+                    ),
+                    child: Text(
+                      isLocationLoading ? 'جاري الحفظ...' : 'تأكيد وحفظ الموقع',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontFamily: 'Tajawal',
+                        fontWeight: FontWeight.w600,
+                        fontSize: 16,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+              if (!isLocationConfirmed) SizedBox(height: 16),
+            ],
+          ),
         ),
       ),
     );
