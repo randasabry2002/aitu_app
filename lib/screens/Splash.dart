@@ -150,7 +150,7 @@ class SplashState extends State<Splash> with SingleTickerProviderStateMixin {
 
     // Check if report needs to be uploaded
     if (await _checkReportUploadStatus()) {
-      Get.offAll(() => PDFViewerPage(pdfType: "nominationCard"));
+      Get.offAll(() => PDFViewerPage());
       return;
     }
 

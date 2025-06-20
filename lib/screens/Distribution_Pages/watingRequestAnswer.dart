@@ -245,7 +245,7 @@ class WaitnigReqestAnswer extends StatelessWidget {
             ),
           ),
           onPressed: () {
-            Get.to(() => PDFViewerPage(pdfType: 'nominationCard'));
+            Get.to(() => PDFViewerPage());
           },
         ),
       ],

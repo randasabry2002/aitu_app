@@ -456,7 +456,26 @@ class _Not_College_distribution_pageState
                                 }
                               });
                         }
-                        Get.to(PDFViewerPage(pdfType: "nominationCard"));
+                        // جلب doc id المصنع الحالي من Firestore ثم إرساله
+                        if (selectedFactory != null && selectedGovernorate != null) {
+                          // ابحث عن المصنع في قاعدة البيانات بناءً على الاسم والمحافظة
+                          final factoryQuery = await FirebaseFirestore.instance
+                              .collection('Factories')
+                              .where('name', isEqualTo: selectedFactory)
+                              .where('Governorate', isEqualTo: selectedGovernorate)
+                              .limit(1)
+                              .get();
+            Get.to(() => PDFViewerPage());
+
+                          // if (factoryQuery.docs.isNotEmpty) {
+                          //   final factoryDocId = factoryQuery.docs.first.id;
+                          //   Get.to(WordDocAndReportPage(factoryDocId: factoryDocId));
+                          // } else {
+                          //   ScaffoldMessenger.of(context).showSnackBar(
+                          //     SnackBar(content: Text('لم يتم العثور على المصنع.')),
+                          //   );
+                          // }
+                        }
                       },
                     ),
                   ),
