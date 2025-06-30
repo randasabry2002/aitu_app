@@ -1084,8 +1084,53 @@ class _DuringTrainingState extends State<DuringTraining> {
                 Icons.arrow_back_ios_new_rounded,
                 color: Colors.black87,
               ),
-              onPressed: () {
-                Get.back();
+              onPressed: () async {
+                bool? shouldLeave = await showDialog<bool>(
+                  context: context,
+                  builder: (context) => AlertDialog(
+                    title: Text(
+                      'تحذير',
+                      style: TextStyle(
+                        fontFamily: 'Tajawal',
+                        fontWeight: FontWeight.bold,
+                        fontSize: 20,
+                      ),
+                    ),
+                    content: Text(
+                      'هل أنت متأكد أنك تريد العودة إلى الصفحة الرئيسية؟ قد تفقد تقدمك الحالي.',
+                      style: TextStyle(
+                        fontFamily: 'Tajawal',
+                        fontSize: 16,
+                      ),
+                    ),
+                    actions: [
+                      TextButton(
+                        onPressed: () => Navigator.of(context).pop(false),
+                        child: Text(
+                          'إلغاء',
+                          style: TextStyle(
+                            fontFamily: 'Tajawal',
+                            color: Colors.grey[700],
+                          ),
+                        ),
+                      ),
+                      TextButton(
+                        onPressed: () => Navigator.of(context).pop(true),
+                        child: Text(
+                          'تأكيد',
+                          style: TextStyle(
+                            fontFamily: 'Tajawal',
+                            color: Colors.red[700],
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+                if (shouldLeave == true) {
+                  Get.offAll(() => HomeScreen());
+                }
               },
             ),
             backgroundColor: Colors.white,
