@@ -77,7 +77,7 @@ class _Add_New_Factory_Request_PageState
     setState(() {
       governorates =
           querySnapshot.docs
-              .map((doc) => {'name': doc['name'], 'id': doc.id})
+              .map((doc) => {'name': doc['GName'], 'id': doc.id})
               .toList();
     });
   }

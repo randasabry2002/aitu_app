@@ -245,7 +245,7 @@ class WaitnigReqestAnswer extends StatelessWidget {
             ),
           ),
           onPressed: () {
-            Get.to(() => PDFViewerPage());
+            Get.to(() => PDFViewerPage(isNominationCard: true, factoryID: factoryName));
           },
         ),
       ],
