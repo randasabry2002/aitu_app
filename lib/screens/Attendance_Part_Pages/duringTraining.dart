@@ -233,24 +233,6 @@ class _DuringTrainingState extends State<DuringTraining> {
     try {
       final supabase = Supabase.instance.client;
       String studentId = await _prefs.getString("studentId") ?? "";
-      final session = supabase.auth.currentSession;
-      final accessToken = session?.accessToken;
-      print('Supabase access token: $accessToken');
-      if (accessToken == null) {
-        print('No access token found. User might not be logged in.');
-        Get.snackbar(
-          'خطأ',
-          'لم يتم العثور على صلاحية الدخول. يرجى إعادة تسجيل الدخول.',
-          backgroundColor: Colors.red,
-          colorText: Colors.white,
-          snackPosition: SnackPosition.TOP,
-          duration: Duration(seconds: 3),
-        );
-        setState(() {
-          isUploading = false;
-        });
-        return;
-      }
 
       for (int i = 0; i < selectedImages.length; i++) {
         File imageFile = selectedImages[i];
@@ -259,16 +241,10 @@ class _DuringTrainingState extends State<DuringTraining> {
         print('اسم الملف: $fileName');
         print('المسار: ${imageFile.path}');
 
-        // رفع الصورة إلى Supabase
+        // رفع الصورة إلى Supabase بدون headers
         await supabase.storage
             .from('studenttrainingimages')
-            .upload(
-              fileName,
-              imageFile,
-              fileOptions: FileOptions(
-                headers: {'Authorization': 'Bearer $accessToken'},
-              ),
-            );
+            .upload(fileName, imageFile);
         print('تم رفع الصورة رقم $i بنجاح');
 
         // الحصول على الرابط العام

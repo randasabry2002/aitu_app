@@ -7,7 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:aitu_app/screens/Profile.dart';
 import 'package:aitu_app/screens/Attendance_Part_Pages/EnterFactory.dart';
-import 'package:aitu_app/screens/Attendance_Part_Pages/ExitFactory.dart';
+// import 'package:aitu_app/screens/Attendance_Part_Pages/ExitFactory.dart';
 import 'package:aitu_app/screens/Attendance_Part_Pages/InfoPage.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:geolocator/geolocator.dart';
@@ -316,7 +316,7 @@ class _HomeScreenState extends State<HomeScreen> {
     try {
       QueryDocumentSnapshot? student = await getStudent();
       if (student != null) {
-        String factoryId = student['factory'] ?? ''; 
+        String factoryId = student['factory'] ?? '';
         addDebugLog('Fetching factory with name: $factoryId');
 
         final factoryQuery =
@@ -350,7 +350,7 @@ class _HomeScreenState extends State<HomeScreen> {
       addDebugLog('Error getting factory: $e');
       setState(() {
         factName = 'خطأ في تحميل بيانات المصنع';
-      }); 
+      });
       return null;
     }
   }
@@ -359,7 +359,7 @@ class _HomeScreenState extends State<HomeScreen> {
   Future<void> fetchData() async {
     try {
       addDebugLog('Fetching data started');
-      student = await getStudent(); 
+      student = await getStudent();
       factory = await getFactory();
       await checkCurrentAttendance();
       await checkTodayAttendance();
@@ -377,7 +377,7 @@ class _HomeScreenState extends State<HomeScreen> {
             () => LocationConfirmationPage(
               factName: factName ?? '',
               onLocationConfirmed: () {
-                setState(() { 
+                setState(() {
                   showLocationPage = false;
                 });
                 Get.off(() => EnterFactory());
@@ -796,128 +796,127 @@ class _HomeScreenState extends State<HomeScreen> {
                             ),
                             SizedBox(height: 24),
                             // Action Buttons
-                            if (currentAttendanceId == null)
-                              SizedBox(
-                                height: 60.0,
-                                width: double.infinity,
-                                child: CreateButton(
-                                  onPressed: () async {
-                                    // نافذة تأكيد قبل أي إجراء
-                                    bool? confirmed = await showDialog<bool>(
-                                      context: context,
-                                      builder:
-                                          (context) => AlertDialog(
-                                            title: Text(
-                                              'تأكيد',
-                                              style: TextStyle(
-                                                fontFamily: 'Tajawal',
-                                              ),
+                            SizedBox(
+                              height: 60.0,
+                              width: double.infinity,
+                              child: CreateButton(
+                                onPressed: () async {
+                                  // نافذة تأكيد قبل أي إجراء
+                                  bool? confirmed = await showDialog<bool>(
+                                    context: context,
+                                    builder:
+                                        (context) => AlertDialog(
+                                          title: Text(
+                                            'تأكيد',
+                                            style: TextStyle(
+                                              fontFamily: 'Tajawal',
                                             ),
-                                            content: Text(
-                                              'هل أنت متأكد أنك تريد بدء اليوم؟',
-                                              style: TextStyle(
-                                                fontFamily: 'Tajawal',
-                                              ),
-                                            ),
-                                            actions: [
-                                              TextButton(
-                                                onPressed:
-                                                    () => Navigator.pop(
-                                                      context,
-                                                      false,
-                                                    ),
-                                                child: Text(
-                                                  'إلغاء',
-                                                  style: TextStyle(
-                                                    fontFamily: 'Tajawal',
-                                                  ),
-                                                ),
-                                              ),
-                                              TextButton(
-                                                onPressed:
-                                                    () => Navigator.pop(
-                                                      context,
-                                                      true,
-                                                    ),
-                                                child: Text(
-                                                  'تأكيد',
-                                                  style: TextStyle(
-                                                    fontFamily: 'Tajawal',
-                                                    color: mainColor,
-                                                  ),
-                                                ),
-                                              ),
-                                            ],
                                           ),
-                                    );
-
-                                    if (confirmed != true) return;
-
-                                    if (attendanceDays == 0) {
-                                      // أول يوم: انتقل إلى تحديد الموقع
-                                      Get.to(
-                                        () => LocationConfirmationPage(
-                                          factName: factName ?? '',
-                                          onLocationConfirmed: () {
-                                            Get.to(() => EnterFactory());
-                                          },
+                                          content: Text(
+                                            'هل أنت متأكد أنك تريد بدء اليوم؟',
+                                            style: TextStyle(
+                                              fontFamily: 'Tajawal',
+                                            ),
+                                          ),
+                                          actions: [
+                                            TextButton(
+                                              onPressed:
+                                                  () => Navigator.pop(
+                                                    context,
+                                                    false,
+                                                  ),
+                                              child: Text(
+                                                'إلغاء',
+                                                style: TextStyle(
+                                                  fontFamily: 'Tajawal',
+                                                ),
+                                              ),
+                                            ),
+                                            TextButton(
+                                              onPressed:
+                                                  () => Navigator.pop(
+                                                    context,
+                                                    true,
+                                                  ),
+                                              child: Text(
+                                                'تأكيد',
+                                                style: TextStyle(
+                                                  fontFamily: 'Tajawal',
+                                                  color: mainColor,
+                                                ),
+                                              ),
+                                            ),
+                                          ],
                                         ),
-                                      );
-                                    } else if (hasEnteredToday) {
+                                  );
+
+                                  if (confirmed != true) return;
+
+                                  if (attendanceDays == 0) {
+                                    // أول يوم: انتقل إلى تحديد الموقع
+                                    Get.to(
+                                      () => LocationConfirmationPage(
+                                        factName: factName ?? '',
+                                        onLocationConfirmed: () {
+                                          Get.to(() => EnterFactory());
+                                        },
+                                      ),
+                                    );
+                                  } else if (hasEnteredToday) {
+                                    await _showAttendanceWarning();
+                                  } else {
+                                    bool hasExistingAttendance =
+                                        await _checkExistingAttendance();
+                                    if (hasExistingAttendance) {
                                       await _showAttendanceWarning();
                                     } else {
-                                      bool hasExistingAttendance =
-                                          await _checkExistingAttendance();
-                                      if (hasExistingAttendance) {
-                                        await _showAttendanceWarning();
-                                      } else {
-                                        Get.to(() => EnterFactory());
-                                      }
+                                      Get.to(() => EnterFactory());
                                     }
-                                  },
-                                  title: Center(
-                                    child: Text(
-                                      hasEnteredToday
-                                          ? 'لقد قمت بتسجيل الدخول اليوم بالفعل'
-                                          : 'بدء اليوم',
-                                      style: TextStyle(
-                                        color: Colors.white,
-                                        fontSize: 18.0,
-                                        fontFamily: 'Tajawal',
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              )
-                            else
-                              SizedBox(
-                                height: 60.0,
-                                width: double.infinity,
-                                child: CreateButton(
-                                  onPressed: () {
-                                    Get.to(
-                                      () => ExitFactory(
-                                        attendanceId:
-                                            currentAttendanceId.toString(),
-                                      ),
-                                    );
-                                  
-                                    addDebugLog('Navigated to ExitFactory');
-                                  },
-                                  title: Center(
-                                    child: Text(
-                                      'exit_factory'.tr,
-                                      style: TextStyle(
-                                        color: Colors.white,
-                                        fontSize: 18.0,
-                                        fontFamily: 'Tajawal',
-                                        fontWeight: FontWeight.bold,
-                                      ),
+                                  }
+                                },
+                                title: Center(
+                                  child: Text(
+                                    hasEnteredToday
+                                        ? 'لقد قمت بتسجيل الدخول اليوم بالفعل'
+                                        : 'بدء اليوم',
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 18.0,
+                                      fontFamily: 'Tajawal',
+                                      fontWeight: FontWeight.bold,
                                     ),
                                   ),
                                 ),
                               ),
+                            )
+                          //   else
+                          //     SizedBox(
+                          //       height: 60.0,
+                          //       width: double.infinity,
+                          //       child: CreateButton(
+                          //         onPressed: () {
+                          //           Get.to(
+                          //             () => ExitFactory(
+                          //               attendanceId:
+                          //                   currentAttendanceId.toString(),
+                          //             ),
+                          //           );
+
+                          //           addDebugLog('Navigated to ExitFactory');
+                          //         },
+                          //         title: Center(
+                          //           child: Text(
+                          //             'exit_factory'.tr,
+                          //             style: TextStyle(
+                          //               color: Colors.white,
+                          //               fontSize: 18.0,
+                          //               fontFamily: 'Tajawal',
+                          //               fontWeight: FontWeight.bold,
+                          //             ),
+                          //           ),
+                          //         ),
+                          //       ),
+                          //     ),
                           ],
                         ),
                       ),
@@ -1088,7 +1087,7 @@ class _LocationConfirmationPageState extends State<LocationConfirmationPage> {
           'factory_longitude': currentLongitude,
         });
   }
- 
+
   void _showError(String msg) {
     Get.snackbar(
       'تنبيه',
@@ -1158,7 +1157,7 @@ class _LocationConfirmationPageState extends State<LocationConfirmationPage> {
               ),
               SizedBox(height: 32),
               AnimatedOpacity(
-                opacity: isLocationLoading ? 0.7 : 1.0, 
+                opacity: isLocationLoading ? 0.7 : 1.0,
                 duration: Duration(milliseconds: 200),
                 child: ElevatedButton.icon(
                   onPressed: isLocationLoading ? null : getCurrentLocation,
