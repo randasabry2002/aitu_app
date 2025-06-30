@@ -262,7 +262,7 @@ class _PDFViewerPageState extends State<PDFViewerPage> {
 
   @override
   Widget build(BuildContext context) {
-    bool isNominatinCardAppear = true;
+    bool isNominatinCardAppear = widget.isNominationCard;
     final String pdfUrl =
         'https://cjzaqgnhcpjtlswhnbda.supabase.co/storage/v1/object/public/pdfs//test.pdf';
     return Stack(
@@ -280,6 +280,52 @@ class _PDFViewerPageState extends State<PDFViewerPage> {
                 fontWeight: FontWeight.w800,
               ),
             ),
+            actions: [
+            IconButton(
+              icon: Icon(
+                Icons.info_outline,
+                color: Colors.blueGrey[700],
+              ),
+              tooltip: 'معلومات',
+              onPressed: () {
+                showDialog(
+                  context: context,
+                  builder: (context) => AlertDialog(
+                    title: Text(
+                      'معلومات هامة',
+                      style: TextStyle(
+                        fontFamily: 'Tajawal',
+                        fontWeight: FontWeight.bold,
+                        fontSize: 18,
+                      ),
+                    ),
+                    content: Text(
+                      'قم بالبحث عن اسمك لمعرفة مصنعك (من الاحسن أخذ لقطة شاشه بالبيانات الخاصه بك) ثم قم بالعوده الى الصفحه السابقة لبدأ الحضور',
+                      style: TextStyle(
+                        fontFamily: 'Tajawal',
+                        fontSize: 16,
+                      ),
+                    ),
+                    actions: [
+                      TextButton(
+                        child: Text(
+                          'حسناً',
+                          style: TextStyle(
+                            fontFamily: 'Tajawal',
+                            fontWeight: FontWeight.bold,
+                            color: Colors.blue,
+                          ),
+                        ),
+                        onPressed: () {
+                          Navigator.of(context).pop();
+                        },
+                      ),
+                    ],
+                  ),
+                );
+              },
+            ),
+            ],
             centerTitle: true,
             leading: IconButton(
               icon: Icon(
@@ -287,14 +333,14 @@ class _PDFViewerPageState extends State<PDFViewerPage> {
                 color: const Color.fromARGB(255, 0, 0, 0),
               ),
               onPressed: () {
-                Get.offAll(() => Not_College_distribution_page());
+                Get.back();
               },
             ),
           ),
 
           body: Center(
             child:
-                isNominatinCardAppear
+                widget.isNominationCard
                     ? SingleChildScrollView(
                       child: Column(
                         children: [
@@ -368,7 +414,10 @@ class _PDFViewerPageState extends State<PDFViewerPage> {
                                 SizedBox(height: 12),
                                 Divider(),
                                 SizedBox(height: 8),
-                                _buildInfoRow("اسم المصنع:", factoryData['name']),
+                                _buildInfoRow(
+                                  "اسم المصنع:",
+                                  factoryData['name'],
+                                ),
                                 _buildInfoRow(
                                   "المحافظة:",
                                   factoryData['Governorate'] ??
@@ -382,10 +431,10 @@ class _PDFViewerPageState extends State<PDFViewerPage> {
                           StatefulBuilder(
                             builder: (context, setState) {
                               bool isProcessing = false;
-                      
+
                               Future<void> handleUpload() async {
                                 setState(() => isProcessing = true);
-                      
+
                                 if (generatedWordFile != null &&
                                     await doesReportFileExistInSupabase()) {
                                   Get.snackbar(
@@ -398,18 +447,19 @@ class _PDFViewerPageState extends State<PDFViewerPage> {
                                   return;
                                 }
                                 await handleGenerateWordFile();
-                      
+
                                 if (generatedWordFile != null) {
                                   try {
                                     final supabase = Supabase.instance.client;
                                     final fileName =
                                         '${DateTime.now().millisecondsSinceEpoch}_${generatedWordFile!.path.split('/').last}';
                                     final storagePath = 'reports/$fileName';
-                      
+
                                     final fileBytes =
                                         await generatedWordFile!.readAsBytes();
-                      
-                                    final storageResponse = await supabase.storage
+
+                                    final storageResponse = await supabase
+                                        .storage
                                         .from('reports')
                                         .uploadBinary(
                                           fileName,
@@ -418,14 +468,14 @@ class _PDFViewerPageState extends State<PDFViewerPage> {
                                             upsert: true,
                                           ),
                                         );
-                      
+
                                     if (storageResponse != null &&
                                         storageResponse is String &&
                                         storageResponse.isNotEmpty) {
                                       final publicUrl = supabase.storage
                                           .from('reports')
                                           .getPublicUrl(fileName);
-                      
+
                                       await FirebaseFirestore.instance
                                           .collection('Reports')
                                           .add({
@@ -439,72 +489,100 @@ class _PDFViewerPageState extends State<PDFViewerPage> {
                                             'createdAt':
                                                 FieldValue.serverTimestamp(),
                                           });
-                      
+
                                       showDialog(
                                         context: context,
                                         barrierDismissible: false,
-                                        builder: (context) => AlertDialog(
-                                          shape: RoundedRectangleBorder(
-                                            borderRadius: BorderRadius.circular(20),
-                                          ),
-                                          backgroundColor: Colors.white,
-                                          title: Row(
-                                            children: [
-                                              Icon(Icons.check_circle, color: Colors.green.shade700, size: 28),
-                                              SizedBox(width: 8),
-                                              Text(
-                                                'تم الرفع',
-                                                style: TextStyle(
-                                                  color: Colors.green.shade900,
-                                                  fontFamily: 'Tajawal',
-                                                  fontWeight: FontWeight.bold,
-                                                  fontSize: 20,
-                                                ),
+                                        builder:
+                                            (context) => AlertDialog(
+                                              shape: RoundedRectangleBorder(
+                                                borderRadius:
+                                                    BorderRadius.circular(10),
                                               ),
-                                            ],
-                                          ),
-                                          content: Column(
-                                            mainAxisSize: MainAxisSize.min,
-                                            children: [
-                                              SizedBox(height: 8),
-                                              Text(
-                                                'تم رفع التقرير إلى الكلية وحفظه بنجاح',
-                                                style: TextStyle(
-                                                  color: Colors.green.shade900,
-                                                  fontFamily: 'Tajawal',
-                                                  fontSize: 16,
-                                                ),
-                                                textAlign: TextAlign.center,
-                                              ),
-                                              SizedBox(height: 16),
-                                              Icon(Icons.cloud_upload_rounded, color: Colors.green.shade400, size: 48),
-                                            ],
-                                          ),
-                                          actions: [
-                                            SizedBox(
-                                              width: double.infinity,
-                                              child: ElevatedButton(
-                                                onPressed: () => Navigator.of(context).pop(),
-                                                style: ElevatedButton.styleFrom(
-                                                  backgroundColor: Colors.green.shade700,
-                                                  foregroundColor: Colors.white,
-                                                  shape: RoundedRectangleBorder(
-                                                    borderRadius: BorderRadius.circular(12),
+                                              backgroundColor: Colors.white,
+                                              title: Row(
+                                                children: [
+                                                  Icon(
+                                                    Icons.check_circle,
+                                                    color:
+                                                        Colors.green.shade700,
+                                                    size: 28,
                                                   ),
-                                                  padding: EdgeInsets.symmetric(vertical: 14),
-                                                ),
-                                                child: Text(
-                                                  'حسناً',
-                                                  style: TextStyle(
-                                                    fontFamily: 'Tajawal',
-                                                    fontWeight: FontWeight.bold,
-                                                    fontSize: 16,
+                                                  SizedBox(width: 8),
+                                                  Text(
+                                                    'تم الرفع',
+                                                    style: TextStyle(
+                                                      color:
+                                                          Colors.green.shade900,
+                                                      fontFamily: 'Tajawal',
+                                                      fontWeight:
+                                                          FontWeight.bold,
+                                                      fontSize: 20,
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                              content: Column(
+                                                mainAxisSize: MainAxisSize.min,
+                                                children: [
+                                                  SizedBox(height: 8),
+                                                  Text(
+                                                    'تم رفع التقرير إلى الكلية وحفظه بنجاح',
+                                                    style: TextStyle(
+                                                      color:
+                                                          Colors.green.shade900,
+                                                      fontFamily: 'Tajawal',
+                                                      fontSize: 16,
+                                                    ),
+                                                    textAlign: TextAlign.center,
+                                                  ),
+                                                  SizedBox(height: 16),
+                                                  Icon(
+                                                    Icons.cloud_upload_rounded,
+                                                    color:
+                                                        Colors.green.shade400,
+                                                    size: 48,
+                                                  ),
+                                                ],
+                                              ),
+                                              actions: [
+                                                SizedBox(
+                                                  width: double.infinity,
+                                                  child: ElevatedButton(
+                                                    onPressed:
+                                                        () =>
+                                                            Navigator.of(
+                                                              context,
+                                                            ).pop(),
+                                                    style: ElevatedButton.styleFrom(
+                                                      backgroundColor:
+                                                          Colors.green.shade700,
+                                                      foregroundColor:
+                                                          Colors.white,
+                                                      shape: RoundedRectangleBorder(
+                                                        borderRadius:
+                                                            BorderRadius.circular(
+                                                              8,
+                                                            ),
+                                                      ),
+                                                      padding:
+                                                          EdgeInsets.symmetric(
+                                                            vertical: 14,
+                                                          ),
+                                                    ),
+                                                    child: Text(
+                                                      'حسناً',
+                                                      style: TextStyle(
+                                                        fontFamily: 'Tajawal',
+                                                        fontWeight:
+                                                            FontWeight.bold,
+                                                        fontSize: 16,
+                                                      ),
+                                                    ),
                                                   ),
                                                 ),
-                                              ),
+                                              ],
                                             ),
-                                          ],
-                                        ),
                                       );
                                     } else {
                                       print(
@@ -540,7 +618,7 @@ class _PDFViewerPageState extends State<PDFViewerPage> {
                                 }
                                 setState(() => isProcessing = false);
                               }
-                      
+
                               return Padding(
                                 padding: const EdgeInsets.symmetric(
                                   horizontal: 16.0,
@@ -572,9 +650,9 @@ class _PDFViewerPageState extends State<PDFViewerPage> {
                                               child: CircularProgressIndicator(
                                                 strokeWidth: 3,
                                                 valueColor:
-                                                    AlwaysStoppedAnimation<Color>(
-                                                      Colors.white,
-                                                    ),
+                                                    AlwaysStoppedAnimation<
+                                                      Color
+                                                    >(Colors.white),
                                               ),
                                             )
                                             : Icon(Icons.download_done_rounded),
@@ -589,7 +667,12 @@ class _PDFViewerPageState extends State<PDFViewerPage> {
                                               setState(() => isLoading = true);
                                               await handleUpload();
                                               setState(() => isLoading = false);
-                                              Get.offAll(HomeScreen(studentEmail: currentStudentEmail!,));
+                                              Get.offAll(
+                                                HomeScreen(
+                                                  studentEmail:
+                                                      currentStudentEmail!,
+                                                ),
+                                              );
                                             },
                                   ),
                                 ),
@@ -599,14 +682,16 @@ class _PDFViewerPageState extends State<PDFViewerPage> {
                           SizedBox(height: 16),
                           //download
                           Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 16.0,
+                            ),
                             child: SizedBox(
                               width: double.infinity,
-                      
+
                               child: OutlinedButton.icon(
                                 style: OutlinedButton.styleFrom(
                                   foregroundColor: Colors.blueAccent,
-                      
+
                                   side: BorderSide(
                                     color: Colors.blueAccent,
                                     width: 2,
@@ -631,10 +716,12 @@ class _PDFViewerPageState extends State<PDFViewerPage> {
                                         ? null
                                         : () async {
                                           if (generatedWordFile == null) return;
-                      
+
                                           // Show permission request dialog before requesting
                                           bool?
-                                          userConfirmed = await showDialog<bool>(
+                                          userConfirmed = await showDialog<
+                                            bool
+                                          >(
                                             context: context,
                                             builder:
                                                 (context) => AlertDialog(
@@ -662,7 +749,7 @@ class _PDFViewerPageState extends State<PDFViewerPage> {
                                                   ],
                                                 ),
                                           );
-                      
+
                                           if (userConfirmed != true) {
                                             Get.snackbar(
                                               'تم الإلغاء',
@@ -670,9 +757,9 @@ class _PDFViewerPageState extends State<PDFViewerPage> {
                                             );
                                             return;
                                           }
-                      
+
                                           setState(() => isLoading = true);
-                      
+
                                           try {
                                             // Request storage permission
                                             final status =
@@ -686,14 +773,15 @@ class _PDFViewerPageState extends State<PDFViewerPage> {
                                               setState(() => isLoading = false);
                                               return;
                                             }
-                      
+
                                             // Get the Downloads directory
                                             Directory? downloadsDir;
                                             if (Platform.isAndroid) {
                                               downloadsDir = Directory(
                                                 '/storage/emulated/0/Download',
                                               );
-                                              if (!await downloadsDir.exists()) {
+                                              if (!await downloadsDir
+                                                  .exists()) {
                                                 // fallback to external storage directory
                                                 downloadsDir =
                                                     await getExternalStorageDirectory();
@@ -705,7 +793,7 @@ class _PDFViewerPageState extends State<PDFViewerPage> {
                                               downloadsDir =
                                                   await getApplicationDocumentsDirectory();
                                             }
-                      
+
                                             if (downloadsDir == null) {
                                               Get.snackbar(
                                                 'خطأ',
@@ -714,21 +802,21 @@ class _PDFViewerPageState extends State<PDFViewerPage> {
                                               setState(() => isLoading = false);
                                               return;
                                             }
-                      
+
                                             final fileName =
                                                 generatedWordFile!.path
                                                     .split('/')
                                                     .last;
                                             final savePath =
                                                 '${downloadsDir.path}/$fileName';
-                      
+
                                             final savedFile = await File(
                                               savePath,
                                             ).writeAsBytes(
                                               await generatedWordFile!
                                                   .readAsBytes(),
                                             );
-                      
+
                                             Get.snackbar(
                                               'تم التحميل',
                                               'تم حفظ الملف في مجلد التنزيلات:\n$fileName',
@@ -749,44 +837,35 @@ class _PDFViewerPageState extends State<PDFViewerPage> {
                         ],
                       ),
                     )
-                    : Container(
-                      padding: EdgeInsets.all(24.0),
-                      margin: EdgeInsets.symmetric(
-                        horizontal: 16.0,
-                        vertical: 24.0,
-                      ),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(16.0),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.grey.withOpacity(0.2),
-                            blurRadius: 8,
-                            offset: Offset(0, 4),
-                          ),
-                        ],
-                      ),
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(
-                            Icons.warning_amber_rounded,
-                            color: Colors.red,
-                            size: 48,
-                          ),
-                          SizedBox(height: 16),
-                          Text(
-                            'عذراً، بطاقة الترشيح غير متوفرة حالياً',
-                            style: TextStyle(
-                              color: Colors.black,
-                              fontFamily: 'Tajawal',
-                              fontSize: 18.0,
-                              fontWeight: FontWeight.bold,
-                            ),
-                            textAlign: TextAlign.center,
-                          ),
-                        ],
-                      ),
+                    : Stack(
+                      children: [
+                        SfPdfViewer.network(
+                          'https://cjzaqgnhcpjtlswhnbda.supabase.co/storage/v1/object/public/pdfs//test.pdf',
+                          canShowScrollHead: true,
+                          canShowScrollStatus: true,
+                          enableDoubleTapZooming: true,
+                          onDocumentLoadFailed: (details) {
+                            Get.snackbar(
+                              'خطأ في التحميل',
+                              'حدثت مشكلة أثناء تحميل الملف. الرجاء المحاولة مرة أخرى.',
+                              backgroundColor: Colors.red.shade100,
+                              colorText: Colors.red.shade900,
+                              snackPosition: SnackPosition.BOTTOM,
+                            );
+                          },
+                          onDocumentLoaded: (details) {
+                            Get.snackbar(
+                              'تم عرض التوزيعه',
+                              'قم بالبحث عن اسمك ثم قم بالعوده لبدأ الحضور.',
+                              backgroundColor: Colors.green.shade100,
+                              colorText: Colors.green.shade900,
+                              snackPosition: SnackPosition.TOP,
+                              duration: Duration(seconds: 5),
+                            );
+                          },
+                        ),
+                       
+                      ],
                     ),
           ),
         ),
