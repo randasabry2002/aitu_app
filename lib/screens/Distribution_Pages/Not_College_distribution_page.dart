@@ -457,15 +457,20 @@ class _Not_College_distribution_pageState
                               });
                         }
                         // جلب doc id المصنع الحالي من Firestore ثم إرساله
-                        if (selectedFactory != null && selectedGovernorate != null) {
+                        if (selectedFactory != null &&
+                            selectedGovernorate != null) {
                           // ابحث عن المصنع في قاعدة البيانات بناءً على الاسم والمحافظة
-                          final factoryQuery = await FirebaseFirestore.instance
-                              .collection('Factories')
-                              .where('name', isEqualTo: selectedFactory)
-                              .where('Governorate', isEqualTo: selectedGovernorate)
-                              .limit(1)
-                              .get();
-            Get.to(() => PDFViewerPage());
+                          final factoryQuery =
+                              await FirebaseFirestore.instance
+                                  .collection('Factories')
+                                  .where('name', isEqualTo: selectedFactory)
+                                  .where(
+                                    'Governorate',
+                                    isEqualTo: selectedGovernorate,
+                                  )
+                                  .limit(1)
+                                  .get();
+                          Get.to(() => PDFViewerPage(isNominationCard: true,factoryID: selectedFactory,));
 
                           // if (factoryQuery.docs.isNotEmpty) {
                           //   final factoryDocId = factoryQuery.docs.first.id;

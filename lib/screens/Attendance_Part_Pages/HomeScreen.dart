@@ -316,26 +316,28 @@ class _HomeScreenState extends State<HomeScreen> {
     try {
       QueryDocumentSnapshot? student = await getStudent();
       if (student != null) {
-        String factoryId = student['factory'] ?? '';
-        addDebugLog('Fetching factory with ID: $factoryId');
+        String factoryId = student['factory'] ?? ''; 
+        addDebugLog('Fetching factory with name: $factoryId');
 
-        DocumentSnapshot factoryDoc = 
+        final factoryQuery =
             await FirebaseFirestore.instance
                 .collection('Factories')
-                .doc(factoryId)
+                .where('name', isEqualTo: factoryId)
+                .limit(1)
                 .get();
 
-        if (factoryDoc.exists) {
+        if (factoryQuery.docs.isNotEmpty) {
+          final factoryDoc = factoryQuery.docs.first;
           setState(() {
             factName = factoryDoc['name'];
           });
           addDebugLog('Factory found: ${factoryDoc.data()}');
-          return factoryDoc as QueryDocumentSnapshot;
+          return factoryDoc;
         } else {
           setState(() {
             factName = 'مصنع غير محدد';
           });
-          addDebugLog('No factory found for ID: $factoryId');
+          addDebugLog('No factory found for name: $factoryId');
         }
       } else {
         setState(() {
@@ -348,7 +350,7 @@ class _HomeScreenState extends State<HomeScreen> {
       addDebugLog('Error getting factory: $e');
       setState(() {
         factName = 'خطأ في تحميل بيانات المصنع';
-      });
+      }); 
       return null;
     }
   }
@@ -357,7 +359,7 @@ class _HomeScreenState extends State<HomeScreen> {
   Future<void> fetchData() async {
     try {
       addDebugLog('Fetching data started');
-      student = await getStudent();
+      student = await getStudent(); 
       factory = await getFactory();
       await checkCurrentAttendance();
       await checkTodayAttendance();
@@ -375,7 +377,7 @@ class _HomeScreenState extends State<HomeScreen> {
             () => LocationConfirmationPage(
               factName: factName ?? '',
               onLocationConfirmed: () {
-                setState(() {
+                setState(() { 
                   showLocationPage = false;
                 });
                 Get.off(() => EnterFactory());
@@ -679,41 +681,6 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                   SizedBox(height: 16.0),
                   Divider(color: Colors.white.withOpacity(0.5)),
-                  ListTile(
-                    leading: Icon(Icons.logout, color: Colors.white),
-                    title: Text(
-                      'تسجيل الخروج',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 18.0,
-                        fontFamily: 'Tajawal',
-                      ),
-                    ),
-                    onTap: () {
-                      Navigator.pop(context);
-                      // Add logout logic here
-                      addDebugLog('Logout tapped');
-                    },
-                  ),
-                  SizedBox(height: 8.0),
-                  ListTile(
-                    leading: Icon(Icons.bug_report, color: Colors.white),
-                    title: Text(
-                      'عرض سجل التصحيح',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 18.0,
-                        fontFamily: 'Tajawal',
-                      ),
-                    ),
-                    onTap: () {
-                      Navigator.pop(context);
-                      showDebugInfo();
-                      addDebugLog('Debug info dialog opened');
-                    },
-                  ),
                 ],
               ),
             ),
@@ -935,6 +902,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                             currentAttendanceId.toString(),
                                       ),
                                     );
+                                  
                                     addDebugLog('Navigated to ExitFactory');
                                   },
                                   title: Center(
@@ -1120,7 +1088,7 @@ class _LocationConfirmationPageState extends State<LocationConfirmationPage> {
           'factory_longitude': currentLongitude,
         });
   }
-
+ 
   void _showError(String msg) {
     Get.snackbar(
       'تنبيه',
@@ -1190,7 +1158,7 @@ class _LocationConfirmationPageState extends State<LocationConfirmationPage> {
               ),
               SizedBox(height: 32),
               AnimatedOpacity(
-                opacity: isLocationLoading ? 0.7 : 1.0,
+                opacity: isLocationLoading ? 0.7 : 1.0, 
                 duration: Duration(milliseconds: 200),
                 child: ElevatedButton.icon(
                   onPressed: isLocationLoading ? null : getCurrentLocation,
