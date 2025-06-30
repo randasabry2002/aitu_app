@@ -272,7 +272,7 @@ class _PDFViewerPageState extends State<PDFViewerPage> {
           appBar: AppBar(
             backgroundColor: const Color.fromARGB(255, 255, 255, 255),
             title: Text(
-              'بطاقة الترشيح',
+              widget.isNominationCard?'بطاقة الترشيح':'توزيعة الكلية',
               style: TextStyle(
                 color: const Color.fromARGB(255, 0, 0, 0),
                 fontFamily: 'Tajawal',
