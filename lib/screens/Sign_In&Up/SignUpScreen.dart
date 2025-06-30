@@ -363,9 +363,9 @@ class _SignUpScreenState extends State<SignUpScreen> {
                                     (context) => AlertDialog(
                                       title: Text('تنبيه'.tr),
                                       content: Text(
-                                        'هذا الحساب موجود بالفعل، يرجى تسجيل الدخول أو إنشاء حساب جديد'
-                                            .tr,
-                                      ),
+                                          e.toString().contains("Password should be at least 6 characters")?'كلمة المرور لابد ان تكون على الاقل 6 خانات':
+                                          'هذا الحساب موجود بالفعل، يرجى تسجيل الدخول أو إنشاء حساب جديد'
+                                              .tr,),
                                       actions: [
                                         TextButton(
                                           onPressed:

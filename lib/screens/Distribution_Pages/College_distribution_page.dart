@@ -21,6 +21,18 @@ class _College_distribution_pageState extends State<College_distribution_page> {
   bool loading = false;
   bool hasViewedPDF = false;
 
+  // عرض رسالة تنبيه للمستخدم
+  void _showSnackbar(String message) {
+    Get.snackbar(
+      'تنبيه',
+      message,
+      backgroundColor: Colors.red,
+      colorText: Colors.white,
+      snackPosition: SnackPosition.TOP,
+      duration: Duration(seconds: 3),
+    );
+  }
+
   Future<bool> getBooleanValue() async {
     DocumentSnapshot doc =
         await FirebaseFirestore.instance
@@ -161,7 +173,11 @@ class _College_distribution_pageState extends State<College_distribution_page> {
                           ),
                         ),
                         onPressed:
-                            hasViewedPDF ? _handleStartAttendance : () {},
+                            hasViewedPDF ? _handleStartAttendance : () {
+                              _showSnackbar(
+                                'يجب أن تقوم بعرض التوزيعة اولا',
+                              );
+                            },
                       ),
                     ),
                   ],
