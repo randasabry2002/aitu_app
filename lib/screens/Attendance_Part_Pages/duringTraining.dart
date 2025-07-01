@@ -3,7 +3,6 @@ import 'dart:math';
 import 'dart:io';
 import 'package:aitu_app/screens/Attendance_Part_Pages/HomeScreen.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 import 'package:get/get.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -1035,13 +1034,6 @@ class _DuringTrainingState extends State<DuringTraining> {
           appBar: AppBar(
             automaticallyImplyLeading: false,
             centerTitle: true,
-            actions: [
-              // Spacer(),
-              IconButton(
-                onPressed: _showEditNotebookModal,
-                icon: Icon(Icons.info_outline, color: mainColor, size: 22),
-              ),
-            ],
             leading: IconButton(
               icon: Icon(
                 Icons.arrow_back_ios_new_rounded,
@@ -1061,7 +1053,7 @@ class _DuringTrainingState extends State<DuringTraining> {
                           ),
                         ),
                         content: Text(
-                          'هل أنت متأكد أنك تريد العودة إلى الصفحة الرئيسية؟ قد تفقد تقدمك الحالي.',
+                          'هل أنت متأكد أنك تريد العودة إلى الصفحة الرئيسية؟ سيتم حذف جميع البيانات المدخلة.',
                           style: TextStyle(fontFamily: 'Tajawal', fontSize: 16),
                         ),
                         actions: [
@@ -1076,7 +1068,36 @@ class _DuringTrainingState extends State<DuringTraining> {
                             ),
                           ),
                           TextButton(
-                            onPressed: () => Navigator.of(context).pop(true),
+                            onPressed: () async {
+                              try {
+                                // حذف مستند الحضور من Firestore
+                                await FirebaseFirestore.instance
+                                    .collection("Attendances")
+                                    .doc(attendanceId)
+                                    .delete();
+
+                                // إعادة تعيين معرف الحضور في SharedPreferences
+                                await _prefs.setString("attendanceId", 'null');
+
+                                print(
+                                  "Attendance document deleted successfully",
+                                );
+
+                                Navigator.of(context).pop(true);
+                                Get.offAll(() => HomeScreen());
+                              } catch (e) {
+                                print("Error deleting attendance: $e");
+                                Get.snackbar(
+                                  'خطأ',
+                                  'حدث خطأ أثناء حذف البيانات',
+                                  backgroundColor: Colors.red,
+                                  colorText: Colors.white,
+                                  snackPosition: SnackPosition.TOP,
+                                  duration: Duration(seconds: 3),
+                                );
+                                Navigator.of(context).pop(false);
+                              }
+                            },
                             child: Text(
                               'تأكيد',
                               style: TextStyle(
@@ -1089,9 +1110,6 @@ class _DuringTrainingState extends State<DuringTraining> {
                         ],
                       ),
                 );
-                if (shouldLeave == true) {
-                  Get.offAll(() => HomeScreen());
-                }
               },
             ),
             backgroundColor: Colors.white,
@@ -1113,37 +1131,54 @@ class _DuringTrainingState extends State<DuringTraining> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
+                  // رسالة التعديل الدائمة
                   Container(
                     width: double.infinity,
-                    padding: EdgeInsets.all(24),
+                    padding: EdgeInsets.all(20),
                     decoration: BoxDecoration(
-                      color: Colors.white,
+                      color: Colors.blue.shade50,
                       borderRadius: BorderRadius.circular(16),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.05),
-                          blurRadius: 10,
-                          offset: Offset(0, 4),
-                        ),
-                      ],
+                      border: Border.all(color: Colors.blue.shade200, width: 1),
                     ),
-                    child: Column(
+                    child: Row(
                       children: [
-                        Icon(
-                          Icons.lightbulb_outline,
-                          color: mainColor,
-                          size: 32,
+                        Container(
+                          padding: EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: Colors.blue.shade100,
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Icon(
+                            Icons.info_outline,
+                            color: Colors.blue.shade700,
+                            size: 24,
+                          ),
                         ),
-                        SizedBox(height: 16),
-                        Text(
-                          currentQuote,
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                            color: Colors.black87,
-                            fontSize: 16.0,
-                            fontFamily: 'Tajawal',
-                            fontWeight: FontWeight.w500,
-                            height: 1.5,
+                        SizedBox(width: 16),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'معلومات مهمة',
+                                style: TextStyle(
+                                  color: Colors.blue.shade800,
+                                  fontSize: 16.0,
+                                  fontFamily: 'Tajawal',
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              SizedBox(height: 4),
+                              Text(
+                                'يمكن التعديل على المحتوى خلال نفس اليوم فقط عند الضغط على زر التقرير اليومي في الصفحة الرئيسية',
+                                style: TextStyle(
+                                  color: Colors.blue.shade700,
+                                  fontSize: 14.0,
+                                  fontFamily: 'Tajawal',
+                                  height: 1.4,
+                                ),
+                              ),
+                            ],
                           ),
                         ),
                       ],
@@ -1458,77 +1493,31 @@ class _DuringTrainingState extends State<DuringTraining> {
                           height: 24,
                         ),
                         // تقييم مدى الاستفادة
-                        Card(
-                          elevation: 0,
-                          margin: EdgeInsets.only(bottom: 16),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(14),
-                          ),
-                          color: Colors.grey[50],
-                          child: Padding(
-                            padding: const EdgeInsets.symmetric(
-                              vertical: 16,
-                              horizontal: 14,
-                            ),
-                            child: _buildRatingRow(
-                              'تقييم مدى الاستفادة',
-                              benefitRating,
-                              (rating) {
-                                setState(() {
-                                  benefitRating = rating;
-                                });
-                              },
-                            ),
-                          ),
+                        _buildRatingRow('تقييم مدى الاستفادة', benefitRating, (
+                          rating,
+                        ) {
+                          setState(() {
+                            benefitRating = rating;
+                          });
+                        }),
+                        SizedBox(height: 16),
+                        _buildRatingRow(
+                          'تقييم تعامل المشرف',
+                          supervisorRating,
+                          (rating) {
+                            setState(() {
+                              supervisorRating = rating;
+                            });
+                          },
                         ),
-                        // تقييم تعامل المشرف
-                        Card(
-                          elevation: 0,
-                          margin: EdgeInsets.only(bottom: 16),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(14),
-                          ),
-                          color: Colors.grey[50],
-                          child: Padding(
-                            padding: const EdgeInsets.symmetric(
-                              vertical: 16,
-                              horizontal: 14,
-                            ),
-                            child: _buildRatingRow(
-                              'تقييم تعامل المشرف',
-                              supervisorRating,
-                              (rating) {
-                                setState(() {
-                                  supervisorRating = rating;
-                                });
-                              },
-                            ),
-                          ),
-                        ),
-                        // تقييم بيئة العمل
-                        Card(
-                          elevation: 0,
-                          margin: EdgeInsets.only(bottom: 0),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(14),
-                          ),
-                          color: Colors.grey[50],
-                          child: Padding(
-                            padding: const EdgeInsets.symmetric(
-                              vertical: 16,
-                              horizontal: 14,
-                            ),
-                            child: _buildRatingRow(
-                              'تقييم بيئة العمل',
-                              environmentRating,
-                              (rating) {
-                                setState(() {
-                                  environmentRating = rating;
-                                });
-                              },
-                            ),
-                          ),
-                        ),
+                        SizedBox(height: 16),
+                        _buildRatingRow('تقييم بيئة العمل', environmentRating, (
+                          rating,
+                        ) {
+                          setState(() {
+                            environmentRating = rating;
+                          });
+                        }),
                       ],
                     ),
                   ),
@@ -1570,10 +1559,6 @@ class _DuringTrainingState extends State<DuringTraining> {
     );
   }
 
-  /// بناء صف التقييم بالنجوم
-  /// [label] - عنوان التقييم
-  /// [rating] - قيمة التقييم الحالية
-  /// [onRatingUpdate] - دالة تحديث التقييم
   Widget _buildRatingRow(
     String label,
     double rating,
@@ -1582,7 +1567,6 @@ class _DuringTrainingState extends State<DuringTraining> {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        // عنوان التقييم
         Expanded(
           child: Text(
             label,
@@ -1596,13 +1580,14 @@ class _DuringTrainingState extends State<DuringTraining> {
         ),
         SizedBox(width: 12),
         // شريط التقييم بالنجوم
-        RatingBar.builder(
-          initialRating: rating,
-          minRating: 1,
-          itemCount: 5,
-          itemSize: 32.0,
-          itemBuilder: (context, _) => Icon(Icons.star, color: Colors.amber),
-          onRatingUpdate: onRatingUpdate,
+        Slider(
+          value: rating,
+          min: 0,
+          max: 5,
+          divisions: 5,
+          label: rating.toString(),
+          onChanged: (value) => onRatingUpdate(value),
+          activeColor: Colors.amber,
         ),
       ],
     );
