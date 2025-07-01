@@ -7,7 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:aitu_app/screens/Profile.dart';
 import 'package:aitu_app/screens/Attendance_Part_Pages/EnterFactory.dart';
-import 'package:aitu_app/screens/Attendance_Part_Pages/ExitFactory.dart';
+// import 'package:aitu_app/screens/Attendance_Part_Pages/ExitFactory.dart';
 import 'package:aitu_app/screens/Attendance_Part_Pages/InfoPage.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:geolocator/geolocator.dart';

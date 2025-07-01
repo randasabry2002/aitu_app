@@ -264,7 +264,7 @@ class _PDFViewerPageState extends State<PDFViewerPage> {
   Widget build(BuildContext context) {
     bool isNominatinCardAppear = widget.isNominationCard;
     final String pdfUrl =
-        'https://cjzaqgnhcpjtlswhnbda.supabase.co/storage/v1/object/public/pdfs//test.pdf';
+        'https://cjzaqgnhcpjtlswhnbda.supabase.co/storage/v1/object/public/pdfs//students_export%20(2).pdf';
     return Stack(
       children: [
         Scaffold(
@@ -272,7 +272,7 @@ class _PDFViewerPageState extends State<PDFViewerPage> {
           appBar: AppBar(
             backgroundColor: const Color.fromARGB(255, 255, 255, 255),
             title: Text(
-              widget.isNominationCard?'بطاقة الترشيح':'توزيعة الكلية',
+              widget.isNominationCard ? 'بطاقة الترشيح' : 'توزيعة الكلية',
               style: TextStyle(
                 color: const Color.fromARGB(255, 0, 0, 0),
                 fontFamily: 'Tajawal',
@@ -281,50 +281,48 @@ class _PDFViewerPageState extends State<PDFViewerPage> {
               ),
             ),
             actions: [
-            IconButton(
-              icon: Icon(
-                Icons.info_outline,
-                color: Colors.blueGrey[700],
-              ),
-              tooltip: 'معلومات',
-              onPressed: () {
-                showDialog(
-                  context: context,
-                  builder: (context) => AlertDialog(
-                    title: Text(
-                      'معلومات هامة',
-                      style: TextStyle(
-                        fontFamily: 'Tajawal',
-                        fontWeight: FontWeight.bold,
-                        fontSize: 18,
-                      ),
-                    ),
-                    content: Text(
-                      'قم بالبحث عن اسمك لمعرفة مصنعك (من الاحسن أخذ لقطة شاشه بالبيانات الخاصه بك) ثم قم بالعوده الى الصفحه السابقة لبدأ الحضور',
-                      style: TextStyle(
-                        fontFamily: 'Tajawal',
-                        fontSize: 16,
-                      ),
-                    ),
-                    actions: [
-                      TextButton(
-                        child: Text(
-                          'حسناً',
-                          style: TextStyle(
-                            fontFamily: 'Tajawal',
-                            fontWeight: FontWeight.bold,
-                            color: Colors.blue,
+              IconButton(
+                icon: Icon(Icons.info_outline, color: Colors.blueGrey[700]),
+                tooltip: 'معلومات',
+                onPressed: () {
+                  showDialog(
+                    context: context,
+                    builder:
+                        (context) => AlertDialog(
+                          title: Text(
+                            'معلومات هامة',
+                            style: TextStyle(
+                              fontFamily: 'Tajawal',
+                              fontWeight: FontWeight.bold,
+                              fontSize: 18,
+                            ),
                           ),
+                          content: Text(
+                            'قم بالبحث عن اسمك لمعرفة مصنعك (من الاحسن أخذ لقطة شاشه بالبيانات الخاصه بك) ثم قم بالعوده الى الصفحه السابقة لبدأ الحضور',
+                            style: TextStyle(
+                              fontFamily: 'Tajawal',
+                              fontSize: 16,
+                            ),
+                          ),
+                          actions: [
+                            TextButton(
+                              child: Text(
+                                'حسناً',
+                                style: TextStyle(
+                                  fontFamily: 'Tajawal',
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.blue,
+                                ),
+                              ),
+                              onPressed: () {
+                                Navigator.of(context).pop();
+                              },
+                            ),
+                          ],
                         ),
-                        onPressed: () {
-                          Navigator.of(context).pop();
-                        },
-                      ),
-                    ],
-                  ),
-                );
-              },
-            ),
+                  );
+                },
+              ),
             ],
             centerTitle: true,
             leading: IconButton(
@@ -840,7 +838,7 @@ class _PDFViewerPageState extends State<PDFViewerPage> {
                     : Stack(
                       children: [
                         SfPdfViewer.network(
-                          'https://cjzaqgnhcpjtlswhnbda.supabase.co/storage/v1/object/public/pdfs//test.pdf',
+                          pdfUrl,
                           canShowScrollHead: true,
                           canShowScrollStatus: true,
                           enableDoubleTapZooming: true,
@@ -864,7 +862,6 @@ class _PDFViewerPageState extends State<PDFViewerPage> {
                             );
                           },
                         ),
-                       
                       ],
                     ),
           ),

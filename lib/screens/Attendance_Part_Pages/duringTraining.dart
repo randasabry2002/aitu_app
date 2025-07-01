@@ -3,7 +3,6 @@ import 'dart:math';
 import 'dart:io';
 import 'package:aitu_app/screens/Attendance_Part_Pages/HomeScreen.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 import 'package:get/get.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -214,73 +213,6 @@ class _DuringTrainingState extends State<DuringTraining> {
         snackPosition: SnackPosition.TOP,
         duration: Duration(seconds: 3),
       );
-    }
-  }
-
-  /// رفع الصور إلى Supabase وحفظ روابطها في Firestore
-  Future<void> _uploadImages() async {
-    if (selectedImages.isEmpty) return;
-
-    setState(() {
-      isUploading = true;
-    });
-
-    try {
-      final supabase = Supabase.instance.client;
-      String studentId = await _prefs.getString("studentId") ?? "";
-
-      for (int i = 0; i < selectedImages.length; i++) {
-        File imageFile = selectedImages[i];
-        String fileName = '${DateTime.now().millisecondsSinceEpoch}_$i.jpg';
-
-        // رفع الصورة إلى Supabase
-        await supabase.storage
-            .from('studenttrainingimages')
-            .upload(fileName, imageFile);
-
-        // الحصول على الرابط العام
-        final imageUrl = supabase.storage
-            .from('studenttrainingimages')
-            .getPublicUrl(fileName);
-
-        // إنشاء مستند في Firestore
-        await FirebaseFirestore.instance
-            .collection('studenttrainingimages')
-            .add({
-              'imageUrl': imageUrl,
-              'uploadDate': FieldValue.serverTimestamp(),
-              'studentId': studentId,
-              'trainingId': attendanceId,
-              'fileName': fileName,
-            });
-      }
-
-      setState(() {
-        selectedImages.clear();
-      });
-
-      Get.snackbar(
-        'نجح',
-        'تم رفع الصور بنجاح',
-        backgroundColor: Colors.green,
-        colorText: Colors.white,
-        snackPosition: SnackPosition.TOP,
-        duration: Duration(seconds: 3),
-      );
-    } catch (e) {
-      print("Error uploading images: $e");
-      Get.snackbar(
-        'خطأ',
-        'حدث خطأ أثناء رفع الصور: $e',
-        backgroundColor: Colors.red,
-        colorText: Colors.white,
-        snackPosition: SnackPosition.TOP,
-        duration: Duration(seconds: 3),
-      );
-    } finally {
-      setState(() {
-        isUploading = false;
-      });
     }
   }
 
@@ -1019,17 +951,42 @@ class _DuringTrainingState extends State<DuringTraining> {
   /// إنهاء اليوم مع بيانات موقع محددة
   Future<void> _completeDayWithLocation(double lat, double lng) async {
     try {
-      // طباعة تأكيد استلام بيانات الموقع
       print("_completeDayWithLocation called with Lat: $lat, Lng: $lng");
-
       setState(() {
         spinkitVisable_exit = true;
       });
 
-      // حفظ جميع بيانات التدريب
-      await _saveAllData();
+      // 1. رفع الصور إلى supabase وجمع الروابط
+      List<String> imageUrls = [];
+      final supabase = Supabase.instance.client;
+      for (int i = 0; i < selectedImages.length; i++) {
+        File imageFile = selectedImages[i];
+        String fileName = '${DateTime.now().millisecondsSinceEpoch}_$i.jpg';
+        await supabase.storage
+            .from('studenttrainingimages')
+            .upload(fileName, imageFile);
+        final imageUrl = supabase.storage
+            .from('studenttrainingimages')
+            .getPublicUrl(fileName);
+        imageUrls.add(imageUrl);
+      }
 
-      // تحديث بيانات الحضور مع معلومات الخروج
+      // 2. حفظ جميع بيانات الصفحة في StudentDiary
+      await FirebaseFirestore.instance.collection('StudentDiary').add({
+        'attendanceId': attendanceId,
+        'studentId': await _prefs.getString("studentId") ?? "",
+        'trainingNotebook': trainingNotebook,
+        'trainerEvaluation': trainerEvaluation,
+        'benefitRating': benefitRating,
+        'supervisorRating': supervisorRating,
+        'environmentRating': environmentRating,
+        'images': imageUrls,
+        'date': DateTime.now(),
+        'location': GeoPoint(lat, lng),
+      });
+
+      // حفظ جميع بيانات التدريب في Attendance (كما هو)
+      await _saveAllData();
       await FirebaseFirestore.instance
           .collection("Attendances")
           .doc(attendanceId)
@@ -1038,7 +995,6 @@ class _DuringTrainingState extends State<DuringTraining> {
             "ExitingLocation": GeoPoint(lat, lng),
             "Status": "Completed",
           });
-
       await _prefs.setString("attendanceId", 'null');
 
       Get.snackbar(
@@ -1049,7 +1005,6 @@ class _DuringTrainingState extends State<DuringTraining> {
         snackPosition: SnackPosition.TOP,
         duration: Duration(seconds: 3),
       );
-
       Future.delayed(const Duration(seconds: 2), () {
         Get.offAll(() => HomeScreen());
       });
@@ -1087,56 +1042,80 @@ class _DuringTrainingState extends State<DuringTraining> {
               onPressed: () async {
                 bool? shouldLeave = await showDialog<bool>(
                   context: context,
-                  builder: (context) => AlertDialog(
-                    title: Text(
-                      'تحذير',
-                      style: TextStyle(
-                        fontFamily: 'Tajawal',
-                        fontWeight: FontWeight.bold,
-                        fontSize: 20,
-                      ),
-                    ),
-                    content: Text(
-                      'هل أنت متأكد أنك تريد العودة إلى الصفحة الرئيسية؟ قد تفقد تقدمك الحالي.',
-                      style: TextStyle(
-                        fontFamily: 'Tajawal',
-                        fontSize: 16,
-                      ),
-                    ),
-                    actions: [
-                      TextButton(
-                        onPressed: () => Navigator.of(context).pop(false),
-                        child: Text(
-                          'إلغاء',
+                  builder:
+                      (context) => AlertDialog(
+                        title: Text(
+                          'تحذير',
                           style: TextStyle(
                             fontFamily: 'Tajawal',
-                            color: Colors.grey[700],
-                          ),
-                        ),
-                      ),
-                      TextButton(
-                        onPressed: () => Navigator.of(context).pop(true),
-                        child: Text(
-                          'تأكيد',
-                          style: TextStyle(
-                            fontFamily: 'Tajawal',
-                            color: Colors.red[700],
                             fontWeight: FontWeight.bold,
+                            fontSize: 20,
                           ),
                         ),
+                        content: Text(
+                          'هل أنت متأكد أنك تريد العودة إلى الصفحة الرئيسية؟ سيتم حذف جميع البيانات المدخلة.',
+                          style: TextStyle(fontFamily: 'Tajawal', fontSize: 16),
+                        ),
+                        actions: [
+                          TextButton(
+                            onPressed: () => Navigator.of(context).pop(false),
+                            child: Text(
+                              'إلغاء',
+                              style: TextStyle(
+                                fontFamily: 'Tajawal',
+                                color: Colors.grey[700],
+                              ),
+                            ),
+                          ),
+                          TextButton(
+                            onPressed: () async {
+                              try {
+                                // حذف مستند الحضور من Firestore
+                                await FirebaseFirestore.instance
+                                    .collection("Attendances")
+                                    .doc(attendanceId)
+                                    .delete();
+
+                                // إعادة تعيين معرف الحضور في SharedPreferences
+                                await _prefs.setString("attendanceId", 'null');
+
+                                print(
+                                  "Attendance document deleted successfully",
+                                );
+
+                                Navigator.of(context).pop(true);
+                                Get.offAll(() => HomeScreen());
+                              } catch (e) {
+                                print("Error deleting attendance: $e");
+                                Get.snackbar(
+                                  'خطأ',
+                                  'حدث خطأ أثناء حذف البيانات',
+                                  backgroundColor: Colors.red,
+                                  colorText: Colors.white,
+                                  snackPosition: SnackPosition.TOP,
+                                  duration: Duration(seconds: 3),
+                                );
+                                Navigator.of(context).pop(false);
+                              }
+                            },
+                            child: Text(
+                              'تأكيد',
+                              style: TextStyle(
+                                fontFamily: 'Tajawal',
+                                color: Colors.red[700],
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
-                    ],
-                  ),
                 );
-                if (shouldLeave == true) {
-                  Get.offAll(() => HomeScreen());
-                }
               },
             ),
             backgroundColor: Colors.white,
             elevation: 0,
             title: Text(
-              'خلال التدريب',
+              'اليوم التدريبي',
               style: TextStyle(
                 color: Colors.black87,
                 fontWeight: FontWeight.bold,
@@ -1152,37 +1131,54 @@ class _DuringTrainingState extends State<DuringTraining> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
+                  // رسالة التعديل الدائمة
                   Container(
                     width: double.infinity,
-                    padding: EdgeInsets.all(24),
+                    padding: EdgeInsets.all(20),
                     decoration: BoxDecoration(
-                      color: Colors.white,
+                      color: Colors.blue.shade50,
                       borderRadius: BorderRadius.circular(16),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.05),
-                          blurRadius: 10,
-                          offset: Offset(0, 4),
-                        ),
-                      ],
+                      border: Border.all(color: Colors.blue.shade200, width: 1),
                     ),
-                    child: Column(
+                    child: Row(
                       children: [
-                        Icon(
-                          Icons.lightbulb_outline,
-                          color: mainColor,
-                          size: 32,
+                        Container(
+                          padding: EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: Colors.blue.shade100,
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Icon(
+                            Icons.info_outline,
+                            color: Colors.blue.shade700,
+                            size: 24,
+                          ),
                         ),
-                        SizedBox(height: 16),
-                        Text(
-                          currentQuote,
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                            color: Colors.black87,
-                            fontSize: 16.0,
-                            fontFamily: 'Tajawal',
-                            fontWeight: FontWeight.w500,
-                            height: 1.5,
+                        SizedBox(width: 16),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'معلومات مهمة',
+                                style: TextStyle(
+                                  color: Colors.blue.shade800,
+                                  fontSize: 16.0,
+                                  fontFamily: 'Tajawal',
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              SizedBox(height: 4),
+                              Text(
+                                'يمكن التعديل على المحتوى خلال نفس اليوم فقط عند الضغط على زر التقرير اليومي في الصفحة الرئيسية',
+                                style: TextStyle(
+                                  color: Colors.blue.shade700,
+                                  fontSize: 14.0,
+                                  fontFamily: 'Tajawal',
+                                  height: 1.4,
+                                ),
+                              ),
+                            ],
                           ),
                         ),
                       ],
@@ -1192,15 +1188,15 @@ class _DuringTrainingState extends State<DuringTraining> {
                   SizedBox(height: 24),
 
                   Container(
-                    width: double.infinity,
-                    padding: EdgeInsets.all(24),
+                    margin: EdgeInsets.only(bottom: 28),
+                    padding: EdgeInsets.all(20),
                     decoration: BoxDecoration(
                       color: Colors.white,
-                      borderRadius: BorderRadius.circular(16),
+                      borderRadius: BorderRadius.circular(20),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withOpacity(0.05),
-                          blurRadius: 10,
+                          color: Colors.black.withOpacity(0.06),
+                          blurRadius: 12,
                           offset: Offset(0, 4),
                         ),
                       ],
@@ -1210,85 +1206,109 @@ class _DuringTrainingState extends State<DuringTraining> {
                       children: [
                         Row(
                           children: [
-                            Icon(Icons.book, color: mainColor, size: 24),
-                            SizedBox(width: 12),
+                            Icon(Icons.book, color: mainColor, size: 26),
+                            SizedBox(width: 10),
                             Text(
                               'كراسة التدريب',
                               style: TextStyle(
-                                color: Colors.black87,
-                                fontSize: 18.0,
-                                fontFamily: 'Tajawal',
+                                fontSize: 20,
                                 fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            Spacer(),
-                            IconButton(
-                              onPressed: _showEditNotebookModal,
-                              icon: Icon(
-                                Icons.info_outline,
-                                color: mainColor,
-                                size: 20,
+                                color: Colors.black87,
+                                fontFamily: 'Tajawal',
                               ),
                             ),
                           ],
                         ),
-                        SizedBox(height: 16),
+                        Divider(
+                          thickness: 1,
+                          color: Colors.grey[200],
+                          height: 24,
+                        ),
                         Container(
-                          height: 200,
+                          height: 260,
                           decoration: BoxDecoration(
                             color: Colors.grey.shade50,
-                            borderRadius: BorderRadius.circular(12),
+                            borderRadius: BorderRadius.circular(14),
                             border: Border.all(color: Colors.grey.shade200),
                           ),
-                          child: Padding(
-                            padding: EdgeInsets.all(16),
-                            child: TextField(
-                              controller: notebookController,
-                              maxLines: null,
-                              expands: true,
-                              textAlignVertical: TextAlignVertical.top,
-                              textDirection: TextDirection.rtl,
-                              style: TextStyle(
-                                fontSize: 16,
-                                fontFamily: 'Tajawal',
-                                height: 1.5,
-                                color: Colors.black87,
-                              ),
-                              decoration: InputDecoration(
-                                hintText:
-                                    'اكتب ملاحظاتك وتجربتك في التدريب هنا...',
-                                hintStyle: TextStyle(
-                                  color: Colors.grey.shade400,
-                                  fontFamily: 'Tajawal',
-                                  fontSize: 16,
+                          child: LayoutBuilder(
+                            builder: (context, constraints) {
+                              double lineHeight = 34.0;
+                              return ClipRRect(
+                                borderRadius: BorderRadius.circular(14),
+                                child: Stack(
+                                  fit: StackFit.expand,
+                                  children: [
+                                    CustomPaint(
+                                      painter: _NotebookLinesPainter(
+                                        lineHeight: lineHeight,
+                                        lineColor: Colors.grey.shade200,
+                                      ),
+                                    ),
+                                    Padding(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 18,
+                                        vertical: 10,
+                                      ),
+                                      child: Scrollbar(
+                                        radius: const Radius.circular(8),
+                                        thickness: 4,
+                                        child: TextField(
+                                          controller: notebookController,
+                                          maxLines: null,
+                                          expands: true,
+                                          textAlignVertical:
+                                              TextAlignVertical.top,
+                                          textDirection: TextDirection.rtl,
+                                          style: const TextStyle(
+                                            fontSize: 17,
+                                            fontFamily: 'Tajawal',
+                                            height: 2.1,
+                                            color: Colors.black87,
+                                            decoration: TextDecoration.none,
+                                          ),
+                                          decoration: InputDecoration(
+                                            hintText:
+                                                'ما الذي قمت بدراسته اليوم؟ ...',
+                                            hintStyle: TextStyle(
+                                              color: Colors.grey.shade400,
+                                              fontFamily: 'Tajawal',
+                                              fontSize: 16,
+                                              decoration: TextDecoration.none,
+                                            ),
+                                            border: InputBorder.none,
+                                            contentPadding: EdgeInsets.zero,
+                                          ),
+                                          onChanged: (value) {
+                                            setState(() {
+                                              trainingNotebook = value;
+                                            });
+                                          },
+                                          cursorColor: mainColor,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
                                 ),
-                                border: InputBorder.none,
-                                contentPadding: EdgeInsets.zero,
-                              ),
-                              onChanged: (value) {
-                                setState(() {
-                                  trainingNotebook = value;
-                                });
-                              },
-                            ),
+                              );
+                            },
                           ),
                         ),
                       ],
                     ),
                   ),
-
+                  Divider(thickness: 1, color: Colors.grey[200]),
                   SizedBox(height: 24),
-
                   Container(
-                    width: double.infinity,
-                    padding: EdgeInsets.all(24),
+                    margin: EdgeInsets.only(bottom: 28),
+                    padding: EdgeInsets.all(20),
                     decoration: BoxDecoration(
                       color: Colors.white,
-                      borderRadius: BorderRadius.circular(16),
+                      borderRadius: BorderRadius.circular(20),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withOpacity(0.05),
-                          blurRadius: 10,
+                          color: Colors.black.withOpacity(0.06),
+                          blurRadius: 12,
                           offset: Offset(0, 4),
                         ),
                       ],
@@ -1298,95 +1318,48 @@ class _DuringTrainingState extends State<DuringTraining> {
                       children: [
                         Row(
                           children: [
-                            Icon(Icons.rate_review, color: mainColor, size: 24),
-                            SizedBox(width: 12),
+                            Icon(Icons.camera_alt, color: mainColor, size: 26),
+                            SizedBox(width: 10),
                             Text(
-                              'تقييم المدرب',
+                              'صور التدريب',
                               style: TextStyle(
-                                color: Colors.black87,
-                                fontSize: 18.0,
-                                fontFamily: 'Tajawal',
+                                fontSize: 20,
                                 fontWeight: FontWeight.bold,
+                                color: Colors.black87,
+                                fontFamily: 'Tajawal',
                               ),
                             ),
                           ],
                         ),
-                        SizedBox(height: 16),
-                        Container(
-                          decoration: BoxDecoration(
-                            color: Colors.grey.shade50,
-                            borderRadius: BorderRadius.circular(12),
-                            border: Border.all(color: Colors.grey.shade200),
-                          ),
-                          child: Padding(
-                            padding: EdgeInsets.all(16),
-                            child: TextField(
-                              maxLines: 4,
-                              textDirection: TextDirection.rtl,
-                              style: TextStyle(
-                                fontSize: 16,
-                                fontFamily: 'Tajawal',
-                                height: 1.5,
-                              ),
-                              decoration: InputDecoration(
-                                hintText: 'اكتب تقييم المدرب وملاحظاته هنا...',
-                                hintStyle: TextStyle(
-                                  color: Colors.grey.shade400,
-                                  fontFamily: 'Tajawal',
-                                  fontSize: 16,
+                        Divider(
+                          thickness: 1,
+                          color: Colors.grey[200],
+                          height: 24,
+                        ),
+                        if (selectedImages.isEmpty)
+                          Center(
+                            child: Column(
+                              children: [
+                                SizedBox(height: 24),
+                                Icon(
+                                  Icons.camera_alt_outlined,
+                                  color: Colors.grey[300],
+                                  size: 60,
                                 ),
-                                border: InputBorder.none,
-                                contentPadding: EdgeInsets.zero,
-                              ),
-                              onChanged: (value) {
-                                setState(() {
-                                  trainerEvaluation = value;
-                                });
-                              },
+                                SizedBox(height: 12),
+                                Text(
+                                  'لم تقم بإضافة أي صور بعد',
+                                  style: TextStyle(
+                                    color: Colors.grey,
+                                    fontFamily: 'Tajawal',
+                                    fontSize: 15,
+                                  ),
+                                ),
+                                SizedBox(height: 16),
+                              ],
                             ),
                           ),
-                        ),
-                      ],
-                    ),
-                  ),
-
-                  SizedBox(height: 24),
-
-                  Container(
-                    width: double.infinity,
-                    padding: EdgeInsets.all(24),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(16),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.05),
-                          blurRadius: 10,
-                          offset: Offset(0, 4),
-                        ),
-                      ],
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          children: [
-                            Icon(Icons.camera_alt, color: mainColor, size: 24),
-                            SizedBox(width: 12),
-                            Text(
-                              'رفع صور التدريب',
-                              style: TextStyle(
-                                color: Colors.black87,
-                                fontSize: 18.0,
-                                fontFamily: 'Tajawal',
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ],
-                        ),
-                        SizedBox(height: 16),
-
-                        if (selectedImages.isNotEmpty) ...[
+                        if (selectedImages.isNotEmpty)
                           Container(
                             height: 120,
                             child: ListView.builder(
@@ -1395,6 +1368,20 @@ class _DuringTrainingState extends State<DuringTraining> {
                               itemBuilder: (context, index) {
                                 return Container(
                                   margin: EdgeInsets.only(left: 8),
+                                  decoration: BoxDecoration(
+                                    border: Border.all(
+                                      color: Colors.grey.shade300,
+                                      width: 2,
+                                    ),
+                                    borderRadius: BorderRadius.circular(12),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: Colors.black.withOpacity(0.04),
+                                        blurRadius: 6,
+                                        offset: Offset(0, 2),
+                                      ),
+                                    ],
+                                  ),
                                   child: Stack(
                                     children: [
                                       ClipRRect(
@@ -1435,15 +1422,12 @@ class _DuringTrainingState extends State<DuringTraining> {
                               },
                             ),
                           ),
-                          SizedBox(height: 16),
-                        ],
-
+                        SizedBox(height: 16),
                         Row(
                           children: [
                             Expanded(
                               child: ElevatedButton.icon(
-                                onPressed:
-                                    isUploading ? null : _showImageSourceDialog,
+                                onPressed: _showImageSourceDialog,
                                 icon: Icon(Icons.add_a_photo, size: 20),
                                 label: Text(
                                   'إضافة صور',
@@ -1464,63 +1448,23 @@ class _DuringTrainingState extends State<DuringTraining> {
                                 ),
                               ),
                             ),
-                            if (selectedImages.isNotEmpty) ...[
-                              SizedBox(width: 12),
-                              Expanded(
-                                child: ElevatedButton.icon(
-                                  onPressed: isUploading ? null : _uploadImages,
-                                  icon:
-                                      isUploading
-                                          ? SizedBox(
-                                            width: 18,
-                                            height: 18,
-                                            child: CircularProgressIndicator(
-                                              strokeWidth: 2,
-                                              valueColor:
-                                                  AlwaysStoppedAnimation<Color>(
-                                                    Colors.white,
-                                                  ),
-                                            ),
-                                          )
-                                          : Icon(Icons.cloud_upload, size: 20),
-                                  label: Text(
-                                    isUploading ? 'جاري الرفع...' : 'رفع الصور',
-                                    style: TextStyle(
-                                      fontFamily: 'Tajawal',
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.w600,
-                                    ),
-                                  ),
-                                  style: ElevatedButton.styleFrom(
-                                    backgroundColor: Colors.green,
-                                    foregroundColor: Colors.white,
-                                    padding: EdgeInsets.symmetric(vertical: 14),
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(12),
-                                    ),
-                                    elevation: 0,
-                                  ),
-                                ),
-                              ),
-                            ],
                           ],
                         ),
                       ],
                     ),
                   ),
-
+                  Divider(thickness: 1, color: Colors.grey[200]),
                   SizedBox(height: 24),
-
                   Container(
-                    width: double.infinity,
-                    padding: EdgeInsets.all(24),
+                    margin: EdgeInsets.only(bottom: 28),
+                    padding: EdgeInsets.all(20),
                     decoration: BoxDecoration(
                       color: Colors.white,
-                      borderRadius: BorderRadius.circular(16),
+                      borderRadius: BorderRadius.circular(20),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withOpacity(0.05),
-                          blurRadius: 10,
+                          color: Colors.black.withOpacity(0.06),
+                          blurRadius: 12,
                           offset: Offset(0, 4),
                         ),
                       ],
@@ -1530,21 +1474,26 @@ class _DuringTrainingState extends State<DuringTraining> {
                       children: [
                         Row(
                           children: [
-                            Icon(Icons.star, color: mainColor, size: 24),
-                            SizedBox(width: 12),
+                            Icon(Icons.star, color: mainColor, size: 26),
+                            SizedBox(width: 10),
                             Text(
                               'التقييمات',
                               style: TextStyle(
-                                color: Colors.black87,
-                                fontSize: 18.0,
-                                fontFamily: 'Tajawal',
+                                fontSize: 20,
                                 fontWeight: FontWeight.bold,
+                                color: Colors.black87,
+                                fontFamily: 'Tajawal',
                               ),
                             ),
                           ],
                         ),
-                        SizedBox(height: 20),
-                        _buildRatingRow("تقييم مدى الاستفادة", benefitRating, (
+                        Divider(
+                          thickness: 1,
+                          color: Colors.grey[200],
+                          height: 24,
+                        ),
+                        // تقييم مدى الاستفادة
+                        _buildRatingRow('تقييم مدى الاستفادة', benefitRating, (
                           rating,
                         ) {
                           setState(() {
@@ -1553,7 +1502,7 @@ class _DuringTrainingState extends State<DuringTraining> {
                         }),
                         SizedBox(height: 16),
                         _buildRatingRow(
-                          "تقييم تعامل المشرف",
+                          'تقييم تعامل المشرف',
                           supervisorRating,
                           (rating) {
                             setState(() {
@@ -1562,7 +1511,7 @@ class _DuringTrainingState extends State<DuringTraining> {
                           },
                         ),
                         SizedBox(height: 16),
-                        _buildRatingRow("تقييم بيئة العمل", environmentRating, (
+                        _buildRatingRow('تقييم بيئة العمل', environmentRating, (
                           rating,
                         ) {
                           setState(() {
@@ -1572,9 +1521,8 @@ class _DuringTrainingState extends State<DuringTraining> {
                       ],
                     ),
                   ),
-
+                  Divider(thickness: 1, color: Colors.grey[200]),
                   SizedBox(height: 32),
-
                   SizedBox(
                     height: 56.0,
                     width: double.infinity,
@@ -1588,7 +1536,8 @@ class _DuringTrainingState extends State<DuringTraining> {
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(16),
                         ),
-                        elevation: 0,
+                        elevation: 2,
+                        shadowColor: mainColor.withOpacity(0.2),
                       ),
                       child: Text(
                         'إنهاء اليوم',
@@ -1610,10 +1559,6 @@ class _DuringTrainingState extends State<DuringTraining> {
     );
   }
 
-  /// بناء صف التقييم بالنجوم
-  /// [label] - عنوان التقييم
-  /// [rating] - قيمة التقييم الحالية
-  /// [onRatingUpdate] - دالة تحديث التقييم
   Widget _buildRatingRow(
     String label,
     double rating,
@@ -1622,7 +1567,6 @@ class _DuringTrainingState extends State<DuringTraining> {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        // عنوان التقييم
         Expanded(
           child: Text(
             label,
@@ -1636,15 +1580,38 @@ class _DuringTrainingState extends State<DuringTraining> {
         ),
         SizedBox(width: 12),
         // شريط التقييم بالنجوم
-        RatingBar.builder(
-          initialRating: rating,
-          minRating: 1,
-          itemCount: 5,
-          itemSize: 32.0,
-          itemBuilder: (context, _) => Icon(Icons.star, color: Colors.amber),
-          onRatingUpdate: onRatingUpdate,
+        Slider(
+          value: rating,
+          min: 0,
+          max: 5,
+          divisions: 5,
+          label: rating.toString(),
+          onChanged: (value) => onRatingUpdate(value),
+          activeColor: Colors.amber,
         ),
       ],
     );
   }
+}
+
+class _NotebookLinesPainter extends CustomPainter {
+  final double lineHeight;
+  final Color lineColor;
+
+  _NotebookLinesPainter({required this.lineHeight, required this.lineColor});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint =
+        Paint()
+          ..color = lineColor
+          ..strokeWidth = 1;
+
+    for (double y = 0; y < size.height; y += lineHeight) {
+      canvas.drawLine(Offset(0, y), Offset(size.width, y), paint);
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }

@@ -7,7 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:aitu_app/screens/Profile.dart';
 import 'package:aitu_app/screens/Attendance_Part_Pages/EnterFactory.dart';
-import 'package:aitu_app/screens/Attendance_Part_Pages/ExitFactory.dart';
+// import 'package:aitu_app/screens/Attendance_Part_Pages/ExitFactory.dart';
 import 'package:aitu_app/screens/Attendance_Part_Pages/InfoPage.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:geolocator/geolocator.dart';
@@ -320,7 +320,7 @@ class _HomeScreenState extends State<HomeScreen> {
     try {
       QueryDocumentSnapshot? student = await getStudent();
       if (student != null) {
-        String factoryId = student['factory'] ?? ''; 
+        String factoryId = student['factory'] ?? '';
         addDebugLog('Fetching factory with name: $factoryId');
 
         final factoryQuery =
@@ -354,7 +354,7 @@ class _HomeScreenState extends State<HomeScreen> {
       addDebugLog('Error getting factory: $e');
       setState(() {
         factName = 'خطأ في تحميل بيانات المصنع';
-      }); 
+      });
       return null;
     }
   }
@@ -363,10 +363,11 @@ class _HomeScreenState extends State<HomeScreen> {
   Future<void> fetchData() async {
     try {
       addDebugLog('Fetching data started');
-      student = await getStudent(); 
+      student = await getStudent();
       factory = await getFactory();
       await checkCurrentAttendance();
       await checkTodayAttendance();
+      await checkTodayReport();
       await calculateAttendanceDays();
 
       setState(() {
@@ -381,7 +382,7 @@ class _HomeScreenState extends State<HomeScreen> {
             () => LocationConfirmationPage(
               factName: factName ?? '',
               onLocationConfirmed: () {
-                setState(() { 
+                setState(() {
                   showLocationPage = false;
                 });
                 Get.off(() => EnterFactory());
@@ -498,6 +499,38 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
+  /// التحقق من وجود تقرير اليوم
+  Future<void> checkTodayReport() async {
+    try {
+      final SharedPreferences prefs = await SharedPreferences.getInstance();
+      String studentId = prefs.getString("studentId") ?? "";
+      DateTime today = DateTime.now();
+      DateTime dateOnly = DateTime(today.year, today.month, today.day);
+
+      addDebugLog('Checking today report for student: $studentId on $dateOnly');
+
+      QuerySnapshot reportQuery =
+          await FirebaseFirestore.instance
+              .collection('StudentDiary')
+              .where('studentId', isEqualTo: studentId)
+              .where('date', isGreaterThanOrEqualTo: dateOnly)
+              .where('date', isLessThan: dateOnly.add(Duration(days: 1)))
+              .limit(1)
+              .get();
+
+      setState(() {
+        hasSubmitedReportToday = reportQuery.docs.isNotEmpty;
+      });
+
+      addDebugLog('Has submitted report today: $hasSubmitedReportToday');
+    } catch (e) {
+      addDebugLog('Error checking today report: $e');
+      setState(() {
+        hasSubmitedReportToday = false;
+      });
+    }
+  }
+
   /// التحقق من وجود حضور سابق اليوم
   Future<bool> _checkExistingAttendance() async {
     try {
@@ -551,6 +584,45 @@ class _HomeScreenState extends State<HomeScreen> {
                 },
                 child: Text(
                   'حسناً',
+                  style: TextStyle(fontFamily: 'Tajawal', color: mainColor),
+                ),
+              ),
+            ],
+          ),
+    );
+  }
+
+  /// عرض رسالة عدم وجود تقرير اليوم
+  Future<void> _showNoReportDialog() async {
+    addDebugLog('Showing no report dialog');
+    return showDialog(
+      context: context,
+      builder:
+          (context) => AlertDialog(
+            title: Row(
+              children: [
+                Icon(Icons.warning_amber, color: Colors.orange),
+                SizedBox(width: 8),
+                Text(
+                  'لا يوجد تقرير اليوم',
+                  style: TextStyle(
+                    fontFamily: 'Tajawal',
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
+            ),
+            content: Text(
+              'يجب أن يكون لديك تقرير بتاريخ اليوم لتتمكن من تعديله. التقرير متاح للتعديل خلال نفس اليوم فقط.',
+              style: TextStyle(fontFamily: 'Tajawal'),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  Navigator.pop(context);
+                },
+                child: Text(
+                  'فهمت',
                   style: TextStyle(fontFamily: 'Tajawal', color: mainColor),
                 ),
               ),
@@ -800,130 +872,6 @@ class _HomeScreenState extends State<HomeScreen> {
                             ),
                             SizedBox(height: 24),
                             // Action Buttons
-                            if (currentAttendanceId == null)
-                              SizedBox(
-                                height: 60.0,
-                                width: double.infinity,
-                                child: CreateButton(
-                                  onPressed: () async {
-                                    // نافذة تأكيد قبل أي إجراء
-                                    bool? confirmed = await showDialog<bool>(
-                                      context: context,
-                                      builder:
-                                          (context) => AlertDialog(
-                                            title: Text(
-                                              'تأكيد',
-                                              style: TextStyle(
-                                                fontFamily: 'Tajawal',
-                                              ),
-                                            ),
-                                            content: Text(
-                                              'هل أنت متأكد أنك تريد بدء اليوم؟',
-                                              style: TextStyle(
-                                                fontFamily: 'Tajawal',
-                                              ),
-                                            ),
-                                            actions: [
-                                              TextButton(
-                                                onPressed:
-                                                    () => Navigator.pop(
-                                                      context,
-                                                      false,
-                                                    ),
-                                                child: Text(
-                                                  'إلغاء',
-                                                  style: TextStyle(
-                                                    fontFamily: 'Tajawal',
-                                                  ),
-                                                ),
-                                              ),
-                                              TextButton(
-                                                onPressed:
-                                                    () => Navigator.pop(
-                                                      context,
-                                                      true,
-                                                    ),
-                                                child: Text(
-                                                  'تأكيد',
-                                                  style: TextStyle(
-                                                    fontFamily: 'Tajawal',
-                                                    color: mainColor,
-                                                  ),
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                    );
-
-                                    if (confirmed != true) return;
-
-                                    if (attendanceDays == 0) {
-                                      // أول يوم: انتقل إلى تحديد الموقع
-                                      Get.to(
-                                        () => LocationConfirmationPage(
-                                          factName: factName ?? '',
-                                          onLocationConfirmed: () {
-                                            Get.to(() => EnterFactory());
-                                          },
-                                        ),
-                                      );
-                                    } else if (hasEnteredToday) {
-                                      await _showAttendanceWarning();
-                                    } else {
-                                      bool hasExistingAttendance =
-                                          await _checkExistingAttendance();
-                                      if (hasExistingAttendance) {
-                                        await _showAttendanceWarning();
-                                      } else {
-                                        Get.to(() => EnterFactory());
-                                      }
-                                    }
-                                  },
-                                  title: Center(
-                                    child: Text(
-                                      hasEnteredToday
-                                          ? 'لقد قمت بتسجيل الدخول اليوم بالفعل'
-                                          : 'بدء اليوم',
-                                      style: TextStyle(
-                                        color: Colors.white,
-                                        fontSize: 18.0,
-                                        fontFamily: 'Tajawal',
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              )
-                            else
-                              SizedBox(
-                                height: 60.0,
-                                width: double.infinity,
-                                child: CreateButton(
-                                  onPressed: () {
-                                    Get.to(
-                                      () => ExitFactory(
-                                        attendanceId:
-                                            currentAttendanceId.toString(),
-                                      ),
-                                    );
-                                  
-                                    addDebugLog('Navigated to ExitFactory');
-                                  },
-                                  title: Center(
-                                    child: Text(
-                                      'exit_factory'.tr,
-                                      style: TextStyle(
-                                        color: Colors.white,
-                                        fontSize: 18.0,
-                                        fontFamily: 'Tajawal',
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              ),
-
-                            SizedBox(height: 10,),
                             SizedBox(
                               height: 60.0,
                               width: double.infinity,
@@ -934,66 +882,79 @@ class _HomeScreenState extends State<HomeScreen> {
                                     context: context,
                                     builder:
                                         (context) => AlertDialog(
-                                      title: Text(
-                                        'تأكيد',
-                                        style: TextStyle(
-                                          fontFamily: 'Tajawal',
-                                        ),
-                                      ),
-                                      content: Text(
-                                        'هل أنت متأكد أنك تريد بدء التقرير؟',
-                                        style: TextStyle(
-                                          fontFamily: 'Tajawal',
-                                        ),
-                                      ),
-                                      actions: [
-                                        TextButton(
-                                          onPressed:
-                                              () => Navigator.pop(
-                                            context,
-                                            false,
-                                          ),
-                                          child: Text(
-                                            'إلغاء',
-                                            style: TextStyle(
-                                              fontFamily: 'Tajawal',
-                                            ),
-                                          ),
-                                        ),
-                                        TextButton(
-                                          onPressed:
-                                              () => Navigator.pop(
-                                            context,
-                                            true,
-                                          ),
-                                          child: Text(
+                                          title: Text(
                                             'تأكيد',
                                             style: TextStyle(
                                               fontFamily: 'Tajawal',
-                                              color: mainColor,
                                             ),
                                           ),
+                                          content: Text(
+                                            'هل أنت متأكد أنك تريد بدء اليوم؟',
+                                            style: TextStyle(
+                                              fontFamily: 'Tajawal',
+                                            ),
+                                          ),
+                                          actions: [
+                                            TextButton(
+                                              onPressed:
+                                                  () => Navigator.pop(
+                                                    context,
+                                                    false,
+                                                  ),
+                                              child: Text(
+                                                'إلغاء',
+                                                style: TextStyle(
+                                                  fontFamily: 'Tajawal',
+                                                ),
+                                              ),
+                                            ),
+                                            TextButton(
+                                              onPressed:
+                                                  () => Navigator.pop(
+                                                    context,
+                                                    true,
+                                                  ),
+                                              child: Text(
+                                                'تأكيد',
+                                                style: TextStyle(
+                                                  fontFamily: 'Tajawal',
+                                                  color: mainColor,
+                                                ),
+                                              ),
+                                            ),
+                                          ],
                                         ),
-                                      ],
-                                    ),
                                   );
 
                                   if (confirmed != true) return;
 
-                                  if (hasSubmitedReportToday) {
+                                  if (attendanceDays == 0) {
+                                    // أول يوم: انتقل إلى تحديد الموقع
+                                    Get.to(
+                                      () => LocationConfirmationPage(
+                                        factName: factName ?? '',
+                                        onLocationConfirmed: () {
+                                          Get.to(() => EnterFactory());
+                                        },
+                                      ),
+                                    );
+                                  } else if (hasEnteredToday) {
                                     await _showAttendanceWarning();
                                   } else {
-                                    Get.to(
-                                          () => SubmitDailyReport(),
-                                    );
-
+                                    bool hasExistingAttendance =
+                                        await _checkExistingAttendance();
+                                    if (hasExistingAttendance) {
+                                      await _showAttendanceWarning();
+                                    } else {
+                                      Get.to(() => EnterFactory());
+                                    }
                                   }
                                 },
                                 title: Center(
                                   child: Text(
-                                    hasSubmitedReportToday
-                                        ? 'لقد قمت بتسجيل التقرير اليوم بالفعل'
-                                        : 'ارسال التقرير اليومي',
+                                    hasEnteredToday
+                                        ? 'لقد قمت بتسجيل الدخول اليوم بالفعل'
+                                        : 'بدء اليوم',
                                     style: TextStyle(
                                       color: Colors.white,
                                       fontSize: 18.0,
@@ -1003,7 +964,65 @@ class _HomeScreenState extends State<HomeScreen> {
                                   ),
                                 ),
                               ),
-                            )
+                            ),
+                            // else
+                            //   SizedBox(
+                            //     height: 60.0,
+                            //     width: double.infinity,
+                            //     child: CreateButton(
+                            //       onPressed: () {
+                            //         Get.to(
+                            //           () => ExitFactory(
+                            //             attendanceId:
+                            //                 currentAttendanceId.toString(),
+                            //           ),
+                            //         );
+
+                            //         addDebugLog('Navigated to ExitFactory');
+                            //       },
+                            //       title: Center(
+                            //         child: Text(
+                            //           'exit_factory'.tr,
+                            //           style: TextStyle(
+                            //             color: Colors.white,
+                            //             fontSize: 18.0,
+                            //             fontFamily: 'Tajawal',
+                            //             fontWeight: FontWeight.bold,
+                            //           ),
+                            //         ),
+                            //       ),
+                            //     ),
+                            //   ),
+                            SizedBox(height: 10),
+                            SizedBox(
+                              height: 60.0,
+                              width: double.infinity,
+                              child: CreateButton(
+                                onPressed: () async {
+                                  // التحقق من وجود تقرير اليوم
+                                  await checkTodayReport();
+
+                                  if (hasSubmitedReportToday) {
+                                    // إذا كان هناك تقرير اليوم، اذهب للصفحة
+                                    Get.to(() => SubmitDailyReport());
+                                  } else {
+                                    // إذا لم يكن هناك تقرير اليوم، اعرض رسالة
+                                    await _showNoReportDialog();
+                                  }
+                                },
+                                title: Center(
+                                  child: Text(
+                                    'التقرير اليومي',
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 18.0,
+                                      fontFamily: 'Tajawal',
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
                           ],
                         ),
                       ),
@@ -1066,5 +1085,3 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 }
-
-
