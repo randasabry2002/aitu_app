@@ -68,6 +68,7 @@ dependencies:
   flutter_map: ^8.1.1
   latlong2: ^0.9.1
   # advance_pdf_viewer: ^2.0.1
+  fluttertoast: ^8.2.12
   http: ^1.4.0
   device_preview: ^1.1.0
 
