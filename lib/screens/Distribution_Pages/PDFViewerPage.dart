@@ -2,9 +2,12 @@ import 'dart:io';
 import 'dart:convert';
 import 'dart:typed_data';
 import 'package:aitu_app/screens/Attendance_Part_Pages/homeScreen.dart';
+import 'package:aitu_app/screens/Distribution_Pages/uploadReport.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:get/get.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:http/http.dart';
 import 'package:open_file/open_file.dart';
 import 'package:aitu_app/shared/constant.dart';
 import 'package:get/get_core/src/get_main.dart';
@@ -40,6 +43,7 @@ class _PDFViewerPageState extends State<PDFViewerPage> {
     } else {
       print('Current email is null. Please provide the current user\'s email.');
     }
+    handleGenerateWordFile();
   }
 
   File? generatedWordFile; // Declare at class level if not already
@@ -260,6 +264,28 @@ class _PDFViewerPageState extends State<PDFViewerPage> {
     );
   }
 
+  // function to download the word file
+  // void downloadWordFile() {
+  //   if (generatedWordFile != null) {
+  //     OpenFile.open(generatedWordFile!.path);
+  //   }
+  // }
+
+  void downloadFile() async {
+    var fileName =
+        '${studentData['name']}_${studentData['code']}_nomination card.docx';
+    var path = '/storage/emulated/0/Download/$fileName';
+    var file = File(path);
+    if (await file.exists()) {
+      Fluttertoast.showToast(msg: "الملف موجود بالفعل.\nتم فتح الملف...");
+      OpenFile.open(file.path);
+      return;
+    }
+    var sourceBytes = await File(generatedWordFile!.path).readAsBytes();
+    await file.writeAsBytes(sourceBytes);
+    Fluttertoast.showToast(msg: "تم تحميل الملف بنجاح");
+  }
+
   @override
   Widget build(BuildContext context) {
     bool isNominatinCardAppear = widget.isNominationCard;
@@ -282,13 +308,24 @@ class _PDFViewerPageState extends State<PDFViewerPage> {
             ),
             actions: [
               IconButton(
-                icon: Icon(Icons.info_outline, color: Colors.blueGrey[700]),
+                icon:
+                    widget.isNominationCard
+                        ? Icon(
+                          Icons.info,
+                          color: const Color.fromARGB(255, 255, 0, 0),
+                          // No outline for nomination card
+                        )
+                        : Icon(
+                          Icons.info_outlined,
+                          color: Colors.blueGrey[700],
+                        ),
                 tooltip: 'معلومات',
                 onPressed: () {
                   showDialog(
                     context: context,
                     builder:
                         (context) => AlertDialog(
+                          backgroundColor: Colors.white,
                           title: Text(
                             'معلومات هامة',
                             style: TextStyle(
@@ -297,17 +334,57 @@ class _PDFViewerPageState extends State<PDFViewerPage> {
                               fontSize: 18,
                             ),
                           ),
-                          content: Text(
-                            'قم بالبحث عن اسمك لمعرفة مصنعك (من الاحسن أخذ لقطة شاشه بالبيانات الخاصه بك) ثم قم بالعوده الى الصفحه السابقة لبدأ الحضور',
-                            style: TextStyle(
-                              fontFamily: 'Tajawal',
-                              fontSize: 16,
-                            ),
-                          ),
+                          content:
+                              widget.isNominationCard
+                                  ? Column(
+                                    mainAxisSize: MainAxisSize.min,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        'هذه هي البيانات التي سيتم إرسالها في بطاقة الترشيح للمصنع المختار.',
+                                        style: TextStyle(
+                                          fontFamily: 'Tajawal',
+                                          fontSize: 16,
+                                        ),
+                                      ),
+                                      SizedBox(height: 8),
+                                      Text(
+                                        '---\nبعد تحميل البطاقة، توجه إلى المصنع لختمها، ثم قم برفعها إلى الكلية من خلال "إرسال التقرير إلى الكلية".',
+                                        style: TextStyle(
+                                          fontFamily: 'Tajawal',
+                                          fontSize: 16,
+                                        ),
+                                      ),
+                                    ],
+                                  )
+                                  : Column(
+                                    mainAxisSize: MainAxisSize.min,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        'ابحث عن اسمك لمعرفة المصنع الخاص بك. يُفضل أخذ لقطة شاشة لبياناتك، ثم العودة للصفحة السابقة لبدء الترشيح.',
+                                        style: TextStyle(
+                                          fontFamily: 'Tajawal',
+                                          fontSize: 16,
+                                        ),
+                                      ),
+                                      SizedBox(height: 8),
+                                      Text(
+                                        'يرجى التأكد من صحة البيانات قبل المتابعة.',
+                                        style: TextStyle(
+                                          fontFamily: 'Tajawal',
+                                          fontSize: 16,
+                                          color: Colors.redAccent,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
                           actions: [
                             TextButton(
                               child: Text(
-                                'حسناً',
+                                'فهمت',
                                 style: TextStyle(
                                   fontFamily: 'Tajawal',
                                   fontWeight: FontWeight.bold,
@@ -331,7 +408,7 @@ class _PDFViewerPageState extends State<PDFViewerPage> {
                 color: const Color.fromARGB(255, 0, 0, 0),
               ),
               onPressed: () {
-                Get.back();
+                Get.offAll(Not_College_distribution_page());
               },
             ),
           ),
@@ -444,7 +521,7 @@ class _PDFViewerPageState extends State<PDFViewerPage> {
                                   setState(() => isProcessing = false);
                                   return;
                                 }
-                                await handleGenerateWordFile();
+                                // await handleGenerateWordFile();
 
                                 if (generatedWordFile != null) {
                                   try {
@@ -661,16 +738,8 @@ class _PDFViewerPageState extends State<PDFViewerPage> {
                                     onPressed:
                                         isProcessing
                                             ? null
-                                            : () async {
-                                              setState(() => isLoading = true);
-                                              await handleUpload();
-                                              setState(() => isLoading = false);
-                                              Get.offAll(
-                                                HomeScreen(
-                                                  studentEmail:
-                                                      currentStudentEmail!,
-                                                ),
-                                              );
+                                            : () {
+                                              Get.offAll(UploadReport());
                                             },
                                   ),
                                 ),
@@ -709,129 +778,138 @@ class _PDFViewerPageState extends State<PDFViewerPage> {
                                 ),
                                 icon: Icon(Icons.file_download),
                                 label: Text('تحميل ملف Word'),
-                                onPressed:
-                                    isLoading
-                                        ? null
-                                        : () async {
-                                          if (generatedWordFile == null) return;
+                                onPressed: isLoading ? null : downloadFile,
+                                //           : () async {
+                                //             if (generatedWordFile == null) {
+                                //               // Generate the file first
+                                //               await handleGenerateWordFile();
+                                //             }
+                                //             if (generatedWordFile == null) {
+                                //               Get.snackbar(
+                                //                 'خطأ',
+                                //                 'لم يتم إنشاء ملف Word بعد',
+                                //               );
+                                //               return;
+                                //             }
 
-                                          // Show permission request dialog before requesting
-                                          bool?
-                                          userConfirmed = await showDialog<
-                                            bool
-                                          >(
-                                            context: context,
-                                            builder:
-                                                (context) => AlertDialog(
-                                                  title: Text(
-                                                    'طلب صلاحية التخزين',
-                                                  ),
-                                                  content: Text(
-                                                    'يحتاج التطبيق إلى صلاحية الوصول للتخزين من أجل حفظ الملف. هل ترغب في منح الصلاحية؟',
-                                                  ),
-                                                  actions: [
-                                                    TextButton(
-                                                      onPressed:
-                                                          () => Navigator.of(
-                                                            context,
-                                                          ).pop(false),
-                                                      child: Text('لا'),
-                                                    ),
-                                                    TextButton(
-                                                      onPressed:
-                                                          () => Navigator.of(
-                                                            context,
-                                                          ).pop(true),
-                                                      child: Text('نعم'),
-                                                    ),
-                                                  ],
-                                                ),
-                                          );
+                                //             // Show permission request dialog before requesting
+                                //             bool?
+                                //             userConfirmed = await showDialog<
+                                //               bool
+                                //             >(
+                                //               context: context,
+                                //               builder:
+                                //                   (context) => AlertDialog(
+                                //                     title: Text(
+                                //                       'طلب صلاحية التخزين',
+                                //                     ),
+                                //                     content: Text(
+                                //                       'يحتاج التطبيق إلى صلاحية الوصول للتخزين من أجل حفظ الملف. هل ترغب في منح الصلاحية؟',
+                                //                     ),
+                                //                     actions: [
+                                //                       TextButton(
+                                //                         onPressed:
+                                //                             () => Navigator.of(
+                                //                               context,
+                                //                             ).pop(false),
+                                //                         child: Text('لا'),
+                                //                       ),
+                                //                       TextButton(
+                                //                         onPressed:
+                                //                             () => Navigator.of(
+                                //                               context,
+                                //                             ).pop(true),
+                                //                         child: Text('نعم'),
+                                //                       ),
+                                //                     ],
+                                //                   ),
+                                //             );
 
-                                          if (userConfirmed != true) {
-                                            Get.snackbar(
-                                              'تم الإلغاء',
-                                              'لم يتم منح صلاحية التخزين',
-                                            );
-                                            return;
-                                          }
+                                //             if (userConfirmed != true) {
+                                //               Get.snackbar(
+                                //                 'تم الإلغاء',
+                                //                 'لم يتم منح صلاحية التخزين',
+                                //               );
+                                //               return;
+                                //             }
 
-                                          setState(() => isLoading = true);
+                                //             setState(() => isLoading = true);
 
-                                          try {
-                                            // Request storage permission
-                                            final status =
-                                                await Permission.storage
-                                                    .request();
-                                            if (!status.isGranted) {
-                                              Get.snackbar(
-                                                'خطأ',
-                                                'لم يتم منح صلاحية الوصول للتخزين',
-                                              );
-                                              setState(() => isLoading = false);
-                                              return;
-                                            }
+                                //             try {
+                                //               // Request storage permission
+                                //               final status =
+                                //                   await Permission.storage
+                                //                       .request();
+                                //               if (!status.isGranted) {
+                                //                 Get.snackbar(
+                                //                   'خطأ',
+                                //                   'لم يتم منح صلاحية الوصول للتخزين',
+                                //                 );
+                                //                 setState(() => isLoading = false);
+                                //                 return;
+                                //               }
 
-                                            // Get the Downloads directory
-                                            Directory? downloadsDir;
-                                            if (Platform.isAndroid) {
-                                              downloadsDir = Directory(
-                                                '/storage/emulated/0/Download',
-                                              );
-                                              if (!await downloadsDir
-                                                  .exists()) {
-                                                // fallback to external storage directory
-                                                downloadsDir =
-                                                    await getExternalStorageDirectory();
-                                              }
-                                            } else if (Platform.isIOS) {
-                                              downloadsDir =
-                                                  await getApplicationDocumentsDirectory();
-                                            } else {
-                                              downloadsDir =
-                                                  await getApplicationDocumentsDirectory();
-                                            }
+                                //               // Get the Downloads directory
+                                //               Directory? downloadsDir;
+                                //               if (Platform.isAndroid) {
+                                //                 downloadsDir = Directory(
+                                //                   '/storage/emulated/0/Download',
+                                //                 );
+                                //                 if (!await downloadsDir
+                                //                     .exists()) {
+                                //                   // fallback to external storage directory
+                                //                   downloadsDir =
+                                //                       await getExternalStorageDirectory();
+                                //                 }
+                                //               } else if (Platform.isIOS) {
+                                //                 downloadsDir =
+                                //                     await getApplicationDocumentsDirectory();
+                                //               } else {
+                                //                 downloadsDir =
+                                //                     await getApplicationDocumentsDirectory();
+                                //               }
 
-                                            if (downloadsDir == null) {
-                                              Get.snackbar(
-                                                'خطأ',
-                                                'تعذر تحديد مجلد التنزيلات',
-                                              );
-                                              setState(() => isLoading = false);
-                                              return;
-                                            }
+                                //               if (downloadsDir == null) {
+                                //                 Get.snackbar(
+                                //                   'خطأ',
+                                //                   'تعذر تحديد مجلد التنزيلات',
+                                //                 );
+                                //                 setState(() => isLoading = false);
+                                //                 return;
+                                //               }
 
-                                            final fileName =
-                                                generatedWordFile!.path
-                                                    .split('/')
-                                                    .last;
-                                            final savePath =
-                                                '${downloadsDir.path}/$fileName';
+                                //               final fileName =
+                                //                   generatedWordFile!.path
+                                //                       .split('/')
+                                //                       .last;
+                                //               final savePath =
+                                //                   '${downloadsDir.path}/$fileName';
 
-                                            final savedFile = await File(
-                                              savePath,
-                                            ).writeAsBytes(
-                                              await generatedWordFile!
-                                                  .readAsBytes(),
-                                            );
+                                //               final savedFile = await File(
+                                //                 savePath,
+                                //               ).writeAsBytes(
+                                //                 await generatedWordFile!
+                                //                     .readAsBytes(),
+                                //               );
 
-                                            Get.snackbar(
-                                              'تم التحميل',
-                                              'تم حفظ الملف في مجلد التنزيلات:\n$fileName',
-                                            );
-                                          } catch (e) {
-                                            Get.snackbar(
-                                              'خطأ',
-                                              'فشل في تحميل الملف',
-                                            );
-                                            print("Error during file save: $e");
-                                          } finally {
-                                            setState(() => isLoading = false);
-                                          }
-                                        },
+                                //               Get.snackbar(
+                                //                 'تم التحميل',
+                                //                 'تم حفظ الملف في مجلد التنزيلات:\n$fileName',
+                                //               );
+                                //             } catch (e) {
+                                //               Get.snackbar(
+                                //                 'خطأ',
+                                //                 'فشل في تحميل الملف',
+                                //               );
+                                //               print("Error during file save: $e");
+                                //             } finally {
+                                //               setState(() => isLoading = false);
+                                //             }
+                                //           },
                               ),
                             ),
                           ),
+                          SizedBox(height: 10.0),
                         ],
                       ),
                     )
