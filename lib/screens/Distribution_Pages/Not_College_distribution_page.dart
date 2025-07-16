@@ -470,7 +470,12 @@ class _Not_College_distribution_pageState
                                   )
                                   .limit(1)
                                   .get();
-                          Get.to(() => PDFViewerPage(isNominationCard: true,factoryID: selectedFactory,));
+                          Get.to(
+                            () => PDFViewerPage(
+                              isNominationCard: true,
+                              factoryID: selectedFactory,
+                            ),
+                          );
 
                           // if (factoryQuery.docs.isNotEmpty) {
                           //   final factoryDocId = factoryQuery.docs.first.id;
