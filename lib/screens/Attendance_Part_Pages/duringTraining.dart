@@ -24,9 +24,9 @@ class DuringTraining extends StatefulWidget {
 class _DuringTrainingState extends State<DuringTraining> {
   String trainingNotebook = "";
   String trainerEvaluation = "";
-  double benefitRating = 0;
-  double supervisorRating = 0;
-  double environmentRating = 0;
+  String benefitNote = "";
+  String supervisorNote = "";
+  String environmentNote = "";
   late String attendanceId;
   late final SharedPreferences _prefs;
   String currentQuote = "";
@@ -85,11 +85,9 @@ class _DuringTrainingState extends State<DuringTraining> {
         setState(() {
           trainingNotebook = attendanceDoc.get('TrainingNotebook') ?? '';
           trainerEvaluation = attendanceDoc.get('TrainerEvaluation') ?? '';
-          benefitRating = (attendanceDoc.get('BenefitRating') ?? 0).toDouble();
-          supervisorRating =
-              (attendanceDoc.get('SupervisorRating') ?? 0).toDouble();
-          environmentRating =
-              (attendanceDoc.get('EnvironmentRating') ?? 0).toDouble();
+          benefitNote = attendanceDoc.get('BenefitNote') ?? '';
+          supervisorNote = attendanceDoc.get('SupervisorNote') ?? '';
+          environmentNote = attendanceDoc.get('EnvironmentNote') ?? '';
         });
 
         notebookController.text = trainingNotebook;
@@ -108,9 +106,9 @@ class _DuringTrainingState extends State<DuringTraining> {
           .update({
             "TrainingNotebook": trainingNotebook,
             "TrainerEvaluation": trainerEvaluation,
-            "BenefitRating": benefitRating,
-            "SupervisorRating": supervisorRating,
-            "EnvironmentRating": environmentRating,
+            "BenefitNote": benefitNote,
+            "SupervisorNote": supervisorNote,
+            "EnvironmentNote": environmentNote,
           });
     } catch (e) {
       print("Error saving data: $e");
@@ -977,9 +975,9 @@ class _DuringTrainingState extends State<DuringTraining> {
         'studentId': await _prefs.getString("studentId") ?? "",
         'trainingNotebook': trainingNotebook,
         'trainerEvaluation': trainerEvaluation,
-        'benefitRating': benefitRating,
-        'supervisorRating': supervisorRating,
-        'environmentRating': environmentRating,
+        'benefitNote': benefitNote,
+        'supervisorNote': supervisorNote,
+        'environmentNote': environmentNote,
         'images': imageUrls,
         'date': DateTime.now(),
         'location': GeoPoint(lat, lng),
@@ -1477,7 +1475,7 @@ class _DuringTrainingState extends State<DuringTraining> {
                             Icon(Icons.star, color: mainColor, size: 26),
                             SizedBox(width: 10),
                             Text(
-                              'التقييمات',
+                              'ملاحظات حول التدريب',
                               style: TextStyle(
                                 fontSize: 20,
                                 fontWeight: FontWeight.bold,
@@ -1492,32 +1490,89 @@ class _DuringTrainingState extends State<DuringTraining> {
                           color: Colors.grey[200],
                           height: 24,
                         ),
-                        // تقييم مدى الاستفادة
-                        _buildRatingRow('تقييم مدى الاستفادة', benefitRating, (
-                          rating,
-                        ) {
-                          setState(() {
-                            benefitRating = rating;
-                          });
-                        }),
-                        SizedBox(height: 16),
-                        _buildRatingRow(
-                          'تقييم تعامل المشرف',
-                          supervisorRating,
-                          (rating) {
-                            setState(() {
-                              supervisorRating = rating;
-                            });
-                          },
+                        // تم استبدال التقييمات بملاحظات نصية
+                        Text(
+                          'ملاحظات حول مدى الاستفادة',
+                          style: TextStyle(
+                            fontSize: 16.0,
+                            color: Colors.black87,
+                            fontFamily: 'Tajawal',
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                        SizedBox(height: 8),
+                        TextField(
+                          decoration: InputDecoration(
+                            hintText: 'اكتب ملاحظاتك هنا...',
+                            border: OutlineInputBorder(),
+                            contentPadding: EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 8,
+                            ),
+                          ),
+                          minLines: 1,
+                          maxLines: 3,
+                          controller: TextEditingController(text: benefitNote),
+                          onChanged: (val) => setState(() => benefitNote = val),
                         ),
                         SizedBox(height: 16),
-                        _buildRatingRow('تقييم بيئة العمل', environmentRating, (
-                          rating,
-                        ) {
-                          setState(() {
-                            environmentRating = rating;
-                          });
-                        }),
+                        // ملاحظات حول تعامل المشرف
+                        Text(
+                          'ملاحظات حول تعامل المشرف',
+                          style: TextStyle(
+                            fontSize: 16.0,
+                            color: Colors.black87,
+                            fontFamily: 'Tajawal',
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                        SizedBox(height: 8),
+                        TextField(
+                          decoration: InputDecoration(
+                            hintText: 'اكتب ملاحظاتك هنا...',
+                            border: OutlineInputBorder(),
+                            contentPadding: EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 8,
+                            ),
+                          ),
+                          minLines: 1,
+                          maxLines: 3,
+                          controller: TextEditingController(
+                            text: supervisorNote,
+                          ),
+                          onChanged:
+                              (val) => setState(() => supervisorNote = val),
+                        ),
+                        SizedBox(height: 16),
+                        // ملاحظات حول بيئة العمل
+                        Text(
+                          'ملاحظات حول بيئة العمل',
+                          style: TextStyle(
+                            fontSize: 16.0,
+                            color: Colors.black87,
+                            fontFamily: 'Tajawal',
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                        SizedBox(height: 8),
+                        TextField(
+                          decoration: InputDecoration(
+                            hintText: 'اكتب ملاحظاتك هنا...',
+                            border: OutlineInputBorder(),
+                            contentPadding: EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 8,
+                            ),
+                          ),
+                          minLines: 1,
+                          maxLines: 3,
+                          controller: TextEditingController(
+                            text: environmentNote,
+                          ),
+                          onChanged:
+                              (val) => setState(() => environmentNote = val),
+                        ),
                       ],
                     ),
                   ),
@@ -1556,40 +1611,6 @@ class _DuringTrainingState extends State<DuringTraining> {
           ),
         ),
       ),
-    );
-  }
-
-  Widget _buildRatingRow(
-    String label,
-    double rating,
-    Function(double) onRatingUpdate,
-  ) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Expanded(
-          child: Text(
-            label,
-            style: TextStyle(
-              fontSize: 16.0,
-              color: Colors.black87,
-              fontFamily: 'Tajawal',
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-        ),
-        SizedBox(width: 12),
-        // شريط التقييم بالنجوم
-        Slider(
-          value: rating,
-          min: 0,
-          max: 5,
-          divisions: 5,
-          label: rating.toString(),
-          onChanged: (value) => onRatingUpdate(value),
-          activeColor: Colors.amber,
-        ),
-      ],
     );
   }
 }

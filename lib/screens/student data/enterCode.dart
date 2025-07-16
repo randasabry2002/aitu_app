@@ -83,12 +83,12 @@ class _EnterStudentCodeState extends State<EnterStudentCode> {
                           vertical: 40,
                         ),
                         decoration: BoxDecoration(
-                          border: Border.all(color: mainColor, width: 1.4),
+                          // border: Border.all(color: mainColor, width: 1.4),
                           color: const Color.fromARGB(57, 255, 255, 255),
                           borderRadius: BorderRadius.circular(20),
                           boxShadow: [
                             BoxShadow(
-                              color: Colors.black.withOpacity(0.1),
+                              color: Colors.black.withOpacity(0.5),
                               blurRadius: 10,
                               offset: Offset(0, 5),
                             ),
@@ -127,111 +127,82 @@ class _EnterStudentCodeState extends State<EnterStudentCode> {
                       ),
                       Transform.translate(
                         offset: Offset(0, -32),
-                        child: Container(
-                          width: 68,
-                          height: 68,
-                          decoration: BoxDecoration(
-                            gradient: LinearGradient(
-                              colors: [
-                                mainColor,
-                                Color.fromARGB(255, 0, 243, 223),
-                              ],
-                              begin: Alignment.centerLeft,
-                              end: Alignment.centerRight,
-                            ),
-                            shape: BoxShape.circle,
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withOpacity(0.2),
-                                blurRadius: 8,
-                                offset: Offset(0, 4),
-                              ),
-                            ],
-                          ),
-                          child: Material(
-                            color: Colors.transparent,
-                            child: InkWell(
-                              borderRadius: BorderRadius.circular(30),
-                              onTap: () async {
-                                if (studentCode.isEmpty) {
-                                  Get.snackbar(
-                                    'تنبيه',
-                                    'يرجى إدخال كود الطالب',
-                                    backgroundColor: Colors.red,
-                                    colorText: Colors.white,
-                                    snackPosition: SnackPosition.TOP,
-                                    duration: Duration(seconds: 3),
-                                  );
-                                  return;
-                                }
-                                final firebaseService = FirebaseService();
-                                try {
-                                  final student = await firebaseService
-                                      .getDataWithStudentId(studentCode);
-                                  if (student != null) {
-                                    if (student.email == "") {
-                                      Get.offAll(
-                                        () => SignUpScreen(
-                                          studentCode: studentCode,
-                                        ),
-                                      );
-                                    } else if (student.birthAddress == "") {
-                                      Get.offAll(
-                                        () => CompleteStudentData(
-                                          studentCode: studentCode,
-                                        ),
-                                      );
-                                    } else {
-                                      Get.offAll(
-                                        () => SignInScreen(
-                                          studentCode: studentCode,
-                                        ),
-                                      );
-                                    }
-                                  } else {
-                                    Get.snackbar(
-                                      'تنبيه',
-                                      "الكود غير موجود!".tr,
-                                      backgroundColor: Colors.red,
-                                      colorText: Colors.white,
-                                      snackPosition: SnackPosition.TOP,
-                                      duration: Duration(seconds: 3),
-                                    );
-                                  }
-                                } catch (error) {
-                                  print("Error fetching student data: $error");
-                                  showDialog(
-                                    context: context,
-                                    builder:
-                                        (context) => AlertDialog(
-                                          title: Text(
-                                            'لا يوجد طالب بهذا الكود'.tr,
-                                          ),
-                                          content: Text(
-                                            'يرجى التحقق من الكود المدخل\n اذا كنت متأكد منه قم بالطلب من احد اعضاء الشئون الطلابية والتأكد من اضافتك للبرنامج. \n'
-                                                .tr,
-                                          ),
-                                          actions: [
-                                            TextButton(
-                                              onPressed:
-                                                  () =>
-                                                      Navigator.of(
-                                                        context,
-                                                      ).pop(),
-                                              child: Text('حسنا'.tr),
-                                            ),
-                                          ],
-                                        ),
-                                  );
-                                }
-                              },
-                              child: Icon(
-                                Icons.arrow_back_ios_new_rounded,
-                                color: Colors.white,
-                                size: 30.0,
-                              ),
+                        child: CreateButton(
+                          title: Text(
+                            'الدخول',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 24,
+                              fontWeight: FontWeight.w600,
+                              fontFamily: 'Tajawal',
                             ),
                           ),
+                          onPressed: () async {
+                            if (studentCode.isEmpty) {
+                              Get.snackbar(
+                                'تنبيه',
+                                'يرجى إدخال كود الطالب',
+                                backgroundColor: Colors.red,
+                                colorText: Colors.white,
+                                snackPosition: SnackPosition.TOP,
+                                duration: Duration(seconds: 3),
+                              );
+                              return;
+                            }
+                            final firebaseService = FirebaseService();
+                            try {
+                              final student = await firebaseService
+                                  .getDataWithStudentId(studentCode);
+                              if (student != null) {
+                                if (student.email == "") {
+                                  Get.offAll(
+                                    () =>
+                                        SignUpScreen(studentCode: studentCode),
+                                  );
+                                } else if (student.birthAddress == "") {
+                                  Get.offAll(
+                                    () => CompleteStudentData(
+                                      studentCode: studentCode,
+                                    ),
+                                  );
+                                } else {
+                                  Get.offAll(
+                                    () =>
+                                        SignInScreen(studentCode: studentCode),
+                                  );
+                                }
+                              } else {
+                                Get.snackbar(
+                                  'تنبيه',
+                                  "الكود غير موجود!".tr,
+                                  backgroundColor: Colors.red,
+                                  colorText: Colors.white,
+                                  snackPosition: SnackPosition.TOP,
+                                  duration: Duration(seconds: 3),
+                                );
+                              }
+                            } catch (error) {
+                              print("Error fetching student data: $error");
+                              showDialog(
+                                context: context,
+                                builder:
+                                    (context) => AlertDialog(
+                                      title: Text('لا يوجد طالب بهذا الكود'.tr),
+                                      content: Text(
+                                        'يرجى التحقق من الكود المدخل\n اذا كنت متأكد منه قم بالطلب من احد اعضاء الشئون الطلابية والتأكد من اضافتك للبرنامج. \n'
+                                            .tr,
+                                      ),
+                                      actions: [
+                                        TextButton(
+                                          onPressed:
+                                              () => Navigator.of(context).pop(),
+                                          child: Text('حسنا'.tr),
+                                        ),
+                                      ],
+                                    ),
+                              );
+                            }
+                          },
                         ),
                       ),
                     ],
