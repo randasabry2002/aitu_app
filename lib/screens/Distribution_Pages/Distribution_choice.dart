@@ -97,7 +97,7 @@ class _Distribution_choiceState extends State<Distribution_choice> {
                 Padding(
                   padding: const EdgeInsets.all(4.0),
                   child: Text(
-                    'distribution_choice_text'.tr,
+                    'التوزيع بواسطة الادارة',
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       fontSize: 18,
