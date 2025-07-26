@@ -777,7 +777,7 @@ class _PDFViewerPageState extends State<PDFViewerPage> {
                                   ),
                                 ),
                                 icon: Icon(Icons.file_download),
-                                label: Text('تحميل ملف Word'),
+                                label: Text('تحميل خطاب الترشيح'),
                                 onPressed: isLoading ? null : downloadFile,
                                 //           : () async {
                                 //             if (generatedWordFile == null) {
