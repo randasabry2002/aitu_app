@@ -31,8 +31,9 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 // You need to add image_picker to your pubspec.yaml for this to work.
 
 class UploadReport extends StatefulWidget {
-  const UploadReport({Key? key}) : super(key: key);
+  String? factoryID;
 
+  UploadReport(String? factoryID, {super.key});
   @override
   State<UploadReport> createState() => _UploadReportState();
 }
@@ -137,8 +138,8 @@ class _UploadReportState extends State<UploadReport> {
                   .get();
           if (studentQuery.docs.isNotEmpty) {
             final studentDoc = studentQuery.docs.first;
-            // Example: update factory to 'المصنع المختار'
-            await studentDoc.reference.update({'factory': 'المصنع المختار'});
+            // update factory to 'المصنع المختار'
+            await studentDoc.reference.update({'factory': widget.factoryID});
             // Navigate to HomeScreen
             Get.offAllNamed('/home');
           }

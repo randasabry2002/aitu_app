@@ -739,7 +739,7 @@ class _PDFViewerPageState extends State<PDFViewerPage> {
                                         isProcessing
                                             ? null
                                             : () {
-                                              Get.offAll(UploadReport());
+                                              Get.offAll(UploadReport(widget.factoryID));
                                             },
                                   ),
                                 ),
